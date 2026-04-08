@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDGE — Trading Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #050508;
+    --surface:  #0d0d14;
+    --border:   #1a1a2e;
+    --accent:   #00ff88;
+    --red:      #ff3366;
+    --amber:    #ffaa00;
+    --blue:     #0088ff;
+    --muted:    #444466;
+    --text:     #e0e0f0;
+    --mono:     'Space Mono', monospace;
+    --display:  'Bebas Neue', cursive;
+    --body:     'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,5,8,0.9);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,255,136,0.4);
+  }
+
+  .logo span { color: var(--muted); font-size: 12px; font-family: var(--mono); letter-spacing: 2px; display: block; margin-top: -4px; }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all 0.3s;
+  }
+  .dot.live { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+  .dot.error { background: var(--red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  #ws-status { color: var(--muted); }
+  #last-update { color: var(--muted); }
+
+  /* ── Spot Hero ── */
+  .spot-hero {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 40px 24px 24px;
+  }
+
+  .spot-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .spot-price {
+    font-family: var(--display);
+    font-size: clamp(56px, 12vw, 96px);
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--text);
+    transition: color 0.3s;
+  }
+
+  .spot-price.flash-up   { color: var(--accent); }
+  .spot-price.flash-down { color: var(--red); }
+
+  /* ── Grid Layout ── */
+  .grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 16px 16px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+
+  .card.full { grid-column: 1 / -1; }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .card-value {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* ── Bias Card ── */
+  .bias-card {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .bias-badge {
+    font-family: var(--display);
+    font-size: 36px;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    background: rgba(0,255,136,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,255,136,0.3);
+    transition: all 0.4s;
+  }
+
+  .bias-badge.bearish {
+    background: rgba(255,51,102,0.1);
+    color: var(--red);
+    border-color: rgba(255,51,102,0.3);
+  }
+
+  .bias-badge.neutral {
+    background: rgba(255,170,0,0.1);
+    color: var(--amber);
+    border-color: rgba(255,170,0,0.3);
+  }
+
+  .bias-right { text-align: right; }
+
+  .trade-dir {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Score Bar ── */
+  .score-wrap { margin-top: 8px; }
+  .score-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+  .score-fill.bearish { background: var(--red); }
+  .score-fill.neutral { background: var(--amber); }
+
+  /* ── S/R Card ── */
+  .sr-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .sr-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .sr-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+  }
+  .sr-val {
+    font-family: var(--display);
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .sr-val.support    { color: var(--accent); }
+  .sr-val.resistance { color: var(--red); }
+  .sr-val.atm        { color: var(--amber); }
+  .sr-oi {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── PCR ── */
+  .pcr-big {
+    font-family: var(--display);
+    font-size: 42px;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  /* ── Alpha Strikes ── */
+  .alpha-list { display: flex; flex-direction: column; gap: 8px; }
+  .alpha-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .alpha-rank {
+    font-family: var(--display);
+    font-size: 20px;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  .alpha-strike {
+    font-family: var(--display);
+    font-size: 24px;
+    letter-spacing: 1px;
+    flex: 1;
+  }
+
+  .alpha-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .alpha-tag.ce { background: rgba(255,51,102,0.15); color: var(--red); }
+  .alpha-tag.pe { background: rgba(0,255,136,0.15);  color: var(--accent); }
+
+  .alpha-score {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── Connecting state ── */
+  .connecting {
+    text-align: center;
+    padding: 60px 24px;
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .connecting::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 20px auto 0;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* ── Expiry badge ── */
+  .expiry-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  /* shimmer on update */
+  @keyframes shimmer {
+    0%   { opacity: 0.5; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+  .updating { animation: shimmer 0.6s ease; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div>
+  </div>
+  <div class="status-bar">
+    <div class="dot" id="dot"></div>
+    <span id="ws-status">CONNECTING</span>
+    <span id="last-update">--:--</span>
+  </div>
+</header>
+
+<div id="app">
+  <div class="connecting">CONNECTING TO ENGINE</div>
+</div>
+
+<footer>EDGE v3 &nbsp;·&nbsp; NIFTY 50 &nbsp;·&nbsp; PAPER TRADE ONLY</footer>
+
+<script>
+  const WS_URL = "wss://edge-backend-r1ng.onrender.com";
+  let ws, reconnectTimer, lastData;
+
+  function fmt(n) {
+    if (!n && n !== 0) return "--";
+    if (n >= 1e7) return (n/1e7).toFixed(1) + "Cr";
+    if (n >= 1e5) return (n/1e5).toFixed(1) + "L";
+    return n.toLocaleString("en-IN");
+  }
+
+  function getBiasClass(bias) {
+    if (!bias) return "";
+    const b = bias.toUpperCase();
+    if (b.includes("BEAR")) return "bearish";
+    if (b.includes("NEUTRAL")) return "neutral";
+    return "";
+  }
+
+  function now() {
+    return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  }
+
+  function render(d) {
+    if (!d || d.type === "error") return;
+    lastData = d;
+
+    const biasClass = getBiasClass(d.sentiment?.bias);
+    const score     = d.sentiment?.score || 50;
+    const spot      = d.spot || "--";
+
+    const app = document.getElementById("app");
+    app.innerHTML = `
+      <div class="spot-hero">
+        <div class="spot-label">NIFTY 50 SPOT</div>
+        <div class="spot-price" id="spot">₹${spot.toLocaleString("en-IN")}</div>
+        <div style="margin-top:8px;">
+          <span class="expiry-tag">${d.expiry === "mock" ? "⚠ MOCK DATA" : d.expiry || "--"}</span>
+        </div>
+      </div>
+
+      <div class="grid">
+
+        <!-- Bias -->
+        <div class="card bias-card">
+          <div>
+            <div class="card-label">Market Bias</div>
+            <div class="bias-badge ${biasClass}">${d.sentiment?.bias || "--"}</div>
+            <div class="score-wrap">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SCORE</span>
+                <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">${score}/100</span>
+              </div>
+              <div class="score-track">
+                <div class="score-fill ${biasClass}" style="width:${score}%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="bias-right">
+            <div class="card-label">Trade Direction</div>
+            <div class="trade-dir">${d.sentiment?.tradeDir || "--"}</div>
+            <div style="margin-top:8px;" class="card-label">PCR</div>
+            <div class="pcr-big">${d.pcr?.overall?.oiPCR || "--"}</div>
+          </div>
+        </div>
+
+        <!-- S/R -->
+        <div class="card full">
+          <div class="card-label">Support / ATM / Resistance</div>
+          <div class="sr-row">
+            <div><div class="sr-tag">SUPPORT</div><div class="sr-val support">${d.sr?.support?.strike || "--"}</div></div>
+            <div class="sr-oi">PE OI<br>${fmt(d.sr?.support?.peOI)}</div>
+          </div>
+          <div class="sr-row">
+            <div><div class="sr-tag">ATM</div><div class="sr-val atm">${d.sr?.atmStrike || "--"}</div></div>
+            <div class="sr-oi">At The Money</div>
+          </div>
+          <div class="sr-row">
+            <div><div class="sr-tag">RESISTANCE</div><div class="sr-val resistance">${d.sr?.resistance?.strike || "--"}</div></div>
+            <div class="sr-oi">CE OI<br>${fmt(d.sr?.resistance?.ceOI)}</div>
+          </div>
+        </div>
+
+        <!-- PCR breakdown -->
+        <div class="card">
+          <div class="card-label">Total CE OI</div>
+          <div class="card-value" style="color:var(--red)">${fmt(d.pcr?.overall?.totalCeOI)}</div>
+          <div class="card-sub">Call Writers</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total PE OI</div>
+          <div class="card-value" style="color:var(--accent)">${fmt(d.pcr?.overall?.totalPeOI)}</div>
+          <div class="card-sub">Put Writers</div>
+        </div>
+
+        <!-- Alpha Strikes -->
+        <div class="card full">
+          <div class="card-label">Alpha Strikes — Top 3 by OI Conviction</div>
+          <div class="alpha-list">
+            ${(d.alphas || []).map(a => `
+              <div class="alpha-row">
+                <div class="alpha-rank">#${a.rank}</div>
+                <div class="alpha-strike">${a.strike}</div>
+                <span class="alpha-tag ${a.dominant?.toLowerCase()}">${a.dominant}</span>
+                <div class="alpha-score">CE: ${fmt(a.ceOI)}<br>PE: ${fmt(a.peOI)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function setStatus(state) {
+    const dot = document.getElementById("dot");
+    const txt = document.getElementById("ws-status");
+    if (state === "live")        { dot.className = "dot live"; txt.textContent = "LIVE"; txt.style.color = "var(--accent)"; }
+    else if (state === "error")  { dot.className = "dot error"; txt.textContent = "ERROR"; txt.style.color = "var(--red)"; }
+    else                         { dot.className = "dot"; txt.textContent = "CONNECTING"; txt.style.color = "var(--muted)"; }
+  }
+
+  function connect() {
+    clearTimeout(reconnectTimer);
+    setStatus("connecting");
+
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      setStatus("live");
+      console.log("✅ Connected");
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        render(data);
+        document.getElementById("last-update").textContent = now();
+      } catch(err) {
+        console.error("Parse error:", err);
+      }
+    };
+
+    ws.onerror = () => setStatus("error");
+
+    ws.onclose = () => {
+      setStatus("error");
+      console.log("🔌 Disconnected — retrying in 5s");
+      reconnectTimer = setTimeout(connect, 5000);
+    };
+  }
+
+  connect();
+</script>
+</body>
+</html>
