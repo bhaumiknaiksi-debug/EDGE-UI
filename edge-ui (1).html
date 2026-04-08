@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EDGE">
+<meta name="theme-color" content="#050508">
+<title>EDGE — Trading Intelligence</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #050508;
+    --surface: #0d0d14;
+    --border:  #1a1a2e;
+    --accent:  #00ff88;
+    --red:     #ff3366;
+    --amber:   #ffaa00;
+    --muted:   #444466;
+    --text:    #e0e0f0;
+    --mono:    'Space Mono', monospace;
+    --display: 'Bebas Neue', cursive;
+    --body:    'DM Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text); font-family:var(--body);
+    min-height:100vh; min-height:100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px);
+    background-size:40px 40px;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    position:relative; z-index:10; min-height:100dvh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .login-logo { font-family:var(--display); font-size:72px; letter-spacing:8px; color:var(--accent); text-shadow:0 0 40px rgba(0,255,136,.4); text-align:center; line-height:1; }
+  .login-sub { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); text-align:center; margin-bottom:40px; margin-top:4px; }
+  .login-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; }
+  .login-title { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--muted); margin-bottom:20px; text-transform:uppercase; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+  .field input {
+    width:100%; background:#0a0a10; border:1px solid var(--border);
+    border-radius:8px; padding:12px 14px; color:var(--text);
+    font-family:var(--mono); font-size:14px; outline:none; transition:border-color .2s;
+  }
+  .field input:focus { border-color:var(--accent); }
+  .field input::placeholder { color:var(--muted); }
+  .login-btn { width:100%; margin-top:8px; padding:14px; background:var(--accent); color:#000; font-family:var(--display); font-size:20px; letter-spacing:3px; border:none; border-radius:8px; cursor:pointer; transition:opacity .2s; }
+  .login-btn:hover { opacity:.85; }
+  .login-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .mock-btn { width:100%; margin-top:10px; padding:12px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:11px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; transition:all .2s; }
+  .mock-btn:hover { border-color:var(--muted); color:var(--text); }
+  .login-error { margin-top:12px; padding:10px 14px; background:rgba(255,51,102,.1); border:1px solid rgba(255,51,102,.3); border-radius:8px; font-family:var(--mono); font-size:11px; color:var(--red); display:none; }
+  .login-note { margin-top:16px; font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; letter-spacing:1px; line-height:1.6; }
+
+  /* ── DASHBOARD ── */
+  #dashboard { display:none; }
+
+  header {
+    position:sticky; top:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px solid var(--border);
+    background:rgba(5,5,8,.95); backdrop-filter:blur(10px);
+  }
+  .logo { font-family:var(--display); font-size:28px; letter-spacing:4px; color:var(--accent); text-shadow:0 0 20px rgba(0,255,136,.3); }
+  .logo span { color:var(--muted); font-size:10px; font-family:var(--mono); letter-spacing:2px; display:block; margin-top:-2px; }
+  .status-bar { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); transition:all .3s; }
+  .dot.live { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+  .dot.error { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── SPOT HERO ── */
+  .spot-hero { position:relative; z-index:1; text-align:center; padding:32px 20px 20px; }
+  .spot-label { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); margin-bottom:6px; }
+  #spot-price {
+    font-family:var(--display); font-size:clamp(52px,12vw,88px);
+    letter-spacing:2px; line-height:1; transition:color .3s;
+  }
+  #spot-price.flash-up   { color:var(--accent); animation:flashUp .6s ease forwards; }
+  #spot-price.flash-down { color:var(--red);    animation:flashDown .6s ease forwards; }
+  @keyframes flashUp   { 0%{color:var(--accent);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  @keyframes flashDown { 0%{color:var(--red);transform:scale(1.04)}    100%{color:var(--text);transform:scale(1)} }
+  .expiry-tag { font-family:var(--mono); font-size:10px; color:var(--muted); padding:4px 10px; border:1px solid var(--border); border-radius:20px; margin-top:8px; display:inline-block; }
+  .expiry-tag.mock { color:var(--amber); border-color:rgba(255,170,0,.3); }
+
+  /* ── GRID ── */
+  .grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 20px; max-width:480px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; position:relative; overflow:hidden; }
+  .card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--accent); opacity:.25; }
+  .card.full { grid-column:1/-1; }
+  .card-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+  .card-value { font-family:var(--display); font-size:28px; letter-spacing:1px; line-height:1; }
+  .card-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+
+  .bias-card { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  #bias-badge { font-family:var(--display); font-size:34px; letter-spacing:2px; padding:8px 18px; border-radius:8px; background:rgba(0,255,136,.1); color:var(--accent); border:1px solid rgba(0,255,136,.3); transition:all .4s; }
+  #bias-badge.bearish { background:rgba(255,51,102,.1); color:var(--red); border-color:rgba(255,51,102,.3); }
+  #bias-badge.neutral { background:rgba(255,170,0,.1); color:var(--amber); border-color:rgba(255,170,0,.3); }
+  .bias-right { text-align:right; }
+  #trade-dir { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px; }
+  #pcr-val { font-family:var(--display); font-size:42px; letter-spacing:2px; }
+  .score-wrap { margin-top:8px; }
+  .score-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+  #score-fill { height:100%; background:var(--accent); border-radius:2px; transition:width .8s ease, background .4s; }
+  #score-fill.bearish { background:var(--red); }
+  #score-fill.neutral { background:var(--amber); }
+  #score-text { font-family:var(--mono); font-size:9px; color:var(--muted); }
+
+  .sr-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .sr-row:last-child { border-bottom:none; padding-bottom:0; }
+  .sr-tag { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); }
+  .sr-val { font-family:var(--display); font-size:22px; letter-spacing:1px; }
+  .sr-val.support { color:var(--accent); }
+  .sr-val.resistance { color:var(--red); }
+  .sr-val.atm { color:var(--amber); }
+  .sr-oi { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; }
+
+  #ce-oi-val { font-family:var(--display); font-size:28px; letter-spacing:1px; line-height:1; color:var(--red); }
+  #pe-oi-val { font-family:var(--display); font-size:28px; letter-spacing:1px; line-height:1; color:var(--accent); }
+
+  .alpha-list { display:flex; flex-direction:column; gap:8px; }
+  .alpha-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,.03); border-radius:8px; border:1px solid var(--border); }
+  .alpha-rank { font-family:var(--display); font-size:20px; color:var(--muted); width:20px; flex-shrink:0; }
+  .alpha-strike { font-family:var(--display); font-size:24px; letter-spacing:1px; flex:1; }
+  .alpha-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px; letter-spacing:1px; }
+  .alpha-tag.ce { background:rgba(255,51,102,.15); color:var(--red); }
+  .alpha-tag.pe { background:rgba(0,255,136,.15); color:var(--accent); }
+  .alpha-score { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; }
+
+  .logout-btn { display:block; margin:4px auto 20px; padding:10px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; width:calc(100% - 28px); max-width:452px; transition:all .2s; text-align:center; }
+  .logout-btn:hover { border-color:var(--red); color:var(--red); }
+  footer { text-align:center; padding:16px; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); position:relative; z-index:1; }
+
+  #last-update { font-family:var(--mono); font-size:11px; color:var(--muted); }
+  #ws-status { color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">EDGE</div>
+  <div class="login-sub">TRADING INTELLIGENCE</div>
+  <div class="login-card">
+    <div class="login-title">Angel One — Broker Connect</div>
+    <div class="field"><label>Client ID</label><input type="text" id="clientId" placeholder="B123456" autocomplete="off" autocapitalize="characters"></div>
+    <div class="field"><label>MPIN</label><input type="password" id="pin" placeholder="••••••" inputmode="numeric"></div>
+    <div class="field"><label>TOTP (6-digit live code)</label><input type="text" id="totp" placeholder="123456" inputmode="numeric" maxlength="6"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">CONNECT</button>
+    <button class="mock-btn" onclick="useMock()">Use Mock Data Instead</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-note">Credentials sent directly to Angel One.<br>Never stored anywhere.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <div><div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div></div>
+    <div class="status-bar">
+      <div class="dot" id="dot"></div>
+      <span id="ws-status">CONNECTING</span>
+      <span id="last-update"></span>
+    </div>
+  </header>
+
+  <div class="spot-hero">
+    <div class="spot-label">NIFTY 50 SPOT</div>
+    <div id="spot-price">--</div>
+    <span id="expiry-tag" class="expiry-tag">--</span>
+  </div>
+
+  <div class="grid">
+    <!-- Bias -->
+    <div class="card bias-card">
+      <div>
+        <div class="card-label">Market Bias</div>
+        <div id="bias-badge">--</div>
+        <div class="score-wrap">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SCORE</span>
+            <span id="score-text">--</span>
+          </div>
+          <div class="score-track"><div id="score-fill" style="width:50%"></div></div>
+        </div>
+      </div>
+      <div class="bias-right">
+        <div class="card-label">Trade Direction</div>
+        <div id="trade-dir">--</div>
+        <div style="margin-top:8px" class="card-label">PCR</div>
+        <div id="pcr-val">--</div>
+      </div>
+    </div>
+
+    <!-- S/R -->
+    <div class="card full">
+      <div class="card-label">Support / ATM / Resistance</div>
+      <div class="sr-row">
+        <div><div class="sr-tag">SUPPORT</div><div class="sr-val support" id="sr-support">--</div></div>
+        <div class="sr-oi">PE OI<br><span id="sr-support-oi">--</span></div>
+      </div>
+      <div class="sr-row">
+        <div><div class="sr-tag">ATM</div><div class="sr-val atm" id="sr-atm">--</div></div>
+        <div class="sr-oi">At The Money</div>
+      </div>
+      <div class="sr-row">
+        <div><div class="sr-tag">RESISTANCE</div><div class="sr-val resistance" id="sr-resistance">--</div></div>
+        <div class="sr-oi">CE OI<br><span id="sr-resistance-oi">--</span></div>
+      </div>
+    </div>
+
+    <!-- OI totals -->
+    <div class="card">
+      <div class="card-label">Total CE OI</div>
+      <div id="ce-oi-val">--</div>
+      <div class="card-sub">Call Writers</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total PE OI</div>
+      <div id="pe-oi-val">--</div>
+      <div class="card-sub">Put Writers</div>
+    </div>
+
+    <!-- Alpha Strikes -->
+    <div class="card full">
+      <div class="card-label">Alpha Strikes — Top 3 OI Conviction</div>
+      <div class="alpha-list" id="alpha-list"></div>
+    </div>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">DISCONNECT · LOGOUT</button>
+  <footer>EDGE v3 &nbsp;·&nbsp; NIFTY 50 &nbsp;·&nbsp; PAPER TRADE ONLY</footer>
+</div>
+
+<script>
+  const BACKEND = "https://edge-backend-r1ng.onrender.com";
+  const WS_URL  = "wss://edge-backend-r1ng.onrender.com";
+  let ws, reconnectTimer, prevSpot = null;
+
+  // ── Safe text setter (XSS fix) ──
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val ?? "--";
+  }
+
+  function fmt(n) {
+    if (!n && n !== 0) return "--";
+    if (n >= 1e7) return (n/1e7).toFixed(1) + "Cr";
+    if (n >= 1e5) return (n/1e5).toFixed(1) + "L";
+    return n.toLocaleString("en-IN");
+  }
+
+  function getBiasClass(bias) {
+    if (!bias) return "";
+    const b = bias.toUpperCase();
+    if (b.includes("BEAR")) return "bearish";
+    if (b.includes("NEUTRAL")) return "neutral";
+    return "";
+  }
+
+  function nowStr() {
+    return new Date().toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  }
+
+  // ── LOGIN ──
+  async function doLogin() {
+    const clientId = document.getElementById("clientId").value.trim().toUpperCase();
+    const pin      = document.getElementById("pin").value.trim();
+    const totp     = document.getElementById("totp").value.trim();
+    const errEl    = document.getElementById("login-error");
+    const btn      = document.getElementById("login-btn");
+    errEl.style.display = "none";
+    if (!clientId || !pin || !totp) { showError("All fields required"); return; }
+    btn.disabled = true; btn.textContent = "CONNECTING...";
+    try {
+      const res  = await fetch(BACKEND + "/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ clientId, pin, totp }) });
+      const data = await res.json();
+      if (data.success) { showDashboard(); connectWS(); }
+      else { showError(data.message || "Login failed"); btn.disabled=false; btn.textContent="CONNECT"; }
+    } catch(err) {
+      showError("Cannot reach engine. Is Render awake?");
+      btn.disabled=false; btn.textContent="CONNECT";
+    }
+  }
+
+  function useMock() { showDashboard(); connectWS(); }
+
+  function showError(msg) {
+    const el = document.getElementById("login-error");
+    el.textContent = msg; el.style.display = "block";
+  }
+
+  function showDashboard() {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+  }
+
+  function logout() {
+    if (ws) ws.close();
+    clearTimeout(reconnectTimer);
+    prevSpot = null;
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("login-btn").disabled = false;
+    document.getElementById("login-btn").textContent = "CONNECT";
+    document.getElementById("login-error").style.display = "none";
+    document.getElementById("totp").value = "";
+  }
+
+  // ── WEBSOCKET ──
+  function connectWS() {
+    clearTimeout(reconnectTimer);
+    setStatus("connecting");
+    ws = new WebSocket(WS_URL);
+    ws.onopen    = () => setStatus("live");
+    ws.onmessage = (e) => { try { render(JSON.parse(e.data)); setText("last-update", nowStr()); } catch(err) {} };
+    ws.onerror   = () => setStatus("error");
+    ws.onclose   = () => { setStatus("error"); reconnectTimer = setTimeout(connectWS, 5000); };
+  }
+
+  function setStatus(state) {
+    const dot = document.getElementById("dot");
+    const txt = document.getElementById("ws-status");
+    if (state === "live")       { dot.className="dot live"; txt.textContent="LIVE"; txt.style.color="var(--accent)"; }
+    else if (state === "error") { dot.className="dot error"; txt.textContent="ERROR"; txt.style.color="var(--red)"; }
+    else                        { dot.className="dot"; txt.textContent="CONNECTING"; txt.style.color="var(--muted)"; }
+  }
+
+  // ── RENDER — targeted DOM updates, no innerHTML thrash ──
+  function render(d) {
+    if (!d || d.type === "error") return;
+
+    // Spot price with flash animation
+    const spot = d.spot || 0;
+    const spotEl = document.getElementById("spot-price");
+    if (spotEl) {
+      spotEl.textContent = "₹" + spot.toLocaleString("en-IN");
+      if (prevSpot !== null && spot !== prevSpot) {
+        const cls = spot > prevSpot ? "flash-up" : "flash-down";
+        spotEl.classList.remove("flash-up", "flash-down");
+        void spotEl.offsetWidth; // force reflow to restart animation
+        spotEl.classList.add(cls);
+        setTimeout(() => spotEl.classList.remove(cls), 700);
+      }
+      prevSpot = spot;
+    }
+
+    // Expiry
+    const isMock = d.expiry === "mock";
+    const expEl = document.getElementById("expiry-tag");
+    if (expEl) {
+      expEl.textContent = isMock ? "⚠ MOCK DATA" : (d.expiry || "--");
+      expEl.className = "expiry-tag" + (isMock ? " mock" : "");
+    }
+
+    // Bias
+    const biasClass = getBiasClass(d.sentiment?.bias);
+    const biasEl = document.getElementById("bias-badge");
+    if (biasEl) { biasEl.textContent = d.sentiment?.bias || "--"; biasEl.className = biasClass; }
+
+    // Score
+    const score = d.sentiment?.score || 50;
+    setText("score-text", score + "/100");
+    const fillEl = document.getElementById("score-fill");
+    if (fillEl) { fillEl.style.width = score + "%"; fillEl.className = biasClass; }
+
+    // Trade dir + PCR
+    setText("trade-dir", d.sentiment?.tradeDir || "--");
+    setText("pcr-val", d.pcr?.overall?.oiPCR ?? "--");
+
+    // S/R
+    setText("sr-support",      d.sr?.support?.strike    ?? "--");
+    setText("sr-support-oi",   fmt(d.sr?.support?.peOI));
+    setText("sr-atm",          d.sr?.atmStrike           ?? "--");
+    setText("sr-resistance",   d.sr?.resistance?.strike  ?? "--");
+    setText("sr-resistance-oi",fmt(d.sr?.resistance?.ceOI));
+
+    // OI totals
+    setText("ce-oi-val", fmt(d.pcr?.overall?.totalCeOI));
+    setText("pe-oi-val", fmt(d.pcr?.overall?.totalPeOI));
+
+    // Alpha strikes — only rebuild if data changed
+    const alphaEl = document.getElementById("alpha-list");
+    if (alphaEl && d.alphas) {
+      const newHTML = (d.alphas).map(a => {
+        const dom = document.createElement("div");
+        dom.className = "alpha-row";
+        const rank = document.createElement("div"); rank.className="alpha-rank"; rank.textContent="#"+a.rank;
+        const strike = document.createElement("div"); strike.className="alpha-strike"; strike.textContent=a.strike;
+        const tag = document.createElement("span"); tag.className="alpha-tag "+(a.dominant||"").toLowerCase(); tag.textContent=a.dominant||"--";
+        const score = document.createElement("div"); score.className="alpha-score"; score.textContent="CE: "+fmt(a.ceOI)+"\nPE: "+fmt(a.peOI);
+        score.style.whiteSpace="pre";
+        dom.appendChild(rank); dom.appendChild(strike); dom.appendChild(tag); dom.appendChild(score);
+        return dom;
+      });
+      alphaEl.replaceChildren(...newHTML);
+    }
+  }
+
+  // Enter on TOTP field
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("totp").addEventListener("keydown", e => { if (e.key==="Enter") doLogin(); });
+  });
+
+  // ── PWA Service Worker ──
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+</script>
+</body>
+</html>
