@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EDGE">
+<meta name="theme-color" content="#050508">
+<title>EDGE Trading Intelligence</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#050508; --surface:#0d0d14; --border:#1a1a2e; --accent:#00ff88; --red:#ff3366; --amber:#ffaa00; --muted:#444466; --text:#e0e0f0; --mono:'Space Mono',monospace; --display:'Bebas Neue',cursive; --body:'DM Sans',sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--body); min-height:100dvh; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; background-image:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px); background-size:40px 40px; }
+
+  #login-screen { position:relative; z-index:10; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .login-logo { font-family:var(--display); font-size:72px; letter-spacing:8px; color:var(--accent); text-shadow:0 0 40px rgba(0,255,136,.4); text-align:center; line-height:1; }
+  .login-sub { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); text-align:center; margin-bottom:40px; margin-top:4px; }
+  .login-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; }
+  .login-title { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--muted); margin-bottom:20px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+  .field input { width:100%; background:#0a0a10; border:1px solid var(--border); border-radius:8px; padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:14px; outline:none; transition:border-color .2s; }
+  .field input:focus { border-color:var(--accent); }
+  .field input::placeholder { color:var(--muted); }
+  .login-btn { width:100%; margin-top:8px; padding:14px; background:var(--accent); color:#000; font-family:var(--display); font-size:20px; letter-spacing:3px; border:none; border-radius:8px; cursor:pointer; transition:opacity .2s; }
+  .login-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .mock-btn { width:100%; margin-top:10px; padding:12px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:11px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+  .login-error { margin-top:12px; padding:10px 14px; background:rgba(255,51,102,.1); border:1px solid rgba(255,51,102,.3); border-radius:8px; font-family:var(--mono); font-size:11px; color:var(--red); display:none; }
+  .login-note { margin-top:16px; font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; line-height:1.6; }
+
+  #dashboard { display:none; }
+  header { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:rgba(5,5,8,.95); backdrop-filter:blur(10px); }
+  .logo { font-family:var(--display); font-size:28px; letter-spacing:4px; color:var(--accent); }
+  .logo span { color:var(--muted); font-size:10px; font-family:var(--mono); letter-spacing:2px; display:block; margin-top:-2px; }
+  .status-bar { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); }
+  .dot.live { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+  .dot.error { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .spot-hero { position:relative; z-index:1; text-align:center; padding:32px 20px 20px; }
+  .spot-label { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); margin-bottom:6px; }
+  #spot-price { font-family:var(--display); font-size:clamp(52px,12vw,88px); letter-spacing:2px; line-height:1; transition:color .3s; }
+  @keyframes flashUp { 0%{color:var(--accent);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  @keyframes flashDown { 0%{color:var(--red);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  #spot-price.flash-up { animation:flashUp .6s ease forwards; }
+  #spot-price.flash-down { animation:flashDown .6s ease forwards; }
+  .expiry-tag { font-family:var(--mono); font-size:10px; color:var(--muted); padding:4px 10px; border:1px solid var(--border); border-radius:20px; margin-top:8px; display:inline-block; }
+  .expiry-tag.mock { color:var(--amber); border-color:rgba(255,170,0,.3); }
+  .expiry-tag.live { color:var(--accent); border-color:rgba(0,255,136,.3); }
+
+  .grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 20px; max-width:480px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; position:relative; overflow:hidden; }
+  .card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--accent); opacity:.25; }
+  .card.full { grid-column:1/-1; }
+  .card-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+
+  .bias-card { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  #bias-badge { font-family:var(--display); font-size:34px; letter-spacing:2px; padding:8px 18px; border-radius:8px; background:rgba(0,255,136,.1); color:var(--accent); border:1px solid rgba(0,255,136,.3); transition:all .4s; }
+  #bias-badge.bearish { background:rgba(255,51,102,.1); color:var(--red); border-color:rgba(255,51,102,.3); }
+  #bias-badge.neutral { background:rgba(255,170,0,.1); color:var(--amber); border-color:rgba(255,170,0,.3); }
+  .bias-right { text-align:right; }
+  #trade-dir { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px; }
+  #pcr-val { font-family:var(--display); font-size:42px; letter-spacing:2px; }
+  .score-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:6px; }
+  #score-fill { height:100%; background:var(--accent); border-radius:2px; transition:width .8s ease; }
+  #score-fill.bearish { background:var(--red); }
+  #score-fill.neutral { background:var(--amber); }
+
+  .sr-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .sr-row:last-child { border-bottom:none; padding-bottom:0; }
+  .sr-tag { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); }
+  .sr-val { font-family:var(--display); font-size:22px; }
+  .sr-val.support { color:var(--accent); } .sr-val.resistance { color:var(--red); } .sr-val.atm { color:var(--amber); }
+  .sr-oi { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; }
+
+  #ce-oi-val { font-family:var(--display); font-size:28px; color:var(--red); }
+  #pe-oi-val { font-family:var(--display); font-size:28px; color:var(--accent); }
+  .card-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+
+  .alpha-list { display:flex; flex-direction:column; gap:10px; }
+  .alpha-row { display:flex; flex-direction:column; gap:6px; padding:12px 14px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border); }
+  .alpha-top { display:flex; align-items:center; gap:10px; }
+  .alpha-rank { font-family:var(--display); font-size:20px; color:var(--muted); width:20px; }
+  .alpha-strike { font-family:var(--display); font-size:26px; flex:1; }
+  .alpha-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px; }
+  .alpha-tag.ce { background:rgba(255,51,102,.15); color:var(--red); }
+  .alpha-tag.pe { background:rgba(0,255,136,.15); color:var(--accent); }
+  .alpha-bottom { display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid rgba(255,255,255,.04); }
+  .alpha-meta { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .alpha-chip { font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--muted); padding:2px 7px; background:rgba(255,255,255,.04); border-radius:4px; }
+  .alpha-chip .val { color:var(--text); }
+  .alpha-oi { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; white-space:pre; }
+
+  .logout-btn { display:block; margin:4px auto 20px; padding:10px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; width:calc(100% - 28px); max-width:452px; text-align:center; }
+  footer { text-align:center; padding:16px; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); position:relative; z-index:1; }
+  #last-update, #ws-status { font-family:var(--mono); font-size:11px; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-logo">EDGE</div>
+  <div class="login-sub">TRADING INTELLIGENCE</div>
+  <div class="login-card">
+    <div class="login-title">ANGEL ONE - BROKER CONNECT</div>
+    <div class="field"><label>API KEY</label><input type="text" id="apiKey" placeholder="AYTsHnd2" autocomplete="off"></div>
+    <div class="field"><label>CLIENT ID</label><input type="text" id="clientId" placeholder="B123456" autocomplete="off" autocapitalize="characters"></div>
+    <div class="field"><label>MPIN</label><input type="password" id="pin" placeholder="4 digit pin" inputmode="numeric"></div>
+    <div class="field"><label>TOTP (from authenticator app)</label><input type="text" id="totp" placeholder="123456" inputmode="numeric" maxlength="6"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">CONNECT</button>
+    <button class="mock-btn" onclick="useMock()">Use Mock Data Instead</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-note">Login happens directly from your device.<br>Credentials never stored or sent to our server.</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div><div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div></div>
+    <div class="status-bar">
+      <div class="dot" id="dot"></div>
+      <span id="ws-status">CONNECTING</span>
+      <span id="last-update"></span>
+    </div>
+  </header>
+
+  <div class="spot-hero">
+    <div class="spot-label">NIFTY 50 SPOT</div>
+    <div id="spot-price">--</div>
+    <span id="expiry-tag" class="expiry-tag">--</span>
+  </div>
+
+  <div class="grid">
+    <div class="card bias-card">
+      <div>
+        <div class="card-label">Market Bias</div>
+        <div id="bias-badge">--</div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SCORE</span>
+          <span id="score-text" style="font-family:var(--mono);font-size:9px;color:var(--muted)">--</span>
+        </div>
+        <div class="score-track"><div id="score-fill" style="width:50%"></div></div>
+      </div>
+      <div class="bias-right">
+        <div class="card-label">Trade Direction</div>
+        <div id="trade-dir">--</div>
+        <div style="margin-top:8px" class="card-label">PCR</div>
+        <div id="pcr-val">--</div>
+      </div>
+    </div>
+
+    <div class="card full">
+      <div class="card-label">Support / ATM / Resistance</div>
+      <div class="sr-row"><div><div class="sr-tag">SUPPORT</div><div class="sr-val support" id="sr-support">--</div></div><div class="sr-oi">PE OI<br><span id="sr-support-oi">--</span></div></div>
+      <div class="sr-row"><div><div class="sr-tag">ATM</div><div class="sr-val atm" id="sr-atm">--</div></div><div class="sr-oi">At The Money</div></div>
+      <div class="sr-row"><div><div class="sr-tag">RESISTANCE</div><div class="sr-val resistance" id="sr-resistance">--</div></div><div class="sr-oi">CE OI<br><span id="sr-resistance-oi">--</span></div></div>
+    </div>
+
+    <div class="card"><div class="card-label">Total CE OI</div><div id="ce-oi-val">--</div><div class="card-sub">Call Writers</div></div>
+    <div class="card"><div class="card-label">Total PE OI</div><div id="pe-oi-val">--</div><div class="card-sub">Put Writers</div></div>
+
+    <div class="card full">
+      <div class="card-label">Alpha Strikes - Top 3 OI Conviction</div>
+      <div class="alpha-list" id="alpha-list"></div>
+    </div>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">DISCONNECT - LOGOUT</button>
+  <footer>EDGE v3 - NIFTY 50 - PAPER TRADE ONLY</footer>
+</div>
+
+<script>
+  var BACKEND = "https://edge-backend-r1ng.onrender.com";
+  var WS_URL  = "wss://edge-backend-r1ng.onrender.com";
+  var ANGEL   = "https://apiconnect.angelone.in";
+  var ws, reconnectTimer, prevSpot = null;
+
+  function fmt(n) {
+    if (!n && n !== 0) return "--";
+    if (n >= 1e7) return (n/1e7).toFixed(1) + "Cr";
+    if (n >= 1e5) return (n/1e5).toFixed(1) + "L";
+    return n.toLocaleString("en-IN");
+  }
+
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = (val !== undefined && val !== null) ? val : "--";
+  }
+
+  function getBiasClass(bias) {
+    if (!bias) return "";
+    var b = bias.toUpperCase();
+    if (b.indexOf("BEAR") >= 0) return "bearish";
+    if (b.indexOf("NEUTRAL") >= 0) return "neutral";
+    return "";
+  }
+
+  function nowStr() {
+    return new Date().toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  }
+
+  async function doLogin() {
+    var apiKey   = document.getElementById("apiKey").value.trim();
+    var clientId = document.getElementById("clientId").value.trim().toUpperCase();
+    var pin      = document.getElementById("pin").value.trim();
+    var totp     = document.getElementById("totp").value.trim();
+    var btn      = document.getElementById("login-btn");
+
+    document.getElementById("login-error").style.display = "none";
+    if (!apiKey || !clientId || !pin || !totp) { showError("All fields required"); return; }
+
+    btn.disabled = true; btn.textContent = "CONNECTING...";
+
+    try {
+      var loginRes = await fetch(ANGEL + "/rest/auth/angelbroking/user/v1/loginByPassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-ClientLocalIP": "127.0.0.1",
+          "X-ClientPublicIP": "127.0.0.1",
+          "X-MACAddress": "00:00:00:00:00:00",
+          "X-PrivateKey": apiKey,
+          "X-SourceID": "WEB",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ clientcode: clientId, password: pin, totp: totp })
+      });
+
+      var loginData = await loginRes.json();
+
+      if (!loginData || !loginData.data || !loginData.data.jwtToken) {
+        showError(loginData.message || "Login failed. Check credentials.");
+        btn.disabled = false; btn.textContent = "CONNECT";
+        return;
+      }
+
+      var jwt = loginData.data.jwtToken;
+
+      var sessionRes = await fetch(BACKEND + "/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jwt: jwt, apiKey: apiKey, clientId: clientId })
+      });
+
+      var sessionData = await sessionRes.json();
+      console.log("Session:", sessionData.message);
+
+      showDashboard();
+      connectWS();
+
+    } catch(err) {
+      showError("Error: " + err.message);
+      btn.disabled = false; btn.textContent = "CONNECT";
+    }
+  }
+
+  function useMock() { showDashboard(); connectWS(); }
+
+  function showError(msg) {
+    var el = document.getElementById("login-error");
+    el.textContent = msg; el.style.display = "block";
+  }
+
+  function showDashboard() {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+  }
+
+  function logout() {
+    if (ws) ws.close();
+    clearTimeout(reconnectTimer);
+    prevSpot = null;
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("login-btn").disabled = false;
+    document.getElementById("login-btn").textContent = "CONNECT";
+    document.getElementById("login-error").style.display = "none";
+    document.getElementById("totp").value = "";
+  }
+
+  function connectWS() {
+    clearTimeout(reconnectTimer);
+    setStatus("connecting");
+    ws = new WebSocket(WS_URL);
+    ws.onopen = function() { setStatus("live"); };
+    ws.onmessage = function(e) {
+      try { render(JSON.parse(e.data)); setText("last-update", nowStr()); } catch(err) {}
+    };
+    ws.onerror = function() { setStatus("error"); };
+    ws.onclose = function() { setStatus("error"); reconnectTimer = setTimeout(connectWS, 5000); };
+  }
+
+  function setStatus(state) {
+    var dot = document.getElementById("dot");
+    var txt = document.getElementById("ws-status");
+    if (state === "live") { dot.className="dot live"; txt.textContent="LIVE"; txt.style.color="var(--accent)"; }
+    else if (state === "error") { dot.className="dot error"; txt.textContent="ERROR"; txt.style.color="var(--red)"; }
+    else { dot.className="dot"; txt.textContent="CONNECTING"; txt.style.color="var(--muted)"; }
+  }
+
+  function render(d) {
+    if (!d || d.type === "error") return;
+    var spot = d.spot || 0;
+    var spotEl = document.getElementById("spot-price");
+    if (spotEl) {
+      spotEl.textContent = "Rs." + spot.toLocaleString("en-IN");
+      if (prevSpot !== null && spot !== prevSpot) {
+        var cls = spot > prevSpot ? "flash-up" : "flash-down";
+        spotEl.classList.remove("flash-up","flash-down");
+        void spotEl.offsetWidth;
+        spotEl.classList.add(cls);
+        setTimeout(function() { spotEl.classList.remove(cls); }, 700);
+      }
+      prevSpot = spot;
+    }
+
+    var isMock = d.expiry === "mock";
+    var expiryDisplay = isMock ? "MOCK DATA" : (d.expiry || "--");
+    var expEl = document.getElementById("expiry-tag");
+    if (expEl) { expEl.textContent = expiryDisplay; expEl.className = "expiry-tag " + (isMock ? "mock" : "live"); }
+
+    var biasClass = getBiasClass(d.sentiment && d.sentiment.bias);
+    var biasEl = document.getElementById("bias-badge");
+    if (biasEl) { biasEl.textContent = (d.sentiment && d.sentiment.bias) || "--"; biasEl.className = biasClass; }
+
+    var score = (d.sentiment && d.sentiment.score) || 50;
+    setText("score-text", score + "/100");
+    var fillEl = document.getElementById("score-fill");
+    if (fillEl) { fillEl.style.width = score + "%"; fillEl.className = biasClass; }
+
+    setText("trade-dir", d.sentiment && d.sentiment.tradeDir);
+    setText("pcr-val", d.pcr && d.pcr.overall && d.pcr.overall.oiPCR);
+    setText("sr-support", d.sr && d.sr.support && d.sr.support.strike);
+    setText("sr-support-oi", fmt(d.sr && d.sr.support && d.sr.support.peOI));
+    setText("sr-atm", d.sr && d.sr.atmStrike);
+    setText("sr-resistance", d.sr && d.sr.resistance && d.sr.resistance.strike);
+    setText("sr-resistance-oi", fmt(d.sr && d.sr.resistance && d.sr.resistance.ceOI));
+    setText("ce-oi-val", fmt(d.pcr && d.pcr.overall && d.pcr.overall.totalCeOI));
+    setText("pe-oi-val", fmt(d.pcr && d.pcr.overall && d.pcr.overall.totalPeOI));
+
+    // Alpha Strikes — now with strike price (LTP) and expiry
+    var alphaEl = document.getElementById("alpha-list");
+    if (alphaEl && d.alphas) {
+      var rows = d.alphas.map(function(a) {
+        var row = document.createElement("div"); row.className = "alpha-row";
+
+        // Top line: rank, strike, dominant tag
+        var top = document.createElement("div"); top.className = "alpha-top";
+        var rank = document.createElement("div"); rank.className = "alpha-rank"; rank.textContent = "#" + a.rank;
+        var strike = document.createElement("div"); strike.className = "alpha-strike"; strike.textContent = a.strike;
+        var tag = document.createElement("span"); tag.className = "alpha-tag " + (a.dominant||"").toLowerCase(); tag.textContent = a.dominant || "--";
+        top.appendChild(rank); top.appendChild(strike); top.appendChild(tag);
+
+        // Bottom line: expiry, CE LTP, PE LTP, OI
+        var bottom = document.createElement("div"); bottom.className = "alpha-bottom";
+
+        var meta = document.createElement("div"); meta.className = "alpha-meta";
+
+        // Expiry chip
+        var expChip = document.createElement("span"); expChip.className = "alpha-chip";
+        expChip.innerHTML = "EXP <span class='val'>" + expiryDisplay + "</span>";
+        meta.appendChild(expChip);
+
+        // CE Price chip
+        var ceChip = document.createElement("span"); ceChip.className = "alpha-chip";
+        ceChip.innerHTML = "CE <span class='val' style='color:var(--red)'>\u20B9" + (a.ceLTP != null ? a.ceLTP : "--") + "</span>";
+        meta.appendChild(ceChip);
+
+        // PE Price chip
+        var peChip = document.createElement("span"); peChip.className = "alpha-chip";
+        peChip.innerHTML = "PE <span class='val' style='color:var(--accent)'>\u20B9" + (a.peLTP != null ? a.peLTP : "--") + "</span>";
+        meta.appendChild(peChip);
+
+        var oi = document.createElement("div"); oi.className = "alpha-oi";
+        oi.textContent = "CE:" + fmt(a.ceOI) + "\nPE:" + fmt(a.peOI);
+
+        bottom.appendChild(meta); bottom.appendChild(oi);
+
+        row.appendChild(top); row.appendChild(bottom);
+        return row;
+      });
+      alphaEl.replaceChildren.apply(alphaEl, rows);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("totp").addEventListener("keydown", function(e) { if (e.key === "Enter") doLogin(); });
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(function() {});
+  }
+</script>
+</body>
+</html>
