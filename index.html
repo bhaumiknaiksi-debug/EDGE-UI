@@ -495,9 +495,29 @@
   }
 
   // Fetch option chain ? with token expiry, rate limit, and backoff handling
-  async function fetchAndPush() {
-    if (!authState.jwt) return;
+  // Parse NSE option chain response into EDGE format
+  function parseNSEChain(data) {
+    var records = (data && data.records) || (data && data.filtered);
+    if (!records || !records.data) return null;
+    var spot = records.underlyingValue || 0;
+    var expiry = records.expiryDates && records.expiryDates[0];
+    var strikeMap = {};
+    records.data.forEach(function(row) {
+      if (expiry && row.expiryDate !== expiry) return;
+      var s = row.strikePrice;
+      if (!strikeMap[s]) strikeMap[s] = { strike: s, ce: null, pe: null };
+      if (row.CE) strikeMap[s].ce = { ltp: row.CE.lastPrice||0, oi: row.CE.openInterest||0, oiChange: row.CE.changeinOpenInterest||0, volume: row.CE.totalTradedVolume||0 };
+      if (row.PE) strikeMap[s].pe = { ltp: row.PE.lastPrice||0, oi: row.PE.openInterest||0, oiChange: row.PE.changeinOpenInterest||0, volume: row.PE.totalTradedVolume||0 };
+    });
+    var strikes = Object.values(strikeMap)
+      .filter(function(r) { return r.ce && r.pe; })
+      .sort(function(a, b) { return a.strike - b.strike; })
+      .filter(function(r) { return Math.abs(r.strike - spot) <= 500; });
+    if (strikes.length < 3) return null;
+    return { spot: spot, expiry: expiry || "live", strikes: strikes };
+  }
 
+  async function fetchAndPush() {
     // Fix 3: Stop fetching outside market hours
     if (!isMarketOpen()) {
       clearInterval(pollTimer); clearTimeout(pollTimer);
@@ -517,17 +537,20 @@
     }
 
     try {
-      var res = await fetch(ANGEL + "/rest/secure/angelbroking/market/v1/optionGreek?exchange=NFO&symboltoken=99926000&expiry=&strike=-1&optiontype=CE", {
+      // Warm up NSE session cookie before API call
+      try {
+        await fetch("https://www.nseindia.com/", { credentials: "include", mode: "no-cors" });
+        await fetch("https://www.nseindia.com/option-chain", { credentials: "include", mode: "no-cors" });
+      } catch(e2) {}
+
+      var res = await fetch("https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY", {
         headers: {
-          "Authorization": "Bearer " + authState.jwt,
-          "Content-Type": "application/json",
-          "X-ClientLocalIP": "127.0.0.1",
-          "X-ClientPublicIP": "127.0.0.1",
-          "X-MACAddress": "00:00:00:00:00:00",
-          "X-PrivateKey": authState.apiKey,
-          "X-SourceID": "WEB",
-          "Accept": "application/json"
-        }
+          "Accept": "application/json, text/plain, */*",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Referer": "https://www.nseindia.com/option-chain",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        credentials: "include"
       });
 
       // Rate limit detection (HTTP 429)
@@ -541,30 +564,15 @@
 
       var data = await res.json();
 
-      // Token expired detection - Angel One returns errorcode AB1004/AB8050
-      var errCode = data && (data.errorcode || (data.data === null && data.status === false));
-      var tokenCodes = ['AB1004', 'AB8050', 'AB1010'];
-      var isExpired = tokenCodes.some(function(c) { return data.errorcode === c; }) ||
-                      (data.message && data.message.toLowerCase().indexOf('token') >= 0 && data.status === false);
-
-      if (isExpired) {
-        fetchState.tokenExpired = true;
-        clearInterval(pollTimer);
-        authState.jwt = null;
-        setFetchStatus('Token expired - re-login needed', 'var(--red)');
-        // Show re-login prompt in dashboard
-        showReloginPrompt();
-        return;
-      }
-
-      if (!data || !data.data) {
+      // NSE bot detection - returns {} when blocking
+      if (!data || Object.keys(data).length === 0) {
         fetchState.consecutiveFails++;
-        setFetchStatus('Fetch failed: ' + (data && data.message || 'unknown') + ' (fail ' + fetchState.consecutiveFails + ')', 'var(--red)');
+        setFetchStatus('NSE blocked this request (' + fetchState.consecutiveFails + ' fails)', 'var(--red)');
         if (fetchState.consecutiveFails >= 3) scheduleNextFetch();
         return;
       }
 
-      var chain = parseAngelChain(data.data);
+      var chain = parseNSEChain(data);
       if (!chain) {
         fetchState.consecutiveFails++;
         setFetchStatus('Chain parse failed', 'var(--amber)');
@@ -671,7 +679,14 @@
     }
   }
 
-  function useMock() { showDashboard(); connectWS(); startMarketStatusTimer(); }
+  function useMock() {
+    showDashboard();
+    connectWS();
+    startMarketStatusTimer();
+    // Start NSE polling immediately
+    fetchAndPush();
+    pollTimer = setInterval(fetchAndPush, POLL_MS);
+  }
 
   function showError(msg) {
     var el = document.getElementById("login-error");
@@ -1113,10 +1128,14 @@
   }
   // ============================================================
   document.addEventListener("DOMContentLoaded", function() {
-    // Auto-launch: skip login, connect directly to NSE-powered backend
     showDashboard();
     connectWS();
     startMarketStatusTimer();
+    // Only poll NSE during market hours
+    if (isMarketOpen()) {
+      fetchAndPush();
+      pollTimer = setInterval(fetchAndPush, POLL_MS);
+    }
   });
 
   if ("serviceWorker" in navigator) {
