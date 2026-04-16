@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EDGE">
+<meta name="theme-color" content="#050508">
+<title>EDGE Trading Intelligence</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#050508; --surface:#0d0d14; --border:#1a1a2e; --accent:#00ff88; --red:#ff3366; --amber:#ffaa00; --muted:#444466; --text:#e0e0f0; --mono:'Space Mono',monospace; --display:'Bebas Neue',cursive; --body:'DM Sans',sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:var(--body); min-height:100dvh; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; background-image:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px); background-size:40px 40px; }
+
+  #login-screen { position:relative; z-index:10; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .login-logo { font-family:var(--display); font-size:72px; letter-spacing:8px; color:var(--accent); text-shadow:0 0 40px rgba(0,255,136,.4); text-align:center; line-height:1; }
+  .login-sub { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); text-align:center; margin-bottom:40px; margin-top:4px; }
+  .login-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px 24px; width:100%; max-width:360px; }
+  .login-title { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--muted); margin-bottom:20px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
+  .field input { width:100%; background:#0a0a10; border:1px solid var(--border); border-radius:8px; padding:12px 14px; color:var(--text); font-family:var(--mono); font-size:14px; outline:none; transition:border-color .2s; }
+  .field input:focus { border-color:var(--accent); }
+  .field input::placeholder { color:var(--muted); }
+  .login-btn { width:100%; margin-top:8px; padding:14px; background:var(--accent); color:#000; font-family:var(--display); font-size:20px; letter-spacing:3px; border:none; border-radius:8px; cursor:pointer; }
+  .login-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .mock-btn { width:100%; margin-top:10px; padding:12px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:11px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; }
+  .login-error { margin-top:12px; padding:10px 14px; background:rgba(255,51,102,.1); border:1px solid rgba(255,51,102,.3); border-radius:8px; font-family:var(--mono); font-size:11px; color:var(--red); display:none; }
+  .login-note { margin-top:16px; font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; line-height:1.6; }
+
+  #dashboard { display:none; }
+  header { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); background:rgba(5,5,8,.95); backdrop-filter:blur(10px); }
+  .logo { font-family:var(--display); font-size:28px; letter-spacing:4px; color:var(--accent); }
+  .logo span { color:var(--muted); font-size:10px; font-family:var(--mono); letter-spacing:2px; display:block; margin-top:-2px; }
+  .status-bar { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); }
+  .dot.live { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+  .dot.error { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .spot-hero { position:relative; z-index:1; text-align:center; padding:32px 20px 20px; }
+  .spot-label { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--muted); margin-bottom:6px; }
+  #spot-price { font-family:var(--display); font-size:clamp(52px,12vw,88px); letter-spacing:2px; line-height:1; }
+  @keyframes flashUp { 0%{color:var(--accent);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  @keyframes flashDown { 0%{color:var(--red);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  #spot-price.flash-up { animation:flashUp .6s ease forwards; }
+  #spot-price.flash-down { animation:flashDown .6s ease forwards; }
+  .expiry-tag { font-family:var(--mono); font-size:10px; padding:4px 10px; border-radius:20px; margin-top:8px; display:inline-block; border:1px solid var(--border); color:var(--muted); }
+  .expiry-tag.mock { color:var(--amber); border-color:rgba(255,170,0,.3); }
+  .expiry-tag.live { color:var(--accent); border-color:rgba(0,255,136,.3); }
+
+  .grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 20px; max-width:480px; margin:0 auto; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; position:relative; overflow:hidden; }
+  .card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--accent); opacity:.25; }
+  .card.full { grid-column:1/-1; }
+  .card-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+
+  .bias-card { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  #bias-badge { font-family:var(--display); font-size:34px; letter-spacing:2px; padding:8px 18px; border-radius:8px; background:rgba(0,255,136,.1); color:var(--accent); border:1px solid rgba(0,255,136,.3); transition:all .4s; }
+  #bias-badge.bearish { background:rgba(255,51,102,.1); color:var(--red); border-color:rgba(255,51,102,.3); }
+  #bias-badge.neutral { background:rgba(255,170,0,.1); color:var(--amber); border-color:rgba(255,170,0,.3); }
+  .bias-right { text-align:right; }
+  #trade-dir { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px; }
+  #pcr-val { font-family:var(--display); font-size:42px; letter-spacing:2px; }
+  .score-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:6px; }
+  #score-fill { height:100%; background:var(--accent); border-radius:2px; transition:width .8s ease; }
+  #score-fill.bearish { background:var(--red); }
+  #score-fill.neutral { background:var(--amber); }
+
+  .sr-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+  .sr-row:last-child { border-bottom:none; padding-bottom:0; }
+  .sr-tag { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); }
+  .sr-val { font-family:var(--display); font-size:22px; }
+  .sr-val.support { color:var(--accent); } .sr-val.resistance { color:var(--red); } .sr-val.atm { color:var(--amber); }
+  .sr-oi { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; }
+
+  #ce-oi-val { font-family:var(--display); font-size:28px; color:var(--red); }
+  #pe-oi-val { font-family:var(--display); font-size:28px; color:var(--accent); }
+  .card-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+
+  .alpha-list { display:flex; flex-direction:column; gap:8px; }
+  .alpha-row { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,.03); border-radius:8px; border:1px solid var(--border); }
+  .alpha-rank { font-family:var(--display); font-size:20px; color:var(--muted); width:20px; }
+  .alpha-strike { font-family:var(--display); font-size:24px; flex:1; }
+  .alpha-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px; }
+  .alpha-tag.ce { background:rgba(255,51,102,.15); color:var(--red); }
+  .alpha-tag.pe { background:rgba(0,255,136,.15); color:var(--accent); }
+  .alpha-score { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; white-space:pre; }
+
+  .logout-btn { display:block; margin:4px auto 20px; padding:10px; background:transparent; color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer; width:calc(100% - 28px); max-width:452px; text-align:center; }
+  footer { text-align:center; padding:16px; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); position:relative; z-index:1; }
+
+  /* Feature 4: Premium transitions */
+  #spot-price, #pcr-val, #bias-badge { transition: all 0.4s ease; }
+  .alpha-row { transition: box-shadow 0.3s; }
+  .alpha-row:hover { box-shadow: 0 0 12px rgba(0,255,136,0.15); border-color: rgba(0,255,136,0.3); }
+  .login-btn:active { transform: scale(0.97); }
+  .mock-btn:active { transform: scale(0.97); }
+
+  /* Feature 4: Skeleton shimmer */
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  .skeleton { background: linear-gradient(90deg, var(--surface) 25%, #1a1a2e 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; color: transparent !important; }
+
+  /* Feature 6: iPhone container fix */
+  .grid, .spot-hero { max-width: 480px; margin-left: auto; margin-right: auto; }
+
+  /* Feature 3: Strike analyser */
+  .strike-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .strike-input-row input { flex: 1; background: #0a0a10; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: var(--mono); font-size: 14px; outline: none; }
+  .strike-input-row input:focus { border-color: var(--accent); }
+  .analyse-btn { padding: 10px 16px; background: var(--accent); color: #000; font-family: var(--display); font-size: 16px; letter-spacing: 1px; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+  .analyse-btn:active { transform: scale(0.97); }
+  #strike-result { display: none; margin-top: 10px; padding: 12px; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); border-radius: 8px; }
+  #strike-result.bearish { background: rgba(255,51,102,0.05); border-color: rgba(255,51,102,0.2); }
+  #strike-result.wait { background: rgba(255,170,0,0.05); border-color: rgba(255,170,0,0.2); }
+  .strike-action { font-family: var(--display); font-size: 28px; letter-spacing: 2px; }
+  .strike-conf { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .strike-reasons { margin-top: 8px; }
+  .strike-reason { font-family: var(--mono); font-size: 10px; color: var(--muted); padding: 2px 0; }
+  .strike-reason::before { content: "+ "; color: var(--accent); }
+
+  /* Feature 5: Intel panel */
+  .intel-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; }
+  .intel-row:last-child { border-bottom: none; }
+  .intel-label { color: var(--muted); }
+  .intel-val { color: var(--text); font-weight: 700; }
+  .market-closed-banner { background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.3); border-radius: 8px; padding: 8px 14px; font-family: var(--mono); font-size: 10px; color: var(--amber); text-align: center; margin: 0 14px 10px; max-width: 452px; margin-left: auto; margin-right: auto; display: none; }
+
+  /* Trade Decision Block */
+  .decision-block { margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto; }
+  .decision-card { border-radius:12px; padding:16px; position:relative; overflow:hidden; border:2px solid var(--accent); background:rgba(0,255,136,0.05); }
+  .decision-card.bearish { border-color:var(--red); background:rgba(255,51,102,0.05); }
+  .decision-card.noedge  { border-color:var(--amber); background:rgba(255,170,0,0.05); }
+  .decision-card.avoid   { border-color:var(--muted); background:rgba(68,68,102,0.05); }
+  .decision-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .decision-action { font-family:var(--display); font-size:22px; letter-spacing:2px; }
+  .decision-action.execute { color:var(--accent); }
+  .decision-action.noedge  { color:var(--amber); }
+  .decision-action.avoid   { color:var(--muted); }
+  .decision-strategy { font-family:var(--display); font-size:18px; letter-spacing:1px; margin-bottom:6px; }
+  .decision-conf { font-family:var(--mono); font-size:10px; color:var(--muted); }
+  .decision-strikes { font-family:var(--mono); font-size:11px; color:var(--text); margin:8px 0; padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; }
+  .decision-reasons { margin-top:8px; }
+  .decision-reason { font-family:var(--mono); font-size:10px; color:var(--muted); padding:2px 0; }
+  .decision-reason::before { content:"* "; color:var(--accent); }
+  .decision-outcome { margin-top:8px; font-family:var(--mono); font-size:10px; color:var(--accent); border-top:1px solid var(--border); padding-top:8px; }
+  .regime-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px; background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.2); }
+  .regime-tag.bearish { background:rgba(255,51,102,0.1); color:var(--red); border-color:rgba(255,51,102,0.2); }
+  .regime-tag.neutral { background:rgba(255,170,0,0.1); color:var(--amber); border-color:rgba(255,170,0,0.2); }
+
+  /* Market status panel */
+  .market-status-bar {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px; max-width: 480px; margin: 0 auto;
+    font-family: var(--mono); font-size: 10px;
+  }
+  .market-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .market-badge.open  { color: var(--accent); border-color: rgba(0,255,136,.3); background: rgba(0,255,136,.06); }
+  .market-badge.closed { color: var(--red);   border-color: rgba(255,51,102,.3); background: rgba(255,51,102,.06); }
+  .market-badge .mbdot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted);
+  }
+  .market-badge.open  .mbdot { background: var(--accent); animation: pulse 2s infinite; }
+  .market-badge.closed .mbdot { background: var(--red); }
+  .session-greeting {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+
+  /* Market closed info panel */
+  .closed-panel {
+    display: none;
+    margin: 0 14px 10px; max-width: 452px;
+    margin-left: auto; margin-right: auto;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    position: relative; z-index: 1;
+  }
+  .closed-panel.visible { display: block; }
+  .closed-panel-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px;
+  }
+  .closed-panel-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .closed-panel-label { color: var(--muted); letter-spacing: 1px; }
+  .closed-panel-val { color: var(--text); font-weight: 700; }
+  .closed-panel-val.countdown { color: var(--amber); font-size: 12px; }
+  .data-as-of {
+    display: none;
+    text-align: center; font-family: var(--mono); font-size: 9px;
+    color: var(--muted); letter-spacing: 2px; padding: 4px 0 8px;
+    position: relative; z-index: 1;
+  }
+  .data-as-of.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-logo">EDGE</div>
+  <div class="login-sub">TRADING INTELLIGENCE</div>
+  <div class="login-card">
+    <div class="login-title" style="text-align:center;font-size:11px;">NIFTY 50 INTELLIGENCE ENGINE</div>
+    <div style="text-align:center;padding:20px 0 10px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:16px;line-height:1.8;">Live data via NSE<br>No login required</div>
+      <button class="login-btn" id="login-btn" onclick="useMock()" style="background:var(--accent);">LAUNCH EDGE</button>
+    </div>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div><div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div></div>
+    <div class="status-bar">
+      <div class="dot" id="dot"></div>
+      <span id="ws-status">CONNECTING</span>
+      <span id="last-update" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
+    </div>
+  </header>
+
+  <!-- Market status bar -->
+  <div class="market-status-bar">
+    <div class="market-badge closed" id="market-badge">
+      <span class="mbdot"></span>
+      <span id="market-badge-text">CLOSED</span>
+    </div>
+    <span class="session-greeting" id="session-greeting"></span>
+  </div>
+
+  <!-- Market closed info panel -->
+  <div class="closed-panel" id="closed-panel">
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">OPENS IN</span>
+      <span class="closed-panel-val countdown" id="time-until-open">--</span>
+    </div>
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">NEXT SESSION</span>
+      <span class="closed-panel-val" id="next-session">--</span>
+    </div>
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">LAST SESSION</span>
+      <span class="closed-panel-val" id="last-session">--</span>
+    </div>
+  </div>
+
+  <!-- Data freshness label (shown when market closed + data exists) -->
+  <div class="data-as-of" id="data-as-of">DATA AS OF LAST CLOSE</div>
+
+  <div class="spot-hero">
+    <div class="spot-label">NIFTY 50 SPOT</div>
+    <div id="spot-price">--</div>
+    <span id="expiry-tag" class="expiry-tag">--</span>
+  </div>
+
+  <div class="grid">
+    <div class="card bias-card">
+      <div>
+        <div class="card-label">Market Bias</div>
+        <div id="bias-badge">--</div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SCORE</span>
+          <span id="score-text" style="font-family:var(--mono);font-size:9px;color:var(--muted)">--</span>
+        </div>
+        <div class="score-track"><div id="score-fill" style="width:50%"></div></div>
+      </div>
+      <div class="bias-right">
+        <div class="card-label">Trade Direction</div>
+        <div id="trade-dir">--</div>
+        <div style="margin-top:8px" class="card-label">PCR</div>
+        <div id="pcr-val">--</div>
+      </div>
+    </div>
+
+    <div class="card full">
+      <div class="card-label">Support / ATM / Resistance</div>
+      <div class="sr-row"><div><div class="sr-tag">SUPPORT</div><div class="sr-val support" id="sr-support">--</div></div><div class="sr-oi">PE OI<br><span id="sr-support-oi">--</span></div></div>
+      <div class="sr-row"><div><div class="sr-tag">ATM</div><div class="sr-val atm" id="sr-atm">--</div></div><div class="sr-oi">At The Money</div></div>
+      <div class="sr-row"><div><div class="sr-tag">RESISTANCE</div><div class="sr-val resistance" id="sr-resistance">--</div></div><div class="sr-oi">CE OI<br><span id="sr-resistance-oi">--</span></div></div>
+    </div>
+
+    <div class="card"><div class="card-label">Total CE OI</div><div id="ce-oi-val">--</div><div class="card-sub">Call Writers</div></div>
+    <div class="card"><div class="card-label">Total PE OI</div><div id="pe-oi-val">--</div><div class="card-sub">Put Writers</div></div>
+
+    <div class="card full">
+      <div class="card-label">Alpha Strikes - Top 3 OI Conviction</div>
+      <div class="alpha-list" id="alpha-list"></div>
+    </div>
+  </div>
+
+
+  <!-- Trade Decision Block (Main Feature) -->
+  <div class="decision-block" id="decision-block" style="display:none;">
+    <div class="card-label" style="padding:0 0 8px;">TRADE DECISION</div>
+    <div class="decision-card" id="decision-card">
+      <div class="decision-header">
+        <div>
+          <div class="decision-action" id="decision-action">--</div>
+          <div class="decision-strategy" id="decision-strategy">--</div>
+          <div class="decision-conf" id="decision-conf"></div>
+        </div>
+        <div id="regime-tag" class="regime-tag">--</div>
+      </div>
+      <div class="decision-strikes" id="decision-strikes"></div>
+      <div class="decision-reasons" id="decision-reasons"></div>
+      <div class="decision-outcome" id="decision-outcome"></div>
+    </div>
+  </div>
+
+  <!-- Feature 3: Strike Analyser -->
+  <div style="padding:0 14px 10px;max-width:480px;margin:0 auto;">
+    <div class="card full" style="margin-top:0;">
+      <div class="card-label">Strike Analyser</div>
+      <div class="strike-input-row">
+        <input type="number" id="strike-input" placeholder="e.g. 22150" inputmode="numeric">
+        <button class="analyse-btn" onclick="doAnalyseStrike()">ANALYSE</button>
+      </div>
+      <div id="strike-result">
+        <div class="strike-action" id="strike-action">--</div>
+        <div class="strike-conf" id="strike-conf"></div>
+        <div class="strike-reasons" id="strike-reasons"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature 5: Option Intelligence -->
+  <div style="padding:0 14px 10px;max-width:480px;margin:0 auto;">
+    <div class="card full" id="intel-card" style="display:none;">
+      <div class="card-label">Option Intelligence</div>
+      <div id="intel-content"></div>
+    </div>
+  </div>
+
+  <!-- Market closed banner -->
+  <div class="market-closed-banner" id="market-closed-banner">MARKET CLOSED - Showing last known data</div>
+
+  <button class="logout-btn" onclick="logout()">DISCONNECT - LOGOUT</button>
+  <footer>EDGE v3 - NIFTY 50 - PAPER TRADE ONLY</footer>
+</div>
+
+<script>
+  var BACKEND = "https://edge-backend-r1ng.onrender.com";
+  var WS_URL  = "wss://edge-backend-r1ng.onrender.com";
+  var ANGEL   = "https://apiconnect.angelone.in";
+  var POLL_MS = 30000;
+
+  var ws, reconnectTimer, pollTimer, prevSpot = null;
+  var authState = { jwt: null, apiKey: null, clientId: null };
+
+  // Error state tracking
+  var fetchState = {
+    consecutiveFails: 0,
+    rateLimitUntil:   0,
+    tokenExpired:     false,
+    lastSuccess:      0
+  };
+
+  // WS reconnect backoff state
+  var wsState = { fails: 0 };
+
+  // Stale data tracker
+  var lastDataTime = 0;
+  var staleTimer   = null;
+
+  // ?? Fix 3: Frontend market hours (mirrors backend isMarketOpen) ??
+  function isMarketOpen() {
+    var now = new Date();
+    var ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    var day = ist.getDay();
+    if (day === 0 || day === 6) return false;
+    var mins = ist.getHours() * 60 + ist.getMinutes();
+    return mins >= 555 && mins <= 930; // 9:15 to 15:30
+  }
+
+  // Returns ms until next market open (9:15 IST next trading day)
+  function msUntilMarketOpen() {
+    var now = new Date();
+    var ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    var day = ist.getDay();
+    // Days to add to get to next Monday if weekend
+    var daysAhead = 1;
+    if (day === 5) daysAhead = 3; // Friday -> Monday
+    if (day === 6) daysAhead = 2; // Saturday -> Monday
+    var next = new Date(ist);
+    next.setDate(next.getDate() + daysAhead);
+    next.setHours(9, 15, 0, 0);
+    return next - now;
+  }
+
+  // ?? Fix 2: Stale data checker ? runs every 15s ??
+  function startStaleChecker() {
+    clearInterval(staleTimer);
+    staleTimer = setInterval(function() {
+      if (!lastDataTime) return;
+      var age = Date.now() - lastDataTime;
+      var dot = document.getElementById('dot');
+      var txt = document.getElementById('ws-status');
+      if (!dot || !txt) return;
+      if (age > 120000) { // 2 min = definitely stale
+        dot.className = 'dot error';
+        txt.textContent = 'STALE';
+        txt.style.color = 'var(--red)';
+      } else if (age > 60000) { // 1 min = warn
+        dot.className = 'dot';
+        dot.style.background = 'var(--amber)';
+        dot.style.boxShadow = '0 0 8px var(--amber)';
+        txt.textContent = 'SYNCING';
+        txt.style.color = 'var(--amber)';
+      }
+    }, 15000);
+  }
+
+  function setFetchStatus(msg, color) {
+    var el = document.getElementById('last-update');
+    if (el) { el.textContent = msg; el.style.color = color || 'var(--muted)'; }
+  }
+
+  // Exponential backoff: 30s -> 60s -> 120s -> cap at 300s
+  function getBackoffMs() {
+    var fails = fetchState.consecutiveFails;
+    if (fails <= 1) return 30000;
+    if (fails === 2) return 60000;
+    if (fails === 3) return 120000;
+    return 300000;
+  }
+
+  function scheduleNextFetch() {
+    clearInterval(pollTimer);
+    var delay = fetchState.consecutiveFails > 0 ? getBackoffMs() : POLL_MS;
+    pollTimer = setTimeout(function() {
+      fetchAndPush();
+      // After first run, switch to interval if healthy
+      if (fetchState.consecutiveFails === 0) {
+        pollTimer = setInterval(fetchAndPush, POLL_MS);
+      } else {
+        scheduleNextFetch(); // keep backing off
+      }
+    }, delay);
+  }
+
+  function fmt(n) {
+    if (!n && n !== 0) return "--";
+    if (n >= 1e7) return (n/1e7).toFixed(1) + "Cr";
+    if (n >= 1e5) return (n/1e5).toFixed(1) + "L";
+    return n.toLocaleString("en-IN");
+  }
+
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = (val !== undefined && val !== null) ? String(val) : "--";
+  }
+
+  function getBiasClass(bias) {
+    if (!bias) return "";
+    var b = bias.toUpperCase();
+    if (b.indexOf("BEAR") >= 0) return "bearish";
+    if (b.indexOf("NEUTRAL") >= 0) return "neutral";
+    return "";
+  }
+
+  function nowStr() {
+    return new Date().toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  }
+
+  // Parse Angel One raw response into our chain format
+  function parseAngelChain(data) {
+    if (!data || !Array.isArray(data)) return null;
+    var strikeMap = {}, spot = 0;
+    data.forEach(function(row) {
+      var s = row.strikePrice;
+      if (!strikeMap[s]) strikeMap[s] = { strike: s, ce: null, pe: null };
+      spot = row.underlyingValue || spot;
+      var side = { ltp: row.ltp||0, oi: row.openInterest||0, oiChange: row.changeinOpenInterest||0, volume: row.tradedVolume||0 };
+      if (row.optionType === "CE") strikeMap[s].ce = side;
+      else if (row.optionType === "PE") strikeMap[s].pe = side;
+    });
+    var strikes = Object.values(strikeMap)
+      .filter(function(r) { return r.ce && r.pe; })
+      .sort(function(a,b) { return a.strike - b.strike; })
+      .filter(function(r) { return Math.abs(r.strike - spot) <= 350; });
+    if (strikes.length < 3) return null;
+    return { spot: spot, expiry: "live", strikes: strikes };
+  }
+
+  // Fetch option chain ? with token expiry, rate limit, and backoff handling
+  // Parse NSE option chain response into EDGE format
+  function parseNSEChain(data) {
+    var records = (data && data.records) || (data && data.filtered);
+    if (!records || !records.data) return null;
+    var spot = records.underlyingValue || 0;
+    var expiry = records.expiryDates && records.expiryDates[0];
+    var strikeMap = {};
+    records.data.forEach(function(row) {
+      if (expiry && row.expiryDate !== expiry) return;
+      var s = row.strikePrice;
+      if (!strikeMap[s]) strikeMap[s] = { strike: s, ce: null, pe: null };
+      if (row.CE) strikeMap[s].ce = { ltp: row.CE.lastPrice||0, oi: row.CE.openInterest||0, oiChange: row.CE.changeinOpenInterest||0, volume: row.CE.totalTradedVolume||0 };
+      if (row.PE) strikeMap[s].pe = { ltp: row.PE.lastPrice||0, oi: row.PE.openInterest||0, oiChange: row.PE.changeinOpenInterest||0, volume: row.PE.totalTradedVolume||0 };
+    });
+    var strikes = Object.values(strikeMap)
+      .filter(function(r) { return r.ce && r.pe; })
+      .sort(function(a, b) { return a.strike - b.strike; })
+      .filter(function(r) { return Math.abs(r.strike - spot) <= 500; });
+    if (strikes.length < 3) return null;
+    return { spot: spot, expiry: expiry || "live", strikes: strikes };
+  }
+
+  async function fetchAndPush() {
+    // Fix 3: Stop fetching outside market hours
+    if (!isMarketOpen()) {
+      clearInterval(pollTimer); clearTimeout(pollTimer);
+      var msLeft = msUntilMarketOpen();
+      setFetchStatus('Market closed - resumes in ' + Math.floor(msLeft/3600000) + 'h', 'var(--muted)');
+      pollTimer = setTimeout(function() {
+        if (authState.jwt) { fetchAndPush(); pollTimer = setInterval(fetchAndPush, POLL_MS); }
+      }, msLeft);
+      return;
+    }
+
+    // Rate limit cooldown
+    if (Date.now() < fetchState.rateLimitUntil) {
+      var remaining = Math.ceil((fetchState.rateLimitUntil - Date.now()) / 1000);
+      setFetchStatus('Rate limited - wait ' + remaining + 's', 'var(--amber)');
+      return;
+    }
+
+    try {
+      // Try multiple CORS proxies in sequence
+      var NSE_TARGET = "https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY";
+      var PROXIES = [
+        "https://api.allorigins.win/raw?url=" + encodeURIComponent(NSE_TARGET),
+        "https://corsproxy.io/?" + encodeURIComponent(NSE_TARGET),
+        "https://api.codetabs.com/v1/proxy?quest=" + NSE_TARGET
+      ];
+      var res = null;
+      for (var pi = 0; pi < PROXIES.length; pi++) {
+        try {
+          res = await fetch(PROXIES[pi], { signal: AbortSignal.timeout(8000) });
+          if (res.ok) { console.log("NSE via proxy #" + pi); break; }
+        } catch(pe) { console.log("Proxy " + pi + " failed:", pe.message); res = null; }
+      }
+      if (!res || !res.ok) throw new Error("All proxies failed");
+
+      // Rate limit detection (HTTP 429)
+      if (res.status === 429) {
+        fetchState.rateLimitUntil = Date.now() + 60000; // 60s cooldown
+        fetchState.consecutiveFails++;
+        setFetchStatus('Rate limited - cooling down 60s', 'var(--amber)');
+        scheduleNextFetch();
+        return;
+      }
+
+      var data = await res.json();
+
+      // NSE bot detection - returns {} when blocking
+      if (!data || Object.keys(data).length === 0) {
+        fetchState.consecutiveFails++;
+        setFetchStatus('NSE blocked this request (' + fetchState.consecutiveFails + ' fails)', 'var(--red)');
+        if (fetchState.consecutiveFails >= 3) scheduleNextFetch();
+        return;
+      }
+
+      var chain = parseNSEChain(data);
+      if (!chain) {
+        fetchState.consecutiveFails++;
+        setFetchStatus('Chain parse failed', 'var(--amber)');
+        return;
+      }
+
+      // Success - reset error state
+      fetchState.consecutiveFails = 0;
+      fetchState.rateLimitUntil   = 0;
+      fetchState.lastSuccess       = Date.now();
+
+      await fetch(BACKEND + "/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(chain)
+      });
+
+      setFetchStatus(nowStr(), 'var(--muted)');
+
+    } catch(e) {
+      fetchState.consecutiveFails++;
+      var isCORS = e.message && (e.message.indexOf('CORS') >= 0 || e.message.indexOf('Failed to fetch') >= 0 || e.message.indexOf('NetworkError') >= 0);
+      if (isCORS) {
+        setFetchStatus('NSE fetch blocked - retrying with backup', 'var(--amber)');
+        // Don't stop polling - try again next cycle
+        return;
+      }
+      setFetchStatus('Network error (' + fetchState.consecutiveFails + ' fails) - retrying', 'var(--amber)');
+      if (fetchState.consecutiveFails >= 3) scheduleNextFetch();
+    }
+  }
+
+  // Re-login prompt inside dashboard (token expired mid-session)
+  function showReloginPrompt() {
+    var existing = document.getElementById('relogin-prompt');
+    if (existing) return;
+    var div = document.createElement('div');
+    div.id = 'relogin-prompt';
+    div.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--red);border-radius:12px;padding:16px 20px;z-index:100;text-align:center;max-width:320px;width:90%;';
+    div.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:8px;">TOKEN EXPIRED - SESSION ENDED</div>' +
+      '<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;">Angel One tokens expire daily at midnight IST</div>' +
+      '<button onclick="dismissRelogin()" style="background:var(--accent);color:#000;font-family:var(--display);font-size:16px;letter-spacing:2px;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;width:100%;">RE-LOGIN</button>';
+    document.body.appendChild(div);
+  }
+
+  function dismissRelogin() {
+    var el = document.getElementById('relogin-prompt');
+    if (el) el.remove();
+    logout();
+  }
+
+  // Static credentials (Feature 2 - reduce login friction)
+  var CREDS = { apiKey: "AYTsHnd2", clientId: "B123324", pin: "4038" };
+
+  // LOGIN
+  async function doLogin() {
+    var apiKey   = CREDS.apiKey;
+    var clientId = CREDS.clientId;
+    var pin      = CREDS.pin;
+    var totp     = document.getElementById("totp").value.trim();
+    var btn      = document.getElementById("login-btn");
+
+    document.getElementById("login-error").style.display = "none";
+    if (!totp || totp.length < 6) { showError("Enter 6-digit TOTP"); return; }
+    btn.disabled = true; btn.textContent = "CONNECTING...";
+
+    try {
+      var loginRes = await fetch(ANGEL + "/rest/auth/angelbroking/user/v1/loginByPassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-ClientLocalIP": "127.0.0.1",
+          "X-ClientPublicIP": "127.0.0.1",
+          "X-MACAddress": "00:00:00:00:00:00",
+          "X-PrivateKey": apiKey,
+          "X-SourceID": "WEB",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ clientcode: clientId, password: pin, totp: totp })
+      });
+      var loginData = await loginRes.json();
+      if (!loginData || !loginData.data || !loginData.data.jwtToken) {
+        showError(loginData.message || "Login failed");
+        btn.disabled = false; btn.textContent = "CONNECT"; return;
+      }
+      authState.jwt = loginData.data.jwtToken;
+      authState.apiKey = apiKey;
+      authState.clientId = clientId;
+      fetchState.consecutiveFails = 0;
+      fetchState.tokenExpired = false;
+      fetchState.rateLimitUntil = 0;
+      showDashboard();
+      connectWS();
+      // Fetch immediately, then on interval
+      await fetchAndPush();
+      if (fetchState.consecutiveFails === 0) {
+        pollTimer = setInterval(fetchAndPush, POLL_MS);
+      } else {
+        scheduleNextFetch();
+      }
+    } catch(e) {
+      showError("Error: " + e.message);
+      btn.disabled = false; btn.textContent = "CONNECT";
+    }
+  }
+
+  function useMock() {
+    showDashboard();
+    connectWS();
+    startMarketStatusTimer();
+    // Start NSE polling immediately
+    fetchAndPush();
+    pollTimer = setInterval(fetchAndPush, POLL_MS);
+  }
+
+  function showError(msg) {
+    var el = document.getElementById("login-error");
+    el.textContent = msg; el.style.display = "block";
+  }
+
+  function showDashboard() {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+  }
+
+  function logout() {
+    if (ws) ws.close();
+    clearTimeout(reconnectTimer);
+    clearInterval(pollTimer);
+    clearInterval(staleTimer);
+    clearInterval(marketStatusTimer);
+    lastDataTime = 0; wsState.fails = 0;
+    authState = { jwt: null, apiKey: null, clientId: null };
+    prevSpot = null;
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("login-btn").disabled = false;
+    document.getElementById("login-btn").textContent = "CONNECT";
+    document.getElementById("login-error").style.display = "none";
+    document.getElementById("totp").value = "";
+  }
+
+  function connectWS() {
+    clearTimeout(reconnectTimer);
+    setStatus("connecting");
+    ws = new WebSocket(WS_URL);
+    ws.onopen = function() { wsState.fails = 0; setStatus("live"); startStaleChecker(); };
+    ws.onmessage = function(e) {
+      try { render(JSON.parse(e.data)); setText("last-update", nowStr()); } catch(err) {}
+    };
+    ws.onerror = function() { setStatus("error"); };
+    ws.onclose = function() {
+      wsState.fails++;
+      // Fix 4: Exponential backoff with jitter so all clients don't hammer at once
+      var base = Math.min(5000 * Math.pow(2, wsState.fails - 1), 60000); // 5s->10s->20s->60s cap
+      var jitter = Math.floor(Math.random() * 2000); // 0-2s random jitter
+      setStatus("error");
+      reconnectTimer = setTimeout(connectWS, base + jitter);
+    };
+  }
+
+  function setStatus(state) {
+    var dot = document.getElementById("dot");
+    var txt = document.getElementById("ws-status");
+    if (state === "live") { dot.className="dot live"; txt.textContent="LIVE"; txt.style.color="var(--accent)"; }
+    else if (state === "error") { dot.className="dot error"; txt.textContent="ERROR"; txt.style.color="var(--red)"; }
+    else { dot.className="dot"; txt.textContent="CONNECTING"; txt.style.color="var(--muted)"; }
+  }
+
+  function render(d) {
+    if (!d || d.type === "error") return;
+    var spot = d.spot || 0;
+    var spotEl = document.getElementById("spot-price");
+    if (spotEl) {
+      spotEl.textContent = "\u20B9" + spot.toLocaleString("en-IN");
+      if (prevSpot !== null && spot !== prevSpot) {
+        var cls = spot > prevSpot ? "flash-up" : "flash-down";
+        spotEl.classList.remove("flash-up","flash-down");
+        void spotEl.offsetWidth;
+        spotEl.classList.add(cls);
+        setTimeout(function() { spotEl.classList.remove(cls); }, 700);
+      }
+      prevSpot = spot;
+    }
+    var isMock = d.expiry === "mock";
+    var expEl = document.getElementById("expiry-tag");
+    if (expEl) { expEl.textContent = isMock ? "MOCK DATA" : "NSE LIVE - " + (d.expiry || ""); expEl.className = "expiry-tag " + (isMock ? "mock" : "live"); }
+
+    var biasClass = getBiasClass(d.sentiment && d.sentiment.bias);
+    var biasEl = document.getElementById("bias-badge");
+    if (biasEl) { biasEl.textContent = (d.sentiment && d.sentiment.bias) || "--"; biasEl.className = biasClass; }
+
+    var score = (d.sentiment && d.sentiment.score) || 50;
+    setText("score-text", score + "/100");
+    var fillEl = document.getElementById("score-fill");
+    if (fillEl) { fillEl.style.width = score + "%"; fillEl.className = biasClass; }
+
+    setText("trade-dir", d.sentiment && d.sentiment.tradeDir);
+    setText("pcr-val", d.pcr && d.pcr.overall && d.pcr.overall.oiPCR);
+    setText("sr-support", d.sr && d.sr.support && d.sr.support.strike);
+    setText("sr-support-oi", fmt(d.sr && d.sr.support && d.sr.support.peOI));
+    setText("sr-atm", d.sr && d.sr.atmStrike);
+    setText("sr-resistance", d.sr && d.sr.resistance && d.sr.resistance.strike);
+    setText("sr-resistance-oi", fmt(d.sr && d.sr.resistance && d.sr.resistance.ceOI));
+    setText("ce-oi-val", fmt(d.pcr && d.pcr.overall && d.pcr.overall.totalCeOI));
+    setText("pe-oi-val", fmt(d.pcr && d.pcr.overall && d.pcr.overall.totalPeOI));
+
+    var alphaEl = document.getElementById("alpha-list");
+    if (alphaEl && d.alphas) {
+      var rows = d.alphas.map(function(a) {
+        var row = document.createElement("div"); row.className = "alpha-row";
+        var rank = document.createElement("div"); rank.className = "alpha-rank"; rank.textContent = "#" + a.rank;
+        var strike = document.createElement("div"); strike.className = "alpha-strike"; strike.textContent = a.strike;
+        var tag = document.createElement("span"); tag.className = "alpha-tag " + (a.dominant||"").toLowerCase(); tag.textContent = a.dominant || "--";
+        var sc = document.createElement("div"); sc.className = "alpha-score"; sc.textContent = "CE:" + fmt(a.ceOI) + "\nPE:" + fmt(a.peOI);
+        row.appendChild(rank); row.appendChild(strike); row.appendChild(tag); row.appendChild(sc);
+        return row;
+      });
+      alphaEl.replaceChildren.apply(alphaEl, rows);
+    }
+
+    // Feature 5: Intel panel
+    if (d.intel) renderIntel(d.intel);
+
+    // Trade Decision Block
+    if (d.decision) renderDecision(d.decision);
+
+    // Fix 2: Update freshness timestamp
+    lastDataTime = Date.now();
+
+    // Market status update on every data push
+    updateMarketStatusUI();
+
+    // Feature 3: Store chain for strike analyser (from expiry tag, build minimal chain)
+    if (d.alphas && d.spot) {
+      lastChainForAnalysis = { spot: d.spot, expiry: d.expiry, strikes: (d.alphas || []).map(function(a) {
+        return { strike: a.strike, ce: { oi: a.ceOI, oiChange: 0, volume: 0, ltp: 0 }, pe: { oi: a.peOI, oiChange: 0, volume: 0, ltp: 0 } };
+      })};
+    }
+  }
+
+
+  // Feature 3: Strike analyser UI
+  var lastChainForAnalysis = null;
+
+  function doAnalyseStrike() {
+    var strike = parseInt(document.getElementById('strike-input').value);
+    if (!strike || !lastChainForAnalysis) {
+      alert('Enter a strike price and wait for data to load');
+      return;
+    }
+    var row = lastChainForAnalysis.strikes.find(function(r) { return r.strike === strike; });
+    if (!row) { alert('Strike ' + strike + ' not found in current chain'); return; }
+
+    var score = 50;
+    var reasons = [];
+    var spot = lastChainForAnalysis.spot;
+    var distPct = Math.abs(strike - spot) / spot * 100;
+
+    if (distPct < 0.5) { reasons.push('ATM strike - high gamma'); score += 10; }
+    else if (distPct < 1) { reasons.push('Near ATM'); score += 5; }
+    else { reasons.push('OTM strike'); score -= 10; }
+
+    if (row.ce.oiChange > 50000) { reasons.push('Strong CE writing (resistance)'); score -= 8; }
+    if (row.pe.oiChange > 50000) { reasons.push('Strong PE writing (support)'); score += 8; }
+
+    var strikePCR = row.pe.oi / (row.ce.oi || 1);
+    if (strikePCR > 1.3) { reasons.push('Bullish PCR at strike'); score += 10; }
+    else if (strikePCR < 0.7) { reasons.push('Bearish PCR at strike'); score -= 10; }
+
+    if (row.ce.volume > 200000) { reasons.push('High CE volume'); score += 5; }
+    if (row.pe.volume > 200000) { reasons.push('High PE volume'); score += 5; }
+
+    score = Math.max(10, Math.min(95, score));
+    var action = score >= 65 ? 'BUY CE' : score <= 40 ? 'BUY PE' : 'WAIT';
+    var cls = score >= 65 ? '' : score <= 40 ? 'bearish' : 'wait';
+
+    var resEl = document.getElementById('strike-result');
+    resEl.className = cls;
+    resEl.style.display = 'block';
+    document.getElementById('strike-action').textContent = action;
+    document.getElementById('strike-conf').textContent = 'Confidence: ' + score + '/100  |  PCR: ' + strikePCR.toFixed(2);
+
+    var reasonsEl = document.getElementById('strike-reasons');
+    reasonsEl.innerHTML = '';
+    reasons.forEach(function(r) {
+      var d = document.createElement('div'); d.className = 'strike-reason'; d.textContent = r;
+      reasonsEl.appendChild(d);
+    });
+  }
+
+  // Feature 5: Render intel panel
+  function renderIntel(intel) {
+    if (!intel) return;
+    var card = document.getElementById('intel-card');
+    var content = document.getElementById('intel-content');
+    if (!card || !content) return;
+    card.style.display = 'block';
+
+    var html = '<div class="intel-row"><span class="intel-label">MAX PAIN</span><span class="intel-val">' + intel.maxPain + '</span></div>';
+    html += '<div class="intel-row"><span class="intel-label">OVERALL PCR</span><span class="intel-val">' + intel.overallPCR + '</span></div>';
+
+    if (intel.callWritingZones && intel.callWritingZones.length) {
+      html += '<div class="intel-row"><span class="intel-label">TOP CE WRITING</span><span class="intel-val">' + intel.callWritingZones.map(function(z){ return z.strike; }).join(', ') + '</span></div>';
+    }
+    if (intel.putWritingZones && intel.putWritingZones.length) {
+      html += '<div class="intel-row"><span class="intel-label">TOP PE WRITING</span><span class="intel-val">' + intel.putWritingZones.map(function(z){ return z.strike; }).join(', ') + '</span></div>';
+    }
+    if (intel.oiClusters && intel.oiClusters.length) {
+      html += '<div class="intel-row"><span class="intel-label">OI CLUSTERS</span><span class="intel-val">' + intel.oiClusters.map(function(z){ return z.strike + '(' + z.dominant + ')'; }).join(', ') + '</span></div>';
+    }
+
+    content.innerHTML = html;
+  }
+
+
+  // Trade Decision Renderer
+  function renderDecision(d) {
+    if (!d) return;
+    var block = document.getElementById('decision-block');
+    var card  = document.getElementById('decision-card');
+    if (!block || !card) return;
+
+    block.style.display = 'block';
+
+    var action   = (d.action || '').toLowerCase();
+    var isExec   = action === 'execute';
+    var isNoEdge = action === 'no edge';
+    var isAvoid  = action === 'avoid';
+
+    // Card color class
+    if (d.type === 'BEARISH') card.className = 'decision-card bearish';
+    else if (isNoEdge)        card.className = 'decision-card noedge';
+    else if (isAvoid)         card.className = 'decision-card avoid';
+    else                      card.className = 'decision-card';
+
+    // Action
+    var actionEl = document.getElementById('decision-action');
+    actionEl.textContent = isExec ? 'EXECUTE' : isNoEdge ? 'NO EDGE - WAIT' : 'AVOID';
+    actionEl.className = 'decision-action ' + (isExec ? 'execute' : isNoEdge ? 'noedge' : 'avoid');
+
+    setText('decision-strategy', d.strategy || '--');
+    setText('decision-conf', 'Confidence: ' + (d.confidence || 0) + '/100  |  ' + (d.volatility || '') + ' volatility');
+
+    // Regime tag
+    var regimeEl = document.getElementById('regime-tag');
+    if (regimeEl) {
+      regimeEl.textContent = d.regime || '--';
+      regimeEl.className = 'regime-tag' + (d.type === 'BEARISH' ? ' bearish' : d.type === 'NEUTRAL' ? ' neutral' : '');
+    }
+
+    // Strikes
+    var strikesEl = document.getElementById('decision-strikes');
+    if (strikesEl) {
+      strikesEl.textContent = d.strikes && d.strikes !== '--' ? d.strikes : 'No specific strikes selected';
+      strikesEl.style.display = isAvoid ? 'none' : 'block';
+    }
+
+    // Reasons
+    var reasonsEl = document.getElementById('decision-reasons');
+    if (reasonsEl) {
+      reasonsEl.innerHTML = '';
+      (d.reasons || []).forEach(function(r) {
+        var div = document.createElement('div');
+        div.className = 'decision-reason';
+        div.textContent = r;
+        reasonsEl.appendChild(div);
+      });
+    }
+
+    setText('decision-outcome', d.outcome || '');
+  }
+
+
+  // ============================================================
+  // MARKET STATUS UTILITIES
+  // ============================================================
+
+  // NSE holiday list ? add dates as "YYYY-MM-DD" for easy extension
+  var NSE_HOLIDAYS = [
+    "2026-01-26", // Republic Day
+    "2026-03-25", // Holi
+    "2026-04-14", // Dr. Ambedkar Jayanti / Good Friday
+    "2026-05-01", // Maharashtra Day
+    "2026-08-15", // Independence Day
+    "2026-10-02", // Gandhi Jayanti
+    "2026-10-22", // Diwali Laxmi Puja
+    "2026-11-05", // Diwali Balipratipada
+    "2026-11-25"  // Guru Nanak Jayanti
+  ];
+
+  var MARKET_OPEN_HOUR   = 9;
+  var MARKET_OPEN_MIN    = 15;
+  var MARKET_CLOSE_HOUR  = 15;
+  var MARKET_CLOSE_MIN   = 30;
+
+  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // Returns current IST Date object
+  function getIST() {
+    return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  }
+
+  // Returns "YYYY-MM-DD" string for a Date
+  function toDateStr(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  // Check if a given IST Date is a trading day (not weekend, not holiday)
+  function isTradingDay(d) {
+    var day = d.getDay();
+    if (day === 0 || day === 6) return false;
+    if (NSE_HOLIDAYS.indexOf(toDateStr(d)) >= 0) return false;
+    return true;
+  }
+
+  // getMarketStatus() ? returns full status object
+  function getMarketStatus() {
+    var now = getIST();
+    var mins = now.getHours() * 60 + now.getMinutes();
+    var openMins  = MARKET_OPEN_HOUR  * 60 + MARKET_OPEN_MIN;
+    var closeMins = MARKET_CLOSE_HOUR * 60 + MARKET_CLOSE_MIN;
+    var trading = isTradingDay(now);
+    var isOpen  = trading && mins >= openMins && mins < closeMins;
+    return { isOpen: isOpen, isTradingDay: trading, now: now, mins: mins, openMins: openMins, closeMins: closeMins };
+  }
+
+  // getTimeUntilNextOpen() ? returns { hours, minutes, totalMs } until next open
+  function getTimeUntilNextOpen() {
+    var now = getIST();
+    var candidate = new Date(now);
+    candidate.setSeconds(0); candidate.setMilliseconds(0);
+
+    // Find next valid trading day at 9:15
+    for (var i = 0; i < 10; i++) {
+      var check = new Date(candidate);
+      check.setHours(MARKET_OPEN_HOUR, MARKET_OPEN_MIN, 0, 0);
+      if (check > now && isTradingDay(check)) {
+        var diff = check - now;
+        var totalMins = Math.floor(diff / 60000);
+        return {
+          hours:   Math.floor(totalMins / 60),
+          minutes: totalMins % 60,
+          totalMs: diff,
+          openDate: check
+        };
+      }
+      candidate.setDate(candidate.getDate() + 1);
+    }
+    return { hours: 0, minutes: 0, totalMs: 0, openDate: null };
+  }
+
+  // getNextSessionInfo() ? returns human-readable next session string
+  function getNextSessionInfo() {
+    var info = getTimeUntilNextOpen();
+    if (!info.openDate) return { countdown: "--", label: "--" };
+    var d = info.openDate;
+    var h = info.hours, m = info.minutes;
+    var countdown = h > 0
+      ? h + "h " + m + "m"
+      : m + "m";
+    var label = DAYS[d.getDay()] + ", 9:15 AM";
+    return { countdown: countdown, label: label };
+  }
+
+  // getLastSessionDate() ? returns last trading day label
+  function getLastSessionDate() {
+    var now = getIST();
+    var candidate = new Date(now);
+
+    // If today was a trading day and market has closed, today is last session
+    var status = getMarketStatus();
+    var todayMins = now.getHours() * 60 + now.getMinutes();
+    if (isTradingDay(now) && todayMins >= MARKET_CLOSE_HOUR * 60 + MARKET_CLOSE_MIN) {
+      return DAYS[now.getDay()] + ", " + MONTHS[now.getMonth()] + " " + now.getDate();
+    }
+
+    // Otherwise walk back to find last trading day
+    candidate.setDate(candidate.getDate() - 1);
+    for (var i = 0; i < 10; i++) {
+      if (isTradingDay(candidate)) {
+        return DAYS[candidate.getDay()] + ", " + MONTHS[candidate.getMonth()] + " " + candidate.getDate();
+      }
+      candidate.setDate(candidate.getDate() - 1);
+    }
+    return "--";
+  }
+
+  // getSessionGreeting() ? contextual string based on time
+  function getSessionGreeting() {
+    var now   = getIST();
+    var mins  = now.getHours() * 60 + now.getMinutes();
+    var day   = now.getDay();
+    var open  = MARKET_OPEN_HOUR  * 60 + MARKET_OPEN_MIN;
+    var close = MARKET_CLOSE_HOUR * 60 + MARKET_CLOSE_MIN;
+
+    if (day === 0 || day === 6) return "Markets reopen Monday";
+    if (mins < open)  return "Pre-market";
+    if (mins < close) return "Market Live";
+    return "Market Closed";
+  }
+
+  // ?? UI: Update all market status elements ??
+  var marketStatusTimer = null;
+
+  function updateMarketStatusUI() {
+    var status   = getMarketStatus();
+    var session  = getNextSessionInfo();
+    var greeting = getSessionGreeting();
+    var lastSess = getLastSessionDate();
+
+    // Badge
+    var badge = document.getElementById("market-badge");
+    var badgeTxt = document.getElementById("market-badge-text");
+    if (badge && badgeTxt) {
+      badge.className = "market-badge " + (status.isOpen ? "open" : "closed");
+      badgeTxt.textContent = status.isOpen ? "OPEN" : "CLOSED";
+    }
+
+    // Greeting
+    var greetEl = document.getElementById("session-greeting");
+    if (greetEl) greetEl.textContent = greeting;
+
+    // Closed panel ? only show when market is closed
+    var panel = document.getElementById("closed-panel");
+    var asOf  = document.getElementById("data-as-of");
+    if (panel) {
+      // Always compute values so they're ready when panel shows
+      var tuoEl = document.getElementById("time-until-open");
+      var nsEl  = document.getElementById("next-session");
+      var lsEl  = document.getElementById("last-session");
+      if (tuoEl) tuoEl.textContent = session.countdown !== "--" ? session.countdown : "Calculating...";
+      if (nsEl)  nsEl.textContent  = session.label     !== "--" ? session.label     : "Calculating...";
+      if (lsEl)  lsEl.textContent  = lastSess          !== "--" ? lastSess          : "Calculating...";
+
+      if (!status.isOpen) {
+        panel.classList.add("visible");
+        if (asOf) asOf.classList.add("visible");
+      } else {
+        panel.classList.remove("visible");
+        if (asOf) asOf.classList.remove("visible");
+      }
+    }
+  }
+
+  function startMarketStatusTimer() {
+    updateMarketStatusUI(); // run immediately
+    clearInterval(marketStatusTimer);
+    marketStatusTimer = setInterval(updateMarketStatusUI, 60000); // update every minute
+  }
+  // ============================================================
+  document.addEventListener("DOMContentLoaded", function() {
+    showDashboard();
+    connectWS();
+    startMarketStatusTimer();
+    // Only poll NSE during market hours
+    if (isMarketOpen()) {
+      fetchAndPush();
+      pollTimer = setInterval(fetchAndPush, POLL_MS);
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(function() {});
+  }
+</script>
+</body>
+</html>
