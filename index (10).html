@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EDGE">
+<meta name="theme-color" content="#050508">
+<title>EDGE Trading Intelligence</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#04070b; --surface:#0a1119; --surface2:#0d1722; --border:#152735;
+    --accent:#00ff88; --cyan:#00e5ff;
+    --red:#ff3366; --amber:#ffaa00;
+    --muted:#4d6575; --text:#e2eef2;
+    --glow-green:rgba(0,255,136,.35); --glow-cyan:rgba(0,229,255,.25);
+    --mono:'Space Mono',monospace;
+    --display:'Bebas Neue',cursive;
+    --body:'DM Sans',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--bg); color:var(--text); font-family:var(--body);
+    min-height:100dvh;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,229,255,.07), transparent 60%),
+      radial-gradient(ellipse 60% 30% at 50% 110%, rgba(0,255,136,.05), transparent 60%),
+      linear-gradient(rgba(0,229,255,.02) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,229,255,.02) 1px,transparent 1px);
+    background-size:auto,auto,40px 40px,40px 40px;
+  }
+
+  /* HEADER */
+  header {
+    position:sticky; top:0; z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 20px; border-bottom:1px solid var(--border);
+    background:rgba(5,5,8,.95); backdrop-filter:blur(10px);
+  }
+  .logo { font-family:var(--display); font-size:22px; letter-spacing:3px; color:var(--accent); text-shadow:0 0 14px rgba(0,255,136,.45); }
+  .logo span { color:var(--muted); font-size:9px; font-family:var(--mono); letter-spacing:2px; display:block; margin-top:-2px; }
+  .status-bar { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); }
+  .dot.live { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+  .dot.error { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* MARKET STATUS BAR */
+  .market-status-bar {
+    position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 20px; max-width:480px; margin:0 auto;
+    font-family:var(--mono); font-size:10px;
+  }
+  .market-badge {
+    display:flex; align-items:center; gap:6px;
+    padding:4px 10px; border-radius:20px; border:1px solid var(--border); transition:all .3s;
+  }
+  .market-badge.open  { color:var(--accent); border-color:rgba(0,255,136,.3); background:rgba(0,255,136,.06); }
+  .market-badge.closed { color:var(--red); border-color:rgba(255,51,102,.3); background:rgba(255,51,102,.06); }
+  .market-badge .mbdot { width:6px; height:6px; border-radius:50%; background:var(--muted); }
+  .market-badge.open .mbdot { background:var(--accent); animation:pulse 2s infinite; }
+  .market-badge.closed .mbdot { background:var(--red); }
+  .session-greeting { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:1px; }
+
+  /* CLOSED PANEL */
+  .closed-panel {
+    display:none; margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+    position:relative; z-index:1;
+  }
+  .closed-panel.visible { display:block; }
+  .token-banner {
+    display:none; margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto;
+    padding:12px 14px; border-radius:10px;
+    background:rgba(255,51,102,.08); border:1px solid rgba(255,51,102,.35);
+    font-family:var(--mono); font-size:11px; color:var(--red); letter-spacing:.5px;
+    position:relative; z-index:1;
+  }
+  .token-banner.visible { display:block; }
+  .token-banner b { font-family:var(--display); letter-spacing:2px; font-size:13px; }
+  .closed-panel-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:5px 0; border-bottom:1px solid var(--border);
+    font-family:var(--mono); font-size:10px;
+  }
+  .closed-panel-row:last-child { border-bottom:none; padding-bottom:0; }
+  .closed-panel-label { color:var(--muted); letter-spacing:1px; }
+  .closed-panel-val { color:var(--text); font-weight:700; }
+  .closed-panel-val.countdown { color:var(--amber); font-size:12px; }
+  .data-as-of {
+    display:none; text-align:center; font-family:var(--mono); font-size:9px;
+    color:var(--muted); letter-spacing:2px; padding:4px 0 8px; position:relative; z-index:1;
+  }
+  .data-as-of.visible { display:block; }
+
+  /* SPOT HERO - compact strip */
+  .spot-hero {
+    position:relative; z-index:1;
+    margin:10px auto 10px; width:calc(100% - 28px); max-width:452px;
+    padding:10px 16px;
+    border:1px solid rgba(0,229,255,.18); border-radius:12px;
+    background:linear-gradient(165deg, rgba(0,229,255,.05), rgba(10,17,25,.6));
+    box-shadow:0 0 16px rgba(0,229,255,.05);
+    display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:6px 14px;
+  }
+  .spot-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--accent); opacity:.8; }
+  #spot-price {
+    font-family:var(--display); font-size:34px; letter-spacing:2px; line-height:1;
+    text-shadow:0 0 10px var(--glow-green);
+  }
+  @keyframes flashUp   { 0%{color:var(--accent);transform:scale(1.04)} 100%{color:var(--text);transform:scale(1)} }
+  @keyframes flashDown { 0%{color:var(--red);transform:scale(1.04)}    100%{color:var(--text);transform:scale(1)} }
+  #spot-price.flash-up   { animation:flashUp .6s ease forwards; }
+  #spot-price.flash-down { animation:flashDown .6s ease forwards; }
+  .expiry-meta { display:flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; max-width:55%; }
+  .expiry-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:20px; border:1px solid var(--border); color:var(--muted); }
+  .expiry-tag.live { color:var(--accent); border-color:rgba(0,255,136,.3); }
+  .dte-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:20px; border:1px solid rgba(255,170,0,.3); color:var(--amber); }
+  .iv-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:20px; }
+  .iv-tag.low    { background:rgba(0,255,136,.1);  color:var(--accent); border:1px solid rgba(0,255,136,.3); }
+  .iv-tag.normal { background:rgba(255,170,0,.1);  color:var(--amber);  border:1px solid rgba(255,170,0,.3); }
+  .iv-tag.high   { background:rgba(255,51,102,.1); color:var(--red);    border:1px solid rgba(255,51,102,.3); }
+
+  /* GRID */
+  .grid {
+    position:relative; z-index:1;
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    padding:0 14px 10px; max-width:480px; margin:0 auto;
+  }
+  .card {
+    background:linear-gradient(180deg, var(--surface2), var(--surface));
+    border:1px solid var(--border); border-radius:14px; padding:14px;
+    position:relative; overflow:hidden;
+  }
+  .card::before {
+    content:''; position:absolute; top:0;left:0;right:0; height:2px;
+    background:linear-gradient(90deg, var(--accent), var(--cyan) 50%, transparent);
+    opacity:.5;
+  }
+  .card.full { grid-column:1/-1; }
+  .card-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+
+  /* BIAS CARD - hero of the dashboard */
+  .bias-card {
+    grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:18px 16px;
+    border-width:1px;
+    box-shadow:0 0 24px rgba(0,255,136,.04);
+  }
+  #bias-badge {
+    font-family:var(--display); font-size:38px; letter-spacing:2px;
+    padding:10px 22px; border-radius:10px;
+    background:rgba(0,255,136,.1); color:var(--accent); border:1px solid rgba(0,255,136,.35);
+    box-shadow:0 0 20px rgba(0,255,136,.14); text-shadow:0 0 14px rgba(0,255,136,.45);
+    transition:all .4s;
+  }
+  #bias-badge.bearish { background:rgba(255,51,102,.1); color:var(--red); border-color:rgba(255,51,102,.35); box-shadow:0 0 20px rgba(255,51,102,.14); text-shadow:0 0 14px rgba(255,51,102,.45); }
+  #bias-badge.neutral { background:rgba(255,170,0,.1);  color:var(--amber); border-color:rgba(255,170,0,.35); box-shadow:0 0 20px rgba(255,170,0,.14); text-shadow:0 0 14px rgba(255,170,0,.45); }
+  .bias-right { text-align:right; }
+  #pcr-val { font-family:var(--display); font-size:36px; letter-spacing:2px; }
+  .score-track { height:10px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-top:8px; }
+  /* Confidence fill - semantic: green=bullish, red=bearish, amber=neutral */
+  #score-fill {
+    height:100%; border-radius:6px; transition:width .8s ease;
+    background:linear-gradient(90deg, var(--accent), #6dffb8);
+    box-shadow:0 0 12px var(--glow-green);
+  }
+  #score-fill.bearish { background:linear-gradient(90deg, var(--red), #ff6b8f); box-shadow:0 0 12px rgba(255,51,102,.35); }
+  #score-fill.neutral { background:linear-gradient(90deg, var(--amber), #ffd34d); box-shadow:0 0 12px rgba(255,170,0,.3); }
+
+  /* SR CARD - 3 column scan */
+  .sr-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center; }
+  .sr-col { padding:6px 2px; }
+  .sr-col.mid { border-left:1px solid var(--border); border-right:1px solid var(--border); }
+  .sr-tag { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); margin-bottom:4px; }
+  .sr-val { font-family:var(--display); font-size:26px; line-height:1.1; }
+  .sr-val.support    { color:var(--accent); text-shadow:0 0 10px rgba(0,255,136,.3); }
+  .sr-val.resistance { color:var(--red); text-shadow:0 0 10px rgba(255,51,102,.3); }
+  .sr-val.atm        { color:var(--amber); text-shadow:0 0 10px rgba(255,170,0,.3); }
+  .sr-sub { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:4px; line-height:1.5; }
+  .sr-sub span { color:var(--text); }
+
+  /* OI CARDS */
+  #ce-oi-val { font-family:var(--display); font-size:28px; color:var(--red); }
+  #pe-oi-val { font-family:var(--display); font-size:28px; color:var(--accent); }
+  .card-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+
+  /* ALPHA STRIKES */
+  .alpha-list { display:flex; flex-direction:column; gap:8px; }
+  .alpha-row {
+    padding:10px 12px; background:rgba(255,255,255,.03);
+    border-radius:8px; border:1px solid var(--border); transition:box-shadow .3s;
+  }
+  .alpha-row:hover { box-shadow:0 0 12px rgba(0,255,136,0.15); border-color:rgba(0,255,136,0.3); }
+  .alpha-row.top-conviction {
+    padding:14px 14px;
+    border:1px solid rgba(0,255,136,.4);
+    box-shadow:0 0 18px rgba(0,255,136,.1), inset 0 0 24px rgba(0,255,136,.03);
+  }
+  .alpha-row.top-conviction .alpha-strike { font-size:30px; text-shadow:0 0 12px rgba(0,255,136,.35); }
+  .alpha-row.top-conviction .alpha-rank { color:var(--accent); text-shadow:0 0 10px rgba(0,255,136,.4); }
+  .alpha-top { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .alpha-rank   { font-family:var(--display); font-size:20px; color:var(--muted); width:20px; }
+  .alpha-strike { font-family:var(--display); font-size:24px; flex:1; }
+  .alpha-tag { font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px; }
+  .alpha-tag.ce { background:rgba(255,51,102,.15); color:var(--red); }
+  .alpha-tag.pe { background:rgba(0,255,136,.15);  color:var(--accent); }
+  .alpha-oi { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:right; white-space:pre; }
+  /* Greeks row under each alpha */
+  .alpha-greeks {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:4px;
+    padding-top:6px; border-top:1px solid var(--border);
+  }
+  .greek-cell { text-align:center; }
+  .greek-label { font-family:var(--mono); font-size:8px; color:var(--muted); letter-spacing:1px; }
+  .greek-val   { font-family:var(--mono); font-size:11px; color:var(--text); margin-top:2px; }
+  .greek-val.iv-low    { color:var(--accent); }
+  .greek-val.iv-normal { color:var(--amber); }
+  .greek-val.iv-high   { color:var(--red); }
+
+  /* WARNINGS STRIP */
+  .warnings-strip {
+    margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .warning-pill {
+    display:flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:8px;
+    background:rgba(255,170,0,.07); border:1px solid rgba(255,170,0,.25);
+    font-family:var(--mono); font-size:10px; color:var(--amber);
+  }
+  .warning-pill::before { content:'!'; font-family:var(--display); font-size:14px; }
+
+  /* TRADE DECISION */
+  .section-wrap { margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto; }
+  .section-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+  .decision-card {
+    border-radius:12px; padding:16px; position:relative; overflow:hidden;
+    border:2px solid var(--accent); background:rgba(0,255,136,.05);
+  }
+  .decision-card.bearish { border-color:var(--red);   background:rgba(255,51,102,.05); }
+  .decision-card.noedge  { border-color:var(--amber);  background:rgba(255,170,0,.05); }
+  .decision-card.avoid   { border-color:var(--muted);  background:rgba(68,68,102,.05); }
+  .decision-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+  .decision-action   { font-family:var(--display); font-size:22px; letter-spacing:2px; }
+  .decision-action.execute { color:var(--accent); }
+  .decision-action.noedge  { color:var(--amber); }
+  .decision-action.avoid   { color:var(--muted); }
+  .decision-strategy { font-family:var(--display); font-size:18px; letter-spacing:1px; margin-bottom:4px; }
+  .decision-conf { font-family:var(--mono); font-size:10px; color:var(--muted); }
+  .regime-tag {
+    font-family:var(--mono); font-size:9px; padding:3px 8px; border-radius:4px;
+    background:rgba(0,255,136,.1); color:var(--accent); border:1px solid rgba(0,255,136,.2);
+    white-space:nowrap;
+  }
+  .regime-tag.bearish { background:rgba(255,51,102,.1); color:var(--red);   border-color:rgba(255,51,102,.2); }
+  .regime-tag.neutral { background:rgba(255,170,0,.1);  color:var(--amber); border-color:rgba(255,170,0,.2); }
+
+  /* Risk metrics table */
+  .risk-table { margin-top:10px; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+  .risk-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:7px 10px; border-bottom:1px solid var(--border);
+    font-family:var(--mono); font-size:10px;
+  }
+  .risk-row:last-child { border-bottom:none; }
+  .risk-label { color:var(--muted); }
+  .risk-val   { color:var(--text); font-weight:700; text-align:right; }
+  .risk-val.profit  { color:var(--accent); }
+  .risk-val.loss    { color:var(--red); }
+  .risk-val.neutral { color:var(--amber); }
+  .risk-val .rupees { display:block; font-size:9px; opacity:.7; font-weight:400; margin-top:1px; }
+
+  /* Broker-style leg cards (NIFTY 09 JUN 23600 PE / premium block) */
+  .legs-stack { display:flex; flex-direction:column; gap:8px; margin-top:10px; margin-bottom:10px; }
+  .leg-card {
+    border-radius:12px;
+    background:rgba(255,255,255,.02);
+    padding:16px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+  }
+  .leg-card.sell {
+    border:1px solid rgba(255,51,102,.5);
+    box-shadow:0 0 14px rgba(255,51,102,.12), inset 0 0 18px rgba(255,51,102,.04);
+  }
+  .leg-card.buy {
+    border:1px solid rgba(77,148,255,.5);
+    box-shadow:0 0 14px rgba(77,148,255,.12), inset 0 0 18px rgba(77,148,255,.04);
+  }
+  .legs-stack { gap:10px; }
+  .leg-left { display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; }
+  .leg-action {
+    font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:2px;
+  }
+  .leg-action.sell { color:var(--red); }
+  .leg-action.buy  { color:#7aa0ff; }
+  .leg-contract {
+    font-family:var(--mono); font-size:12px; color:var(--text); margin-top:2px;
+    letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .leg-right { text-align:right; }
+  .leg-premium-label { font-family:var(--mono); font-size:8px; color:var(--muted); letter-spacing:1.5px; }
+  .leg-premium { font-family:var(--display); font-size:28px; line-height:1; margin-top:2px; }
+  .leg-premium.sell { color:var(--red); text-shadow:0 0 12px rgba(255,51,102,.45); }
+  .leg-premium.buy  { color:#7aa0ff; text-shadow:0 0 12px rgba(77,148,255,.45); }
+  .lot-note {
+    font-family:var(--mono); font-size:9px; color:var(--muted);
+    letter-spacing:1px; text-align:center;
+    padding:6px 0; margin-top:4px;
+  }
+
+  /* Execution cockpit */
+  .cockpit { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+  .cockpit.two { grid-template-columns:repeat(2,1fr); }
+  .cock-stat {
+    text-align:center; padding:10px 6px;
+    border:1px solid var(--border); border-radius:10px;
+    background:rgba(255,255,255,.02);
+  }
+  .cock-label { font-family:var(--mono); font-size:8px; letter-spacing:1.5px; color:var(--muted); }
+  .cock-val { font-family:var(--display); font-size:22px; margin-top:4px; line-height:1; }
+  .cock-val.profit { color:var(--accent); text-shadow:0 0 10px rgba(0,255,136,.35); }
+  .cock-val.loss   { color:var(--red);    text-shadow:0 0 10px rgba(255,51,102,.35); }
+  .cock-sub { font-family:var(--mono); font-size:8px; color:var(--muted); margin-top:3px; }
+  .pop-wrap { margin-top:10px; }
+  .pop-head { display:flex; justify-content:space-between; font-family:var(--mono); font-size:9px; letter-spacing:1px; color:var(--muted); }
+  .pop-head .pop-pct { color:var(--accent); font-weight:700; }
+  .pop-track { height:8px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:5px; overflow:hidden; margin-top:5px; }
+  .pop-fill { height:100%; background:linear-gradient(90deg, var(--accent), var(--cyan)); box-shadow:0 0 10px var(--glow-green); transition:width .8s ease; }
+
+  /* Signal grade badge */
+  .grade-badge {
+    font-family:var(--display); font-size:15px; padding:1px 10px; border-radius:6px;
+    border:1px solid var(--border); letter-spacing:1px; color:var(--muted);
+  }
+  .grade-badge.good { color:var(--accent); border-color:rgba(0,255,136,.4); background:rgba(0,255,136,.08); }
+  .grade-badge.ok   { color:var(--amber);  border-color:rgba(255,170,0,.4);  background:rgba(255,170,0,.08); }
+  .grade-badge.bad  { color:var(--red);    border-color:rgba(255,51,102,.4); background:rgba(255,51,102,.08); }
+
+  /* Factor breakdown */
+  .bias-card { flex-wrap:wrap; }
+  .factor-list { flex-basis:100%; margin-top:12px; border-top:1px solid var(--border); padding-top:8px; }
+  .factor-row { display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; padding:3px 0; }
+  .factor-label { color:var(--muted); }
+  .factor-val.pos  { color:var(--accent); font-weight:700; }
+  .factor-val.neg  { color:var(--red);    font-weight:700; }
+  .factor-val.zero { color:var(--muted); }
+
+  /* Expected move */
+  /* Expected move - visual range bar */
+  .em-bar-wrap { margin-top:10px; }
+  .em-bar {
+    position:relative; height:8px; border-radius:5px;
+    background:linear-gradient(90deg, rgba(0,229,255,.06), rgba(0,229,255,.22), rgba(0,229,255,.06));
+    border:1px solid rgba(0,229,255,.25);
+  }
+  .em-marker.spot {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:12px; height:12px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.6);
+    border:2px solid var(--bg);
+  }
+  .em-strike-dot {
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    width:10px; height:10px; border-radius:50%; border:2px solid var(--bg);
+  }
+  .em-strike-dot.safe { background:var(--accent); box-shadow:0 0 10px rgba(0,255,136,.6); }
+  .em-strike-dot.risk { background:var(--red);    box-shadow:0 0 10px rgba(255,51,102,.6); }
+  .em-bar-labels {
+    display:flex; justify-content:space-between; margin-top:8px;
+    font-family:var(--display); font-size:18px; letter-spacing:1px;
+  }
+  .em-bar-labels span:first-child  { color:var(--text); }
+  .em-bar-labels span:last-child   { color:var(--text); }
+  #em-spot-label { color:var(--cyan); font-size:14px; text-shadow:0 0 10px rgba(0,229,255,.4); align-self:flex-start; }
+  .em-sub { font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:6px; letter-spacing:1px; }
+
+  /* Session timeline */
+  .timeline-strip {
+    display:flex; align-items:stretch; gap:0;
+    overflow-x:auto; padding:4px 0 8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tl-node {
+    flex:1; min-width:54px; text-align:center; position:relative;
+    padding:4px 2px;
+  }
+  .tl-node::after {
+    content:''; position:absolute; top:21px; right:-50%;
+    width:100%; height:1px; background:var(--border);
+  }
+  .tl-node:last-child::after { display:none; }
+  .tl-time { font-family:var(--mono); font-size:8px; color:var(--muted); letter-spacing:1px; }
+  .tl-dot {
+    width:10px; height:10px; border-radius:50%; margin:6px auto;
+    position:relative; z-index:1; border:2px solid var(--bg);
+  }
+  .tl-dot.bull { background:var(--accent); box-shadow:0 0 8px rgba(0,255,136,.5); }
+  .tl-dot.bear { background:var(--red);    box-shadow:0 0 8px rgba(255,51,102,.5); }
+  .tl-dot.neut { background:var(--amber);  box-shadow:0 0 8px rgba(255,170,0,.5); }
+  .tl-bias { font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:1px; }
+  .tl-bias.bull { color:var(--accent); }
+  .tl-bias.bear { color:var(--red); }
+  .tl-bias.neut { color:var(--amber); }
+  .tl-conf { font-family:var(--mono); font-size:8px; color:var(--muted); margin-top:1px; }
+  .tl-node.latest .tl-dot { width:13px; height:13px; }
+  .tl-node.latest .tl-time { color:var(--text); }
+  .em-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .em-chip { font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:4px; }
+  .em-chip.safe { background:rgba(0,255,136,.1);  color:var(--accent); border:1px solid rgba(0,255,136,.3); }
+  .em-chip.risk { background:rgba(255,51,102,.1); color:var(--red);    border:1px solid rgba(255,51,102,.3); }
+
+  /* Trade thesis + condition lists */
+  .thesis-text {
+    font-family:var(--body); font-size:12px; color:var(--text); line-height:1.65;
+    margin-top:12px; padding:10px 12px;
+    background:rgba(255,255,255,.02); border-left:2px solid var(--accent); border-radius:0 8px 8px 0;
+  }
+  .thesis-text .thesis-kw { color:var(--accent); font-weight:700; }
+  .mini-label { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--muted); margin:12px 0 6px; }
+  .cond-item { font-family:var(--mono); font-size:10px; color:var(--text); padding:3px 0; line-height:1.5; }
+  .cond-item.stop::before { content:'x '; color:var(--red); font-weight:700; }
+  .cond-item.warn::before { content:'! '; color:var(--amber); font-weight:700; }
+  .decision-reason-text {
+    font-family:var(--mono); font-size:10px; color:var(--muted);
+    margin-top:10px; padding-top:8px; border-top:1px solid var(--border);
+    line-height:1.6;
+  }
+
+  /* STRIKE ANALYSER */
+  .strike-input-row { display:flex; gap:8px; margin-bottom:10px; }
+  .strike-input-row input {
+    flex:1; background:#0a0a10; border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; color:var(--text); font-family:var(--mono); font-size:14px; outline:none;
+  }
+  .strike-input-row input:focus { border-color:var(--accent); }
+  .analyse-btn {
+    padding:10px 18px; color:#021510;
+    background:linear-gradient(135deg, var(--accent), var(--cyan));
+    box-shadow:0 0 14px var(--glow-green);
+    font-family:var(--display); font-size:16px; letter-spacing:1px;
+    border:none; border-radius:8px; cursor:pointer; white-space:nowrap;
+  }
+  .analyse-btn:active { transform:scale(0.97); }
+  #strike-result { display:none; margin-top:10px; padding:12px; background:rgba(0,255,136,.05); border:1px solid rgba(0,255,136,.2); border-radius:8px; }
+  #strike-result.bearish { background:rgba(255,51,102,.05); border-color:rgba(255,51,102,.2); }
+  #strike-result.wait    { background:rgba(255,170,0,.05);  border-color:rgba(255,170,0,.2); }
+  .strike-action { font-family:var(--display); font-size:28px; letter-spacing:2px; }
+  .strike-conf   { font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:4px; }
+  .strike-reasons { margin-top:8px; }
+  .strike-reason { font-family:var(--mono); font-size:10px; color:var(--muted); padding:2px 0; }
+  .strike-reason::before { content:"+ "; color:var(--accent); }
+
+  /* INTEL PANEL */
+  .intel-row {
+    display:flex; justify-content:space-between; padding:6px 0;
+    border-bottom:1px solid var(--border); font-family:var(--mono); font-size:10px;
+  }
+  .intel-row:last-child { border-bottom:none; }
+  .intel-label { color:var(--muted); }
+  .intel-val   { color:var(--text); font-weight:700; }
+
+  /* SKELETON */
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  .skeleton {
+    background:linear-gradient(90deg,var(--surface) 25%,#1a1a2e 50%,var(--surface) 75%);
+    background-size:200% 100%; animation:shimmer 1.5s infinite;
+    border-radius:4px; color:transparent !important;
+  }
+
+  footer {
+    text-align:center; padding:16px; font-family:var(--mono); font-size:10px;
+    color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border);
+    position:relative; z-index:1;
+  }
+</style>
+</head>
+<body>
+<div id="dashboard">
+
+  <!-- HEADER -->
+  <header>
+    <div><div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div></div>
+    <div class="status-bar">
+      <div class="dot" id="dot"></div>
+      <span id="ws-status">CONNECTING</span>
+      <span id="last-update" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
+      <button onclick="forceReconnect()" style="margin-left:8px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:8px;letter-spacing:1px;cursor:pointer;">RECONNECT</button>
+    </div>
+  </header>
+
+  <!-- MARKET STATUS BAR -->
+  <div class="market-status-bar">
+    <div class="market-badge closed" id="market-badge">
+      <span class="mbdot"></span>
+      <span id="market-badge-text">CLOSED</span>
+    </div>
+    <span class="session-greeting" id="session-greeting"></span>
+  </div>
+
+  <!-- TOKEN EXPIRED BANNER -->
+  <div class="token-banner" id="token-banner">
+    <b>UPSTOX TOKEN EXPIRED</b><br>
+    Data is stale. Generate a new access token and update the UPSTOX_ACCESS_TOKEN env var on Render.
+  </div>
+
+  <!-- CLOSED PANEL -->
+  <div class="closed-panel" id="closed-panel">
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">OPENS IN</span>
+      <span class="closed-panel-val countdown" id="time-until-open">--</span>
+    </div>
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">NEXT SESSION</span>
+      <span class="closed-panel-val" id="next-session">--</span>
+    </div>
+    <div class="closed-panel-row">
+      <span class="closed-panel-label">LAST SESSION</span>
+      <span class="closed-panel-val" id="last-session">--</span>
+    </div>
+  </div>
+  <div class="data-as-of" id="data-as-of">DATA AS OF LAST CLOSE</div>
+
+  <!-- SPOT HERO -->
+  <div class="spot-hero">
+    <div>
+      <div class="spot-label">NIFTY 50 SPOT</div>
+      <div id="spot-price">--</div>
+    </div>
+    <div class="expiry-meta">
+      <span id="expiry-tag" class="expiry-tag">--</span>
+      <span id="dte-tag" class="dte-tag" style="display:none"></span>
+      <span id="iv-tag" class="iv-tag normal" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- BIAS + PCR -->
+    <div class="card bias-card">
+      <div>
+        <div class="card-label">Market Bias</div>
+        <div id="bias-badge">--</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">CONFIDENCE</span>
+          <span id="signal-grade" class="grade-badge">--</span>
+          <span id="score-text" style="font-family:var(--mono);font-size:9px;color:var(--muted)">--</span>
+        </div>
+        <div class="score-track"><div id="score-fill" style="width:50%"></div></div>
+      </div>
+      <div class="bias-right">
+        <div class="card-label">PCR</div>
+        <div id="pcr-val" style="font-size:28px;font-family:var(--display);margin:6px 0">--</div>
+        <div id="avg-iv" style="font-family:var(--mono);font-size:9px;color:var(--muted)">IV --</div>
+      </div>
+      <div class="factor-list" id="factor-list" style="display:none;"></div>
+    </div>
+
+    <!-- SR LEVELS -->
+    <div class="card full">
+      <div class="card-label">Support / ATM / Resistance</div>
+      <div class="sr-grid">
+        <div class="sr-col">
+          <div class="sr-tag">SUPPORT</div>
+          <div class="sr-val support" id="sr-support">--</div>
+          <div class="sr-sub">PE OI<br><span id="sr-support-oi">--</span></div>
+        </div>
+        <div class="sr-col mid">
+          <div class="sr-tag">ATM</div>
+          <div class="sr-val atm" id="sr-atm">--</div>
+          <div class="sr-sub">CE IV <span id="atm-ce-iv">--</span><br>PE IV <span id="atm-pe-iv">--</span></div>
+        </div>
+        <div class="sr-col">
+          <div class="sr-tag">RESISTANCE</div>
+          <div class="sr-val resistance" id="sr-resistance">--</div>
+          <div class="sr-sub">CE OI<br><span id="sr-resistance-oi">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPECTED MOVE -->
+    <div class="card full" id="em-card" style="display:none;">
+      <div class="card-label">Expected Move (1 SD to Expiry)</div>
+      <div class="em-bar-wrap">
+        <div class="em-bar">
+          <div class="em-marker spot" id="em-marker-spot"></div>
+          <div id="em-strike-markers"></div>
+        </div>
+        <div class="em-bar-labels">
+          <span id="em-low-label">--</span>
+          <span id="em-spot-label">--</span>
+          <span id="em-high-label">--</span>
+        </div>
+      </div>
+      <div class="em-sub" id="em-sub"></div>
+      <div class="em-chips" id="em-chips"></div>
+    </div>
+
+    <!-- MARKET STRUCTURE -->
+    <div class="card full" id="structure-card" style="display:none;">
+      <div class="card-label">Market Structure</div>
+      <div id="structure-content"></div>
+    </div>
+
+    <!-- SESSION TIMELINE -->
+    <div class="card full" id="timeline-card" style="display:none;">
+      <div class="card-label">Session Timeline</div>
+      <div class="timeline-strip" id="timeline-strip"></div>
+    </div>
+
+    <!-- OI TOTALS -->
+    <div class="card">
+      <div class="card-label">Total CE OI</div>
+      <div id="ce-oi-val">--</div>
+      <div class="card-sub">Call Writers</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total PE OI</div>
+      <div id="pe-oi-val">--</div>
+      <div class="card-sub">Put Writers</div>
+    </div>
+
+    <!-- ALPHA STRIKES -->
+    <div class="card full">
+      <div class="card-label">Alpha Strikes - Top 3 OI Conviction</div>
+      <div class="alpha-list" id="alpha-list"></div>
+    </div>
+
+  </div>
+
+  <!-- WARNINGS -->
+  <div class="warnings-strip" id="warnings-strip" style="display:none;"></div>
+
+  <!-- TRADE DECISION -->
+  <div class="section-wrap" id="decision-block" style="display:none;">
+    <div class="section-label">Execution Cockpit</div>
+    <div class="decision-card" id="decision-card">
+      <div class="decision-header">
+        <div>
+          <div class="decision-action execute" id="decision-action">--</div>
+          <div class="decision-strategy" id="decision-strategy">--</div>
+          <div class="decision-conf" id="decision-conf"></div>
+        </div>
+        <div id="regime-tag" class="regime-tag">--</div>
+      </div>
+      <div id="risk-table-wrap"></div>
+      <div id="trade-thesis" class="thesis-text" style="display:none;"></div>
+      <div id="invalid-block" style="display:none;">
+        <div class="mini-label">TRADE INVALID IF</div>
+        <div id="invalid-list"></div>
+      </div>
+      <div id="counter-block" style="display:none;">
+        <div class="mini-label">WHY NOT</div>
+        <div id="counter-list"></div>
+      </div>
+      <div class="decision-reason-text" id="decision-reason"></div>
+    </div>
+  </div>
+
+  <!-- STRIKE ANALYSER -->
+  <div class="section-wrap">
+    <div class="card full" style="margin-top:0;">
+      <div class="card-label">Strike Analyser</div>
+      <div class="strike-input-row">
+        <input type="number" id="strike-input" placeholder="e.g. 24150" inputmode="numeric">
+        <button class="analyse-btn" onclick="doAnalyseStrike()">ANALYSE</button>
+      </div>
+      <div id="strike-result">
+        <div class="strike-action" id="strike-action">--</div>
+        <div class="strike-conf"   id="strike-conf"></div>
+        <div class="strike-reasons" id="strike-reasons"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION INTELLIGENCE -->
+  <div class="section-wrap">
+    <div class="card full" id="intel-card" style="display:none;">
+      <div class="card-label">Option Intelligence</div>
+      <div id="intel-content"></div>
+    </div>
+  </div>
+
+  <footer>EDGE v4 - NIFTY 50 - PAPER TRADE ONLY</footer>
+</div>
+
+<script>
+  var BACKEND = "https://edge-backend-r1ng.onrender.com";
+
+  // -- Session timeline (polls /history once a minute) --
+  function biasClass(b) {
+    if (!b) return "neut";
+    if (b.indexOf("BULL") >= 0) return "bull";
+    if (b.indexOf("BEAR") >= 0) return "bear";
+    return "neut";
+  }
+  function biasShort(b) {
+    if (!b) return "NEUT";
+    if (b === "BULLISH") return "BULL";
+    if (b === "MILD_BULLISH") return "M.BULL";
+    if (b === "BEARISH") return "BEAR";
+    if (b === "MILD_BEARISH") return "M.BEAR";
+    return "NEUT";
+  }
+  function renderTimeline(entries) {
+    var card = document.getElementById("timeline-card");
+    var strip = document.getElementById("timeline-strip");
+    if (!card || !strip) return;
+    if (!entries || entries.length < 2) { card.style.display = "none"; return; }
+    // Downsample to at most 7 nodes, always keeping first and last
+    var MAX_NODES = 7;
+    var picked = [];
+    if (entries.length <= MAX_NODES) {
+      picked = entries;
+    } else {
+      var step = (entries.length - 1) / (MAX_NODES - 1);
+      for (var i = 0; i < MAX_NODES; i++) {
+        picked.push(entries[Math.round(i * step)]);
+      }
+    }
+    card.style.display = "block";
+    strip.innerHTML = "";
+    picked.forEach(function(e, idx) {
+      var cls = biasClass(e.bias);
+      var t = new Date(e.ts);
+      var hh = String(t.getHours()).padStart(2, "0");
+      var mm = String(t.getMinutes()).padStart(2, "0");
+      var node = document.createElement("div");
+      node.className = "tl-node" + (idx === picked.length - 1 ? " latest" : "");
+      node.innerHTML =
+        '<div class="tl-time">' + hh + ':' + mm + '</div>' +
+        '<div class="tl-dot ' + cls + '"></div>' +
+        '<div class="tl-bias ' + cls + '">' + biasShort(e.bias) + '</div>' +
+        '<div class="tl-conf">' + (e.confidence !== undefined ? e.confidence : '--') + '</div>';
+      strip.appendChild(node);
+    });
+  }
+  function pollTimeline() {
+    fetch(BACKEND + "/history?limit=300")
+      .then(function(r) { return r.json(); })
+      .then(function(j) { renderTimeline(j.entries || []); })
+      .catch(function() { /* timeline is best-effort */ });
+  }
+  setInterval(pollTimeline, 60000);
+  setTimeout(pollTimeline, 4000);
+
+  var pollTimer, prevSpot = null;
+  var lastDataTime = 0;
+  var staleTimer = null;
+  var consecutiveFails = 0;
+  var lastData = null;
+
+  // -- Helpers ----------------------------------------------------------------
+  function fmt(n) {
+    if (!n && n !== 0) return "--";
+    if (n >= 1e7) return (n/1e7).toFixed(1) + "Cr";
+    if (n >= 1e5) return (n/1e5).toFixed(1) + "L";
+    return n.toLocaleString("en-IN");
+  }
+  // Highlight numbers and key trading terms in the trade thesis (own text only, no user input)
+  function highlightThesis(text) {
+    var esc = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    // Numbers (incl. decimals, %, and "pct")
+    esc = esc.replace(/(\d[\d,]*\.?\d*\s?(?:pct|%)?)/g, function(m) {
+      return /\d/.test(m) ? '<b class="thesis-kw">' + m + '</b>' : m;
+    });
+    // Strategy & regime keywords
+    var terms = ['Bear Call Spread','Bull Put Spread','Iron Condor','Long Call','Long Put',
+      'bullish','bearish','neutral','Bullish','Bearish','Neutral',
+      'HIGH','LOW','NORMAL','PUT WRITERS LEADING','CALL WRITERS LEADING','BALANCED POSITIONING'];
+    terms.forEach(function(t) {
+      esc = esc.split(t).join('<b class="thesis-kw">' + t + '</b>');
+    });
+    return esc;
+  }
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = (val !== undefined && val !== null) ? String(val) : "--";
+  }
+  function nowStr() {
+    return new Date().toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false });
+  }
+  function getBiasClass(bias) {
+    if (!bias) return "";
+    var b = bias.toUpperCase();
+    if (b.indexOf("BEAR") >= 0) return "bearish";
+    if (b.indexOf("NEUTRAL") >= 0) return "neutral";
+    return "";
+  }
+
+  // -- Status -----------------------------------------------------------------
+  function setStatus(state) {
+    var dot = document.getElementById("dot");
+    var txt = document.getElementById("ws-status");
+    if (!dot || !txt) return;
+    if (state === "live")        { dot.className="dot live";  txt.textContent="LIVE";       txt.style.color="var(--accent)"; }
+    else if (state === "error")  { dot.className="dot error"; txt.textContent="ERROR";      txt.style.color="var(--red)"; }
+    else                         { dot.className="dot";       txt.textContent="CONNECTING"; txt.style.color="var(--muted)"; }
+  }
+
+  // -- Stale checker ----------------------------------------------------------
+  function startStaleChecker() {
+    clearInterval(staleTimer);
+    staleTimer = setInterval(function() {
+      if (!lastDataTime) return;
+      var age = Date.now() - lastDataTime;
+      var dot = document.getElementById("dot");
+      var txt = document.getElementById("ws-status");
+      if (!dot || !txt) return;
+      if (age > 120000)      { dot.className="dot error"; txt.textContent="STALE"; txt.style.color="var(--red)"; }
+      else if (age > 60000)  { dot.className="dot"; dot.style.background="var(--amber)"; dot.style.boxShadow="0 0 8px var(--amber)"; txt.textContent="SYNCING"; txt.style.color="var(--amber)"; }
+    }, 15000);
+  }
+
+  // -- Polling ----------------------------------------------------------------
+  function fetchData() {
+    fetch(BACKEND + "/data")
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        consecutiveFails = 0;
+        setStatus("live");
+        // Token-expired banner check
+        var banner = document.getElementById("token-banner");
+        if (banner) {
+          if (data && data.tokenExpired) banner.classList.add("visible");
+          else banner.classList.remove("visible");
+        }
+        render(data);
+        setText("last-update", nowStr());
+        lastDataTime = Date.now();
+        lastData = data;
+      })
+      .catch(function(err) {
+        consecutiveFails++;
+        if (consecutiveFails > 3) setStatus("error");
+      });
+  }
+  function forceReconnect() {
+    consecutiveFails = 0;
+    clearInterval(pollTimer);
+    setStatus("connecting");
+    fetchData();
+    pollTimer = setInterval(fetchData, 5000);
+  }
+  function startPolling() {
+    clearInterval(pollTimer);
+    setStatus("connecting");
+    fetchData();
+    pollTimer = setInterval(fetchData, 5000);
+  }
+
+  // -- Main render ------------------------------------------------------------
+  function render(d) {
+    if (!d || d.error) return;
+
+    // Spot
+    var spot = d.spot || 0;
+    var spotEl = document.getElementById("spot-price");
+    if (spotEl) {
+      spotEl.textContent = spot.toLocaleString("en-IN");
+      if (prevSpot !== null && spot !== prevSpot) {
+        var cls = spot > prevSpot ? "flash-up" : "flash-down";
+        spotEl.classList.remove("flash-up","flash-down");
+        void spotEl.offsetWidth;
+        spotEl.classList.add(cls);
+        setTimeout(function() { spotEl.classList.remove(cls); }, 700);
+      }
+      prevSpot = spot;
+    }
+
+    // Expiry + DTE + IV regime
+    var expEl = document.getElementById("expiry-tag");
+    if (expEl) { expEl.textContent = "NSE LIVE - " + (d.expiry || "--"); expEl.className = "expiry-tag live"; }
+    var dteEl = document.getElementById("dte-tag");
+    if (dteEl && d.dte !== undefined) { dteEl.textContent = d.dte + "D TO EXPIRY"; dteEl.style.display = "inline-block"; }
+    var ivTagEl = document.getElementById("iv-tag");
+    if (ivTagEl && d.ivRegime) {
+      var ivLbl = { LOW:"IV LOW", NORMAL:"IV NORMAL", HIGH:"IV HIGH" }[d.ivRegime] || d.ivRegime;
+      ivTagEl.textContent = ivLbl + " (" + (d.avgIV || "--") + "%)";
+      ivTagEl.className = "iv-tag " + d.ivRegime.toLowerCase();
+      ivTagEl.style.display = "inline-block";
+    }
+
+    // Bias + confidence
+    var biasClass = getBiasClass(d.bias);
+    var biasEl = document.getElementById("bias-badge");
+    if (biasEl) { biasEl.textContent = d.biasLabel || d.bias || "--"; biasEl.className = biasClass; }
+    setText("score-text", (d.confidence || 0) + "/100");
+    var fillEl = document.getElementById("score-fill");
+    if (fillEl) { fillEl.style.width = (d.confidence || 50) + "%"; fillEl.className = biasClass; }
+
+    // PCR + avg IV
+    setText("pcr-val", d.pcr);
+    setText("avg-iv", "IV " + (d.avgIV || "--") + "%");
+
+    // SR levels
+    setText("sr-support",    d.support && d.support.strike);
+    setText("sr-support-oi", fmt(d.support && d.support.peOI));
+    setText("sr-atm",        d.atm && d.atm.strike);
+    setText("sr-resistance", d.resistance && d.resistance.strike);
+    setText("sr-resistance-oi", fmt(d.resistance && d.resistance.ceOI));
+    setText("atm-ce-iv", d.atm && d.atm.ceIV ? d.atm.ceIV.toFixed(1) + "%" : "--");
+    setText("atm-pe-iv", d.atm && d.atm.peIV ? d.atm.peIV.toFixed(1) + "%" : "--");
+
+    // OI totals
+    setText("ce-oi-val", fmt(d.totalCEOI));
+    setText("pe-oi-val", fmt(d.totalPEOI));
+
+    // Alpha strikes with Greeks
+    renderAlphas(d.alphas, d.ivRegime);
+
+    // Explainability: grade + factor breakdown
+    renderExplain(d.explain);
+
+    // Expected move
+    renderEM(d.expectedMove);
+
+    // Market structure
+    renderStructure(d.structure);
+
+    // Warnings
+    renderWarnings(d.warnings);
+
+    // Decision
+    renderDecision(d.decision, d.confidence, d.bias, d.ivRegime, d.explain);
+
+    // Intel
+    renderIntel(d.intel, d.pcr);
+
+    // Market status
+    updateMarketStatusUI();
+  }
+
+  // -- Alpha strikes ----------------------------------------------------------
+  function renderAlphas(alphas, ivRegime) {
+    var el = document.getElementById("alpha-list");
+    if (!el || !alphas) return;
+    el.innerHTML = "";
+    alphas.forEach(function(a, i) {
+      var dominant = (a.ceOI || 0) > (a.peOI || 0) ? "CE" : "PE";
+      var ivVal = a.ceIV || 0;
+      var ivClass = ivVal < 12 ? "iv-low" : ivVal <= 20 ? "iv-normal" : "iv-high";
+
+      var row = document.createElement("div"); row.className = "alpha-row" + (i === 0 ? " top-conviction" : "");
+      row.innerHTML =
+        '<div class="alpha-top">' +
+          '<div class="alpha-rank">#' + (i+1) + '</div>' +
+          '<div class="alpha-strike">' + a.strike + '</div>' +
+          '<span class="alpha-tag ' + dominant.toLowerCase() + '">' + dominant + ' HEAVY</span>' +
+          '<div class="alpha-oi">CE:' + fmt(a.ceOI) + '\nPE:' + fmt(a.peOI) + '</div>' +
+        '</div>' +
+        '<div class="alpha-greeks">' +
+          '<div class="greek-cell"><div class="greek-label">DELTA</div><div class="greek-val">' + (a.ceDelta ? a.ceDelta.toFixed(2) : '--') + '</div></div>' +
+          '<div class="greek-cell"><div class="greek-label">IV</div><div class="greek-val ' + ivClass + '">' + (a.ceIV ? a.ceIV.toFixed(1) + '%' : '--') + '</div></div>' +
+          '<div class="greek-cell"><div class="greek-label">THETA</div><div class="greek-val" style="color:var(--red)">' + (a.ceTheta ? a.ceTheta.toFixed(1) : '--') + '</div></div>' +
+          '<div class="greek-cell"><div class="greek-label">VEGA</div><div class="greek-val">' + (a.ceVega ? a.ceVega.toFixed(1) : '--') + '</div></div>' +
+        '</div>';
+      el.appendChild(row);
+    });
+  }
+
+  // -- Explainability: signal grade + factor breakdown --
+  function renderExplain(ex) {
+    var grade = document.getElementById("signal-grade");
+    if (grade) {
+      var g = ex && ex.signalGrade ? ex.signalGrade : "--";
+      grade.textContent = g;
+      grade.className = "grade-badge " + (g === "A+" || g === "A" ? "good" : g === "B" ? "ok" : g === "D" ? "bad" : "");
+    }
+    var list = document.getElementById("factor-list");
+    if (!list) return;
+    if (!ex || !ex.factors || !ex.factors.length) { list.style.display = "none"; return; }
+    list.style.display = "block";
+    list.innerHTML = "";
+    ex.factors.forEach(function(f) {
+      var v = f.value;
+      var row = document.createElement("div");
+      row.className = "factor-row";
+      row.innerHTML = '<span class="factor-label">' + f.label + '</span>' +
+        '<span class="factor-val ' + (v > 0 ? "pos" : v < 0 ? "neg" : "zero") + '">' + (v > 0 ? "+" : "") + v + '</span>';
+      list.appendChild(row);
+    });
+  }
+
+  // -- Expected move --
+  function renderEM(em) {
+    var card = document.getElementById("em-card");
+    if (!card) return;
+    if (!em || !em.points) { card.style.display = "none"; return; }
+    card.style.display = "block";
+    var low = em.low, high = em.high;
+    var spot = Math.round((low + high) / 2);
+    setText("em-low-label", low.toLocaleString("en-IN"));
+    setText("em-spot-label", spot.toLocaleString("en-IN"));
+    setText("em-high-label", high.toLocaleString("en-IN"));
+    setText("em-sub", "+/- " + em.points + " PTS FROM SPOT (ATM STRADDLE)");
+
+    var markers = document.getElementById("em-strike-markers");
+    var chips = document.getElementById("em-chips");
+    if (markers) markers.innerHTML = "";
+    if (chips) chips.innerHTML = "";
+    var entries = [];
+    if (em.strikeSafety) {
+      if (em.strikeSafety.ceShort) entries.push(["SHORT CE " + em.strikeSafety.ceShort.strike, em.strikeSafety.ceShort.strike, em.strikeSafety.ceShort.outsideEM]);
+      if (em.strikeSafety.peShort) entries.push(["SHORT PE " + em.strikeSafety.peShort.strike, em.strikeSafety.peShort.strike, em.strikeSafety.peShort.outsideEM]);
+      if (em.strikeSafety.sellLeg) entries.push(["SHORT " + em.strikeSafety.sellLeg.strike, em.strikeSafety.sellLeg.strike, em.strikeSafety.sellLeg.outsideEM]);
+    }
+    var range = high - low;
+    entries.forEach(function(e) {
+      var pct = range > 0 ? ((e[1] - low) / range) * 100 : 50;
+      pct = Math.max(1, Math.min(99, pct));
+      if (markers) {
+        var dot = document.createElement("div");
+        dot.className = "em-strike-dot " + (e[2] ? "safe" : "risk");
+        dot.style.left = pct + "%";
+        markers.appendChild(dot);
+      }
+      if (chips) {
+        var chip = document.createElement("span");
+        chip.className = "em-chip " + (e[2] ? "safe" : "risk");
+        chip.textContent = e[0] + (e[2] ? " - OUTSIDE EM" : " - INSIDE EM");
+        chips.appendChild(chip);
+      }
+    });
+  }
+
+  // -- Market structure --
+  function renderStructure(st) {
+    var card = document.getElementById("structure-card");
+    var content = document.getElementById("structure-content");
+    if (!card || !content) return;
+    if (!st) { card.style.display = "none"; return; }
+    card.style.display = "block";
+    function sRow(label, val) {
+      return '<div class="intel-row"><span class="intel-label">' + label + '</span><span class="intel-val">' + val + '</span></div>';
+    }
+    var html = "";
+    if (st.writerDominance) html += sRow("WRITER DOMINANCE", st.writerDominance.label + " (" + st.writerDominance.strength + ")");
+    html += sRow("OI WALLS", "PE " + st.peWall + "  /  CE " + st.ceWall);
+    html += sRow("RANGE WIDTH", st.rangeWidth + " pts (" + st.rangePct + " pct) - " + st.compression);
+    html += sRow("BREAKOUT RISK", st.breakoutRisk);
+    html += sRow("PREMIUM SELLING", st.premiumSelling);
+    content.innerHTML = html;
+  }
+
+  // -- Warnings ---------------------------------------------------------------
+  function renderWarnings(warnings) {
+    var strip = document.getElementById("warnings-strip");
+    if (!strip) return;
+    if (!warnings || !warnings.length) { strip.style.display = "none"; return; }
+    strip.style.display = "flex";
+    strip.innerHTML = "";
+    warnings.forEach(function(w) {
+      var pill = document.createElement("div"); pill.className = "warning-pill";
+      pill.textContent = w;
+      strip.appendChild(pill);
+    });
+  }
+
+  // -- Decision block ---------------------------------------------------------
+  function renderDecision(dec, confidence, bias, ivRegime, explain) {
+    if (!dec) return;
+    var block = document.getElementById("decision-block");
+    var card  = document.getElementById("decision-card");
+    if (!block || !card) return;
+    block.style.display = "block";
+
+    var strategy = dec.strategy || "WAIT";
+    var isWait = strategy === "WAIT";
+    var isBearish = (bias || "").indexOf("BEAR") >= 0;
+    var isBullish = (bias || "").indexOf("BULL") >= 0;
+
+    card.className = "decision-card" + (isBearish ? " bearish" : isWait ? " noedge" : "");
+
+    var actionEl = document.getElementById("decision-action");
+    actionEl.textContent = isWait ? "NO EDGE - WAIT" : "EXECUTE";
+    actionEl.className = "decision-action " + (isWait ? "noedge" : "execute");
+
+    var strategyNames = {
+      BEAR_CALL_SPREAD: "Bear Call Spread",
+      BULL_PUT_SPREAD:  "Bull Put Spread",
+      LONG_CALL:        "Long Call",
+      LONG_PUT:         "Long Put",
+      IRON_CONDOR:      "Iron Condor",
+      WAIT:             "Wait for Setup"
+    };
+    setText("decision-strategy", strategyNames[strategy] || strategy);
+    setText("decision-conf", "Confidence: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--"));
+
+    // Regime tag
+    var regimeEl = document.getElementById("regime-tag");
+    if (regimeEl) {
+      regimeEl.textContent = ivRegime || "--";
+      regimeEl.className = "regime-tag" + (isBearish ? " bearish" : !isBullish ? " neutral" : "");
+    }
+
+    // Risk table
+    var wrap = document.getElementById("risk-table-wrap");
+    if (wrap) {
+      wrap.innerHTML = "";
+      var legs = dec.tradeLegs;
+      if (legs && !isWait) {
+        // Leg stack (broker-style cards)
+        var legsHtml = '<div class="legs-stack">';
+        function legCardHtml(action, leg) {
+          var cls = action.toLowerCase();
+          return '<div class="leg-card ' + cls + '">' +
+            '<div class="leg-left">' +
+              '<div class="leg-action ' + cls + '">' + action + '</div>' +
+              '<div class="leg-contract">' + (leg.contractId || ('NIFTY ' + leg.strike + ' ' + leg.type)) + '</div>' +
+            '</div>' +
+            '<div class="leg-right">' +
+              '<div class="leg-premium-label">PREMIUM</div>' +
+              '<div class="leg-premium ' + cls + '">' + leg.premium + '</div>' +
+            '</div>' +
+          '</div>';
+        }
+
+        if (legs.ceShort && legs.peShort) {
+          // Iron Condor: 4 legs
+          legsHtml += legCardHtml('SELL', legs.ceShort);
+          legsHtml += legCardHtml('BUY',  legs.ceLong);
+          legsHtml += legCardHtml('SELL', legs.peShort);
+          legsHtml += legCardHtml('BUY',  legs.peLong);
+        } else {
+          if (legs.sellLeg) legsHtml += legCardHtml('SELL', legs.sellLeg);
+          if (legs.buyLeg)  legsHtml += legCardHtml('BUY',  legs.buyLeg);
+        }
+        legsHtml += '</div>';
+        if (legs.lotSize) {
+          legsHtml += '<div class="lot-note">LOT SIZE: ' + legs.lotSize + ' UNITS</div>';
+        }
+
+        // Execution cockpit: big INR stats + PoP bar + compact detail rows
+        function rupeesStr(v) {
+          if (v === undefined || v === null) return '';
+          if (v === 'Unlimited') return 'Unlimited';
+          return Number(v).toLocaleString('en-IN');
+        }
+        function cockStat(label, pts, rupees, tone) {
+          var big = rupees === 'Unlimited' ? 'UNLTD' : 'INR ' + rupeesStr(rupees);
+          var sub = (pts === 'Unlimited') ? '' : pts + ' pts';
+          return '<div class="cock-stat"><div class="cock-label">' + label + '</div>' +
+            '<div class="cock-val ' + tone + '">' + big + '</div>' +
+            (sub ? '<div class="cock-sub">' + sub + '</div>' : '') + '</div>';
+        }
+        var cockpitHtml = '';
+        var stats = [];
+        if (legs.netCredit !== undefined && legs.netCredit !== null) stats.push(cockStat('NET CREDIT', legs.netCredit, legs.netCreditRupees, 'profit'));
+        if (legs.maxProfit) stats.push(cockStat('MAX PROFIT', legs.maxProfit, legs.maxProfitRupees, 'profit'));
+        if (legs.maxLoss)   stats.push(cockStat('MAX LOSS',   legs.maxLoss,   legs.maxLossRupees,   'loss'));
+        if (stats.length) {
+          cockpitHtml = '<div class="cockpit' + (stats.length === 2 ? ' two' : '') + '">' + stats.join('') + '</div>';
+        }
+        var popHtml = '';
+        if (legs.pop) {
+          popHtml = '<div class="pop-wrap"><div class="pop-head"><span>PROB OF PROFIT</span><span class="pop-pct">' + legs.pop + '%</span></div>' +
+            '<div class="pop-track"><div class="pop-fill" style="width:' + Math.max(0, Math.min(100, legs.pop)) + '%"></div></div></div>';
+        }
+        var rows = [];
+        if (legs.breakeven)     rows.push(["BREAKEVEN", legs.breakeven, "neutral"]);
+        if (legs.breakevenLow)  rows.push(["BE LOW",    legs.breakevenLow, "neutral"]);
+        if (legs.breakevenHigh) rows.push(["BE HIGH",   legs.breakevenHigh, "neutral"]);
+        if (legs.rrr)           rows.push(["RISK:REWARD", legs.rrr, "neutral"]);
+        if (legs.liquidity && legs.liquidity !== "TIGHT") {
+          rows.push(["LIQUIDITY", legs.liquidity, legs.liquidity === "LIMITED" ? "loss" : "neutral"]);
+        }
+        var tableHtml = '';
+        if (rows.length) {
+          tableHtml = '<div class="risk-table">' + rows.map(function(r) {
+            return '<div class="risk-row"><span class="risk-label">' + r[0] + '</span><span class="risk-val ' + r[2] + '">' + r[1] + '</span></div>';
+          }).join('') + '</div>';
+        }
+        wrap.innerHTML = legsHtml + cockpitHtml + popHtml + tableHtml;
+      }
+    }
+
+    // Trade thesis (deterministic narrative from engine signals)
+    var thesisEl = document.getElementById("trade-thesis");
+    if (thesisEl) {
+      if (explain && explain.thesis) {
+        thesisEl.style.display = "block";
+        thesisEl.innerHTML = highlightThesis(explain.thesis);
+      } else {
+        thesisEl.style.display = "none";
+      }
+    }
+
+    // Invalidation conditions
+    var ib = document.getElementById("invalid-block");
+    var il = document.getElementById("invalid-list");
+    if (ib && il) {
+      if (explain && explain.invalidation && explain.invalidation.length && !isWait) {
+        ib.style.display = "block";
+        il.innerHTML = "";
+        explain.invalidation.forEach(function(c) {
+          var div = document.createElement("div");
+          div.className = "cond-item stop";
+          div.textContent = c;
+          il.appendChild(div);
+        });
+      } else {
+        ib.style.display = "none";
+      }
+    }
+
+    // Counterarguments (why not)
+    var cb = document.getElementById("counter-block");
+    var cl = document.getElementById("counter-list");
+    if (cb && cl) {
+      if (explain && explain.counterarguments && explain.counterarguments.length) {
+        cb.style.display = "block";
+        cl.innerHTML = "";
+        explain.counterarguments.forEach(function(c) {
+          var div = document.createElement("div");
+          div.className = "cond-item warn";
+          div.textContent = c;
+          cl.appendChild(div);
+        });
+      } else {
+        cb.style.display = "none";
+      }
+    }
+
+    // Reason text (one-liner, kept as compact footer)
+    setText("decision-reason", dec.reason || "");
+  }
+
+  // -- Intel panel ------------------------------------------------------------
+  function renderIntel(intel, pcr) {
+    if (!intel) return;
+    var card = document.getElementById("intel-card");
+    var content = document.getElementById("intel-content");
+    if (!card || !content) return;
+    card.style.display = "block";
+
+    var html = "";
+    html += '<div class="intel-row"><span class="intel-label">MAX PAIN</span><span class="intel-val">' + (intel.maxPain || "--") + '</span></div>';
+    html += '<div class="intel-row"><span class="intel-label">OVERALL PCR</span><span class="intel-val">' + (pcr || "--") + '</span></div>';
+    if (intel.ceWritingZone && intel.ceWritingZone.length)
+      html += '<div class="intel-row"><span class="intel-label">TOP CE WRITING</span><span class="intel-val">' + intel.ceWritingZone.join(", ") + '</span></div>';
+    if (intel.peWritingZone && intel.peWritingZone.length)
+      html += '<div class="intel-row"><span class="intel-label">TOP PE WRITING</span><span class="intel-val">' + intel.peWritingZone.join(", ") + '</span></div>';
+    if (intel.oiClusters && intel.oiClusters.length)
+      html += '<div class="intel-row"><span class="intel-label">OI CLUSTERS</span><span class="intel-val">' + intel.oiClusters.join(", ") + '</span></div>';
+
+    content.innerHTML = html;
+  }
+
+  // -- Strike analyser --------------------------------------------------------
+  function doAnalyseStrike() {
+    var strikeVal = parseInt(document.getElementById("strike-input").value);
+    if (!strikeVal || !lastData) { alert("Enter a strike and wait for data"); return; }
+
+    var alphas = lastData.alphas || [];
+    var spot = lastData.spot || 0;
+    var bias = lastData.bias || "";
+    var ivRegime = lastData.ivRegime || "NORMAL";
+
+    var nearest = alphas.reduce(function(best, a) {
+      return Math.abs(a.strike - strikeVal) < Math.abs(best.strike - strikeVal) ? a : best;
+    }, alphas[0] || { strike: strikeVal, ceOI: 0, peOI: 0, ceDelta: 0.5, ceIV: 15 });
+
+    var score = 50;
+    var reasons = [];
+    var distPct = Math.abs(strikeVal - spot) / spot * 100;
+
+    if (distPct < 0.5)      { reasons.push("ATM strike - high gamma exposure"); score += 10; }
+    else if (distPct < 1.5) { reasons.push("Near ATM");  score += 5; }
+    else                    { reasons.push("OTM strike"); score -= 10; }
+
+    var strikePCR = (nearest.peOI || 0) / ((nearest.ceOI || 0) || 1);
+    if (strikePCR > 1.3) { reasons.push("Bullish PCR at strike (" + strikePCR.toFixed(2) + ")"); score += 12; }
+    else if (strikePCR < 0.7) { reasons.push("Bearish PCR at strike (" + strikePCR.toFixed(2) + ")"); score -= 12; }
+
+    if (bias.indexOf("BULL") >= 0) { reasons.push("Market bias: " + bias); score += 10; }
+    else if (bias.indexOf("BEAR") >= 0) { reasons.push("Market bias: " + bias); score -= 10; }
+
+    if (nearest.ceDelta) {
+      if (nearest.ceDelta >= 0.4 && nearest.ceDelta <= 0.6) reasons.push("Delta " + nearest.ceDelta.toFixed(2) + " - ideal for buying");
+      else if (nearest.ceDelta < 0.3) reasons.push("Low delta " + nearest.ceDelta.toFixed(2) + " - OTM, risky buy");
+    }
+    if (nearest.ceIV) {
+      if (nearest.ceIV > 20) { reasons.push("High IV " + nearest.ceIV.toFixed(1) + "% - prefer selling"); score -= 8; }
+      else if (nearest.ceIV < 12) { reasons.push("Low IV " + nearest.ceIV.toFixed(1) + "% - prefer buying"); score += 8; }
+    }
+
+    score = Math.max(10, Math.min(95, score));
+    var action = score >= 65 ? "BUY CE" : score <= 40 ? "BUY PE" : "WAIT";
+    var cls = score >= 65 ? "" : score <= 40 ? "bearish" : "wait";
+
+    var resEl = document.getElementById("strike-result");
+    resEl.className = cls; resEl.style.display = "block";
+    document.getElementById("strike-action").textContent = action;
+    document.getElementById("strike-conf").textContent = "Score: " + score + "/100  |  Strike PCR: " + strikePCR.toFixed(2) + "  |  IV: " + (nearest.ceIV ? nearest.ceIV.toFixed(1) + "%" : "--");
+
+    var reasonsEl = document.getElementById("strike-reasons");
+    reasonsEl.innerHTML = "";
+    reasons.forEach(function(r) {
+      var div = document.createElement("div"); div.className = "strike-reason"; div.textContent = r;
+      reasonsEl.appendChild(div);
+    });
+  }
+
+  // -- Market status ----------------------------------------------------------
+  var NSE_HOLIDAYS = [
+    "2026-01-26","2026-03-25","2026-04-14","2026-05-01",
+    "2026-08-15","2026-10-02","2026-10-22","2026-11-05","2026-11-25"
+  ];
+  var MARKET_OPEN_HOUR = 9, MARKET_OPEN_MIN = 15;
+  var MARKET_CLOSE_HOUR = 15, MARKET_CLOSE_MIN = 30;
+  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function getIST() { return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"})); }
+  function toDateStr(d) { return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function isTradingDay(d) { var day=d.getDay(); if(day===0||day===6) return false; return NSE_HOLIDAYS.indexOf(toDateStr(d))<0; }
+  function getMarketStatus() {
+    var now=getIST(); var mins=now.getHours()*60+now.getMinutes();
+    var isOpen=isTradingDay(now)&&mins>=MARKET_OPEN_HOUR*60+MARKET_OPEN_MIN&&mins<MARKET_CLOSE_HOUR*60+MARKET_CLOSE_MIN;
+    return {isOpen:isOpen,now:now,mins:mins};
+  }
+  function getTimeUntilNextOpen() {
+    var now=getIST(); var candidate=new Date(now); candidate.setSeconds(0); candidate.setMilliseconds(0);
+    for(var i=0;i<10;i++){
+      var check=new Date(candidate); check.setHours(9,15,0,0);
+      if(check>now&&isTradingDay(check)){
+        var diff=check-now; var totalMins=Math.floor(diff/60000);
+        return {hours:Math.floor(totalMins/60),minutes:totalMins%60,openDate:check};
+      }
+      candidate.setDate(candidate.getDate()+1);
+    }
+    return {hours:0,minutes:0,openDate:null};
+  }
+  function getLastSessionDate() {
+    var now=getIST(); var status=getMarketStatus();
+    var todayMins=now.getHours()*60+now.getMinutes();
+    if(isTradingDay(now)&&todayMins>=MARKET_CLOSE_HOUR*60+MARKET_CLOSE_MIN) return DAYS[now.getDay()]+", "+MONTHS[now.getMonth()]+" "+now.getDate();
+    var candidate=new Date(now); candidate.setDate(candidate.getDate()-1);
+    for(var i=0;i<10;i++){
+      if(isTradingDay(candidate)) return DAYS[candidate.getDay()]+", "+MONTHS[candidate.getMonth()]+" "+candidate.getDate();
+      candidate.setDate(candidate.getDate()-1);
+    }
+    return "--";
+  }
+  function getSessionGreeting() {
+    var now=getIST(); var mins=now.getHours()*60+now.getMinutes(); var day=now.getDay();
+    if(day===0||day===6) return "Markets reopen Monday";
+    if(mins<MARKET_OPEN_HOUR*60+MARKET_OPEN_MIN) return "Pre-market";
+    if(mins<MARKET_CLOSE_HOUR*60+MARKET_CLOSE_MIN) return "Market Live";
+    return "Market Closed";
+  }
+
+  var marketStatusTimer = null;
+  function updateMarketStatusUI() {
+    var status=getMarketStatus();
+    var info=getTimeUntilNextOpen();
+    var countdown=info.hours>0?info.hours+"h "+info.minutes+"m":info.minutes+"m";
+    var label=info.openDate?DAYS[info.openDate.getDay()]+", 9:15 AM":"--";
+
+    var badge=document.getElementById("market-badge");
+    var badgeTxt=document.getElementById("market-badge-text");
+    if(badge&&badgeTxt){ badge.className="market-badge "+(status.isOpen?"open":"closed"); badgeTxt.textContent=status.isOpen?"OPEN":"CLOSED"; }
+
+    var greetEl=document.getElementById("session-greeting");
+    if(greetEl) greetEl.textContent=getSessionGreeting();
+
+    var panel=document.getElementById("closed-panel");
+    var asOf=document.getElementById("data-as-of");
+    if(panel){
+      setText("time-until-open",countdown);
+      setText("next-session",label);
+      setText("last-session",getLastSessionDate());
+      if(!status.isOpen){ panel.classList.add("visible"); if(asOf) asOf.classList.add("visible"); }
+      else              { panel.classList.remove("visible"); if(asOf) asOf.classList.remove("visible"); }
+    }
+  }
+  function startMarketStatusTimer() {
+    updateMarketStatusUI();
+    clearInterval(marketStatusTimer);
+    marketStatusTimer=setInterval(updateMarketStatusUI,60000);
+  }
+
+  // -- Boot -------------------------------------------------------------------
+  document.addEventListener("DOMContentLoaded", function() {
+    startPolling();
+    startMarketStatusTimer();
+    startStaleChecker();
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(function() {});
+  }
+</script>
+</body>
+</html>
