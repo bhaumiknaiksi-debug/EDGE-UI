@@ -1188,37 +1188,77 @@
   function makeActionablePlan(d, dec, confidence, bias, ivRegime) {
     var out = dec ? JSON.parse(JSON.stringify(dec)) : {strategy:"WAIT"};
     var legs = out.tradeLegs || null;
+    var entryBlock = out.entry || {};
+    var timing = entryBlock.timing || {};
+    var risk = out.risk || {};
+    var orchestration = (d && d.orchestration) || {};
+    var position = out.position || (d && d.position) || {};
+
+    // The vNext backend is authoritative. Financial levels and timing now live
+    // in the nested entry/risk modules, while the final execution gate lives
+    // in orchestration. Read those fields directly instead of reconstructing
+    // an older frontend-only decision shape.
+    var backendStatus = orchestration.status || null;
+    var statusMap = {
+      READY_TO_EXECUTE: "EXECUTE",
+      WAIT_FOR_TRIGGER: "SIGNAL",
+      WAIT_FOR_ENTRY: "SIGNAL",
+      POSITION_BLOCKED: "BLOCKED",
+      MARKET_CLOSED: "BLOCKED",
+      NO_TRADE: "BLOCKED"
+    };
+    var actionMap = {
+      READY_TO_EXECUTE: "READY TO EXECUTE",
+      WAIT_FOR_TRIGGER: "WAIT FOR TRIGGER",
+      WAIT_FOR_ENTRY: "WAIT FOR ENTRY",
+      POSITION_BLOCKED: "POSITION BLOCKED",
+      MARKET_CLOSED: "MARKET CLOSED",
+      NO_TRADE: "NO TRADE"
+    };
+
     var plan = {
-      action: out.action || out.signalStatus || "SIGNAL INCOMPLETE",
-      status: out.signalStatus || (out.action ? "SIGNAL" : "INCOMPLETE"),
+      action: actionMap[backendStatus] || out.action || out.signalStatus || "SIGNAL INCOMPLETE",
+      status: statusMap[backendStatus] || out.signalStatus || (out.action ? "SIGNAL" : "INCOMPLETE"),
       entry: firstNum(out.entry, out.entryPrice, legs && legs.entry, legs && legs.netCredit),
-      entryLow: firstNum(out.entryLow, out.entryZoneLow),
-      entryHigh: firstNum(out.entryHigh, out.entryZoneHigh),
+      entryLow: firstNum(out.entryLow, out.entryZoneLow, entryBlock.premium && entryBlock.premium.low),
+      entryHigh: firstNum(out.entryHigh, out.entryZoneHigh, entryBlock.premium && entryBlock.premium.high),
       trigger: firstNum(out.trigger, out.entryTrigger),
-      target: firstNum(out.target, out.targetPrice, legs && legs.target),
-      stop: firstNum(out.stop, out.stopLoss, out.stopPrice, legs && legs.stopLoss),
-      waitMinutes: firstNum(out.validForMinutes, out.entryValidForMinutes),
-      holdMinutes: firstNum(out.maxHoldMinutes, out.holdMinutes),
-      reason: out.reason || "",
+      target: firstNum(out.target, out.targetPrice, legs && legs.target, risk.target1 && risk.target1.value),
+      stop: firstNum(out.stop, out.stopLoss, out.stopPrice, legs && legs.stopLoss, risk.stop && risk.stop.value),
+      waitMinutes: firstNum(out.validForMinutes, out.entryValidForMinutes, timing.validForMinutes),
+      holdMinutes: firstNum(out.maxHoldMinutes, out.holdMinutes, timing.maxHoldMinutes, risk.maxHoldMinutes),
+      reason: (backendStatus === "NO_TRADE" || backendStatus === "POSITION_BLOCKED" || backendStatus === "MARKET_CLOSED")
+        ? (orchestration.summary || position.reason || out.reason || "")
+        : (out.reason || ""),
       chase: out.doNotChasePrice,
-      source: "backend"
+      source: "backend",
+      backendStatus: backendStatus
     };
 
     if (out.strategy === "WAIT") {
-      plan.action = out.action || "WAIT";
-      plan.status = "WAIT";
+      plan.action = actionMap[backendStatus] || out.action || "WAIT";
+      plan.status = backendStatus ? (statusMap[backendStatus] || "WAIT") : "WAIT";
     }
 
-    // The frontend is display-only: every financial level and time window must
-    // originate in the backend decision. Missing values stay visibly missing.
+    // Only flag an actionable signal as incomplete when the backend itself has
+    // not supplied the required financial levels. Do not discard nested vNext
+    // entry/risk values or overwrite a valid final-gate status.
     if (plan.entry === null || plan.stop === null || plan.target === null) {
-      if (plan.status === "SIGNAL" || plan.status === "EXECUTE") {
+      if ((plan.status === "SIGNAL" || plan.status === "EXECUTE") && !backendStatus) {
         plan.status = "INCOMPLETE";
         plan.action = "SIGNAL INCOMPLETE";
         plan.reason = "The backend signal is missing one or more required price levels.";
       }
     }
-    return { strategy: out.strategy || "WAIT", tradeLegs: legs, reason: out.reason || "", action: out.action, signalStatus: out.signalStatus, actionable: plan, explain: out.explain };
+    return {
+      strategy: out.strategy || "WAIT",
+      tradeLegs: legs,
+      reason: out.reason || "",
+      action: out.action,
+      signalStatus: out.signalStatus,
+      actionable: plan,
+      explain: out.explain
+    };
   }
 
   function renderDecision(d, dec, confidence, bias, ivRegime, explain) {
@@ -1254,7 +1294,8 @@
       WAIT:             "Wait for Setup"
     };
     setText("decision-strategy", strategyNames[strategy] || strategy);
-    setText("decision-conf", "Confidence: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--") + "  |  Valid: " + (plan.waitMinutes || 0) + "m");
+    var validityText = plan.waitMinutes !== null && plan.waitMinutes !== undefined ? "Valid: " + plan.waitMinutes + "m" : "Validity: --";
+    setText("decision-conf", "Confidence: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--") + "  |  " + validityText);
 
     var regimeEl = document.getElementById("regime-tag");
     if (regimeEl) {
