@@ -497,19 +497,46 @@
     color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border);
     position:relative; z-index:1;
   }
+
+  /* EDGE personal cockpit tabs */
+  .edge-tabs { position:sticky; top:0; z-index:30; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:7px; margin:0 0 12px; background:rgba(8,10,15,.94); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:12px; }
+  .edge-tab { appearance:none; border:1px solid transparent; background:transparent; color:var(--muted); padding:9px 5px 8px; border-radius:8px; font-family:var(--mono); font-size:9px; letter-spacing:1px; cursor:pointer; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, background .18s ease; }
+  .edge-tab:hover { transform:translateY(-1px) scale(1.01); color:var(--text); border-color:var(--border); }
+  .edge-tab:active { transform:scale(.98); }
+  .edge-tab.active { color:var(--text); border-color:rgba(0,255,136,.28); background:rgba(0,255,136,.055); box-shadow:0 0 16px rgba(0,255,136,.08); }
+  .edge-tab small { display:block; margin-top:3px; font-size:7px; letter-spacing:.8px; opacity:.55; }
+  .edge-panel { display:none; }
+  .edge-panel.active { display:block; animation:edgePanelIn .22s ease both; }
+  @keyframes edgePanelIn { from { opacity:.55; transform:translateY(3px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { .edge-panel.active { animation:none; } .edge-tab { transition:none; } }
+  .edge-personality { color:var(--muted); font-family:var(--mono); font-size:9px; letter-spacing:.7px; margin-top:6px; }
+  .card { transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .card:hover { transform:translateY(-2px); border-color:rgba(0,229,255,.22); box-shadow:0 8px 24px rgba(0,0,0,.22),0 0 18px rgba(0,229,255,.045); }
+  .logo { transition:transform .18s ease, letter-spacing .18s ease; }
+  .logo:hover { transform:rotate(-1deg); letter-spacing:.4px; }
+  .bias-badge { transition:transform .18s ease, box-shadow .18s ease; }
+  .bias-badge:hover { transform:scale(1.02); }
+
 </style>
 </head>
 <body>
+<nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
+  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">RADAR<small>what's up?</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">TRADE<small>what do I do?</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">FLOW<small>what's underneath?</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">LAB<small>poke the market</small></button>
+</nav>
+<div id="tab-radar" class="edge-panel active" role="tabpanel">
 <div id="dashboard">
 
   <!-- HEADER -->
   <header>
-    <div><div class="logo">EDGE <span>TRADING INTELLIGENCE</span></div></div>
+    <div><div class="logo">EDGE <span>NIFTY CHAOS DECODER</span></div></div>
     <div class="status-bar">
       <div class="dot" id="dot"></div>
       <span id="ws-status">CONNECTING</span>
       <span id="last-update" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
-      <button onclick="forceReconnect()" style="margin-left:8px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:8px;letter-spacing:1px;cursor:pointer;">RECONNECT</button>
+      <button onclick="forceReconnect()" style="margin-left:8px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:8px;letter-spacing:1px;cursor:pointer;">POKE THE PIPE</button>
     </div>
   </header>
 
@@ -656,7 +683,10 @@
   <!-- WARNINGS -->
   <div class="warnings-strip" id="warnings-strip" style="display:none;" aria-live="polite"></div>
 
-  <!-- TRADE DECISION -->
+  </div>
+</div>
+<div id="tab-trade" class="edge-panel" role="tabpanel">
+<!-- TRADE DECISION -->
   <div class="section-wrap" id="decision-block" style="display:none;">
     <div class="section-label">Execution Cockpit</div>
     <div class="decision-card" id="decision-card">
@@ -682,7 +712,9 @@
     </div>
   </div>
 
-  <!-- STRIKE ANALYSER -->
+  </div>
+<div id="tab-lab" class="edge-panel" role="tabpanel">
+<!-- STRIKE ANALYSER -->
   <div class="section-wrap">
     <div class="card full" style="margin-top:0;">
       <div class="card-label">Strike Analyser</div>
@@ -698,7 +730,9 @@
     </div>
   </div>
 
-  <!-- OPTION INTELLIGENCE -->
+  </div>
+<div id="tab-flow" class="edge-panel" role="tabpanel">
+<!-- OPTION INTELLIGENCE -->
   <div class="section-wrap">
     <div class="card full" id="intel-card" style="display:none;">
       <div class="card-label">Option Intelligence</div>
@@ -1589,6 +1623,26 @@
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(function() {});
   }
+
+  // -- Personal EDGE tabs ------------------------------------------------------
+  (function initEdgeTabs(){
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-edge-tab]'));
+    var panels = {
+      radar: document.getElementById('tab-radar'),
+      trade: document.getElementById('tab-trade'),
+      flow: document.getElementById('tab-flow'),
+      lab: document.getElementById('tab-lab')
+    };
+    function showTab(name){
+      tabs.forEach(function(t){ var on=t.getAttribute('data-edge-tab')===name; t.classList.toggle('active',on); t.setAttribute('aria-selected',on?'true':'false'); });
+      Object.keys(panels).forEach(function(k){ if(panels[k]) panels[k].classList.toggle('active',k===name); });
+      try { sessionStorage.setItem('edge.activeTab',name); } catch(e) {}
+    }
+    tabs.forEach(function(t){ t.addEventListener('click',function(){ showTab(t.getAttribute('data-edge-tab')); }); });
+    var saved=null; try { saved=sessionStorage.getItem('edge.activeTab'); } catch(e) {}
+    showTab(panels[saved] ? saved : 'radar');
+  })();
 </script>
+</div>
 </body>
 </html>
