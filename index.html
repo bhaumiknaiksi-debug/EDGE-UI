@@ -526,8 +526,6 @@
   <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">FLOW<small>what's underneath?</small></button>
   <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">LAB<small>poke the market</small></button>
 </nav>
-<div id="tab-radar" class="edge-panel active" role="tabpanel">
-<div id="dashboard">
 
   <!-- HEADER -->
   <header>
@@ -551,31 +549,33 @@
 
   <!-- TOKEN EXPIRED BANNER -->
   <div class="token-banner" id="token-banner">
-    <b>UPSTOX TOKEN EXPIRED</b><br>
-    Data is stale. Generate a new access token and update the market-data credentials env var on Render.
+    <b>TOKEN WENT ON VACATION</b><br>
+    Data is stale. Wake the pipe and refresh the market-data credentials on Render.
   </div>
 
   <!-- CLOSED PANEL -->
   <div class="closed-panel" id="closed-panel">
     <div class="closed-panel-row">
-      <span class="closed-panel-label">OPENS IN</span>
+      <span class="closed-panel-label">BACK IN</span>
       <span class="closed-panel-val countdown" id="time-until-open">--</span>
     </div>
     <div class="closed-panel-row">
-      <span class="closed-panel-label">NEXT SESSION</span>
+      <span class="closed-panel-label">NEXT ROUND</span>
       <span class="closed-panel-val" id="next-session">--</span>
     </div>
     <div class="closed-panel-row">
-      <span class="closed-panel-label">LAST SESSION</span>
+      <span class="closed-panel-label">LAST KNOWN DAMAGE</span>
       <span class="closed-panel-val" id="last-session">--</span>
     </div>
   </div>
   <div class="data-as-of" id="data-as-of">DATA AS OF LAST CLOSE</div>
 
+<div id="tab-radar" class="edge-panel active" role="tabpanel">
+<div id="dashboard">
   <!-- SPOT HERO -->
   <div class="spot-hero">
     <div>
-      <div class="spot-label">NIFTY 50 SPOT</div>
+      <div class="spot-label">NIFTY 50 · THE SUSPECT</div>
       <div id="spot-price" aria-live="polite">--</div>
     </div>
     <div class="expiry-meta">
@@ -591,7 +591,7 @@
     <!-- BIAS + PCR -->
     <div class="card bias-card">
       <div>
-        <div class="card-label">Market Bias</div>
+        <div class="card-label">THE VIBES</div>
         <div id="bias-badge">--</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">CONFIDENCE</span>
@@ -610,7 +610,7 @@
 
     <!-- SR LEVELS -->
     <div class="card full">
-      <div class="card-label">Support / ATM / Resistance</div>
+      <div class="card-label">FLOOR · FAIR · CEILING</div>
       <div class="sr-grid">
         <div class="sr-col">
           <div class="sr-tag">SUPPORT</div>
@@ -632,7 +632,7 @@
 
     <!-- EXPECTED MOVE -->
     <div class="card full" id="em-card" style="display:none;">
-      <div class="card-label">Expected Move (1 SD to Expiry)</div>
+      <div class="card-label">WHERE CHAOS MIGHT ROAM · ±1σ</div>
       <div class="em-bar-wrap">
         <div class="em-bar">
           <div class="em-marker spot" id="em-marker-spot"></div>
@@ -650,13 +650,13 @@
 
     <!-- MARKET STRUCTURE -->
     <div class="card full" id="structure-card" style="display:none;">
-      <div class="card-label">Market Structure</div>
+      <div class="card-label">WHO'S HOLDING THE WALL?</div>
       <div id="structure-content"></div>
     </div>
 
     <!-- SESSION TIMELINE -->
     <div class="card full" id="timeline-card" style="display:none;">
-      <div class="card-label">Session Timeline</div>
+      <div class="card-label">TODAY'S PLOT</div>
       <div class="timeline-strip" id="timeline-strip"></div>
     </div>
 
@@ -674,7 +674,7 @@
 
     <!-- ALPHA STRIKES -->
     <div class="card full">
-      <div class="card-label">Alpha Strikes - Top 3 OI Conviction</div>
+      <div class="card-label">HOT STRIKES · OI IS GOSSIPING</div>
       <div class="alpha-list" id="alpha-list"></div>
     </div>
 
@@ -688,7 +688,7 @@
 <div id="tab-trade" class="edge-panel" role="tabpanel">
 <!-- TRADE DECISION -->
   <div class="section-wrap" id="decision-block" style="display:none;">
-    <div class="section-label">Execution Cockpit</div>
+    <div class="section-label">SIGNAL DESK · NOT A BROKER</div>
     <div class="decision-card" id="decision-card">
       <div class="decision-header">
         <div>
@@ -701,11 +701,11 @@
       <div id="risk-table-wrap"></div>
       <div id="trade-thesis" class="thesis-text" style="display:none;"></div>
       <div id="invalid-block" style="display:none;">
-        <div class="mini-label">TRADE INVALID IF</div>
+        <div class="mini-label">WHAT BREAKS THE STORY</div>
         <div id="invalid-list"></div>
       </div>
       <div id="counter-block" style="display:none;">
-        <div class="mini-label">WHY NOT</div>
+        <div class="mini-label">THE DEVIL'S LAWYER</div>
         <div id="counter-list"></div>
       </div>
       <div class="decision-reason-text" id="decision-reason"></div>
@@ -717,10 +717,10 @@
 <!-- STRIKE ANALYSER -->
   <div class="section-wrap">
     <div class="card full" style="margin-top:0;">
-      <div class="card-label">Strike Analyser</div>
+      <div class="card-label">STRIKE VIBES CHECK</div>
       <div class="strike-input-row">
-        <input type="number" id="strike-input" placeholder="e.g. 24150" inputmode="numeric">
-        <button class="analyse-btn" onclick="doAnalyseStrike()">ANALYSE</button>
+        <input type="number" id="strike-input" placeholder="e.g. 24150 · interrogate a strike" inputmode="numeric">
+        <button class="analyse-btn" onclick="doAnalyseStrike()">READ THE ROOM</button>
       </div>
       <div id="strike-result">
         <div class="strike-action" id="strike-action">--</div>
@@ -735,12 +735,12 @@
 <!-- OPTION INTELLIGENCE -->
   <div class="section-wrap">
     <div class="card full" id="intel-card" style="display:none;">
-      <div class="card-label">Option Intelligence</div>
+      <div class="card-label">OPTION GOSSIP</div>
       <div id="intel-content"></div>
     </div>
   </div>
 
-  <footer>EDGE v4 - NIFTY 50 - PAPER TRADE ONLY</footer>
+  <footer>personal NIFTY signal toy · paper only · if I follow it, that's on me</footer>
 </div>
 
 <script>
