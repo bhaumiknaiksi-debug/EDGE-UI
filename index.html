@@ -1367,7 +1367,8 @@
           if (legs.maxProfit) stats.push(cockStat('MAX PROFIT', legs.maxProfit, legs.maxProfitRupees, 'profit'));
           if (legs.maxLoss) stats.push(cockStat('MAX LOSS', legs.maxLoss, legs.maxLossRupees, 'loss'));
           if (stats.length) cockpitHtml = '<div class="cockpit' + (stats.length === 2 ? ' two' : '') + '">' + stats.join('') + '</div>';
-          var popHtml = legs.pop ? '<div class="pop-wrap"><div class="pop-head"><span>PROB OF PROFIT</span><span class="pop-pct">' + legs.pop + '%</span></div><div class="pop-track"><div class="pop-fill" style="width:' + Math.max(0, Math.min(100, legs.pop)) + '%"></div></div></div>' : '';
+          var popValue = Number(legs.pop);
+           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>PROB OF PROFIT</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
           var rows = [];
           if (legs.breakeven) rows.push(["BREAKEVEN", legs.breakeven, "neutral"]);
           if (legs.breakevenLow) rows.push(["BE LOW", legs.breakevenLow, "neutral"]);
@@ -1380,6 +1381,12 @@
           if (plan.holdMinutes) rows.push(["MAX HOLD GUIDE", plan.holdMinutes + " MIN", "neutral"]);
           var tableHtml = rows.length ? '<div class="risk-table">' + rows.map(function(r) { return '<div class="risk-row"><span class="risk-label">' + r[0] + '</span><span class="risk-val ' + r[2] + '">' + r[1] + '</span></div>'; }).join('') + '</div>' : '';
           setSafeHTML(wrap, legsHtml + cockpitHtml + popHtml + tableHtml);
+           var popFill = wrap.querySelector(".pop-fill");
+           if (popFill && Number.isFinite(popValue)) {
+             var clampedPop = Math.max(0, Math.min(100, popValue));
+             popFill.style.width = clampedPop + "%";
+             popFill.setAttribute("aria-label", "Probability of profit " + clampedPop + "%");
+           }
         }
       }
     }
