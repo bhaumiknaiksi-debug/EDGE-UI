@@ -800,7 +800,7 @@
 
   function validStrategyName(strategy) {
     return [
-      'BEAR_CALL_SPREAD','BULL_PUT_SPREAD','LONG_CALL','LONG_PUT',
+      'BEAR_CALL_SPREAD','BULL_PUT_SPREAD','BULL_CALL_SPREAD','BEAR_PUT_SPREAD','LONG_CALL','LONG_PUT',
       'IRON_CONDOR','WAIT'
     ].indexOf(strategy) >= 0;
   }
@@ -889,7 +889,7 @@
       return /\d/.test(m) ? '<b class="thesis-kw">' + m + '</b>' : m;
     });
     // Strategy & regime keywords
-    var terms = ['Bear Call Spread','Bull Put Spread','Iron Condor','Long Call','Long Put',
+    var terms = ['Bear Call Spread','Bull Put Spread','Bull Call Spread','Bear Put Spread','Iron Condor','Long Call','Long Put',
       'bullish','bearish','neutral','Bullish','Bearish','Neutral',
       'HIGH','LOW','NORMAL','PUT WRITERS LEADING','CALL WRITERS LEADING','BALANCED POSITIONING'];
     terms.forEach(function(t) {
@@ -1011,9 +1011,9 @@
     var biasClass = getBiasClass(d.bias);
     var biasEl = document.getElementById("bias-badge");
     if (biasEl) { biasEl.textContent = d.biasLabel || d.bias || "--"; biasEl.className = biasClass; }
-    setText("score-text", (d.confidence || 0) + "/100");
+    setText("score-text", (d.signalQuality !== undefined ? d.signalQuality : (d.confidence || 0)) + "/100");
     var fillEl = document.getElementById("score-fill");
-    if (fillEl) { fillEl.style.width = (d.confidence || 50) + "%"; fillEl.className = biasClass; }
+    if (fillEl) { fillEl.style.width = (d.signalQuality !== undefined ? d.signalQuality : (d.confidence || 50)) + "%"; fillEl.className = biasClass; }
 
     // PCR + avg IV
     setText("pcr-val", d.pcr);
@@ -1048,10 +1048,10 @@
     renderWarnings(d.warnings);
 
     // Decision
-    renderDecision(d, d.decision, d.confidence, d.bias, d.ivRegime, d.explain);
+    renderDecision(d, d.decision, (d.signalQuality !== undefined ? d.signalQuality : d.confidence), d.bias, d.ivRegime, d.explain);
 
     // Intel
-    renderIntel(d.intel, d.pcr);
+    renderIntel(d.intel, d.pcr, d.volatility);
 
     // Market status
     updateMarketStatusUI();
@@ -1212,8 +1212,8 @@
   }
 
   function strategyDirection(strategy, bias) {
-    if (strategy === "BULL_PUT_SPREAD" || strategy === "LONG_CALL") return "BULL";
-    if (strategy === "BEAR_CALL_SPREAD" || strategy === "LONG_PUT") return "BEAR";
+    if (strategy === "BULL_PUT_SPREAD" || strategy === "BULL_CALL_SPREAD" || strategy === "LONG_CALL") return "BULL";
+    if (strategy === "BEAR_CALL_SPREAD" || strategy === "BEAR_PUT_SPREAD" || strategy === "LONG_PUT") return "BEAR";
     if (strategy === "IRON_CONDOR") return "RANGE";
     var b = String(bias || "").toUpperCase();
     return b.indexOf("BULL") >= 0 ? "BULL" : b.indexOf("BEAR") >= 0 ? "BEAR" : "NEUTRAL";
@@ -1253,7 +1253,7 @@
     var plan = {
       action: actionMap[backendStatus] || out.action || out.signalStatus || "SIGNAL INCOMPLETE",
       status: statusMap[backendStatus] || out.signalStatus || (out.action ? "SIGNAL" : "INCOMPLETE"),
-      entry: firstNum(out.entry, out.entryPrice, legs && legs.entry, legs && legs.netCredit),
+      entry: firstNum(out.entry, out.entryPrice, legs && legs.entry, legs && legs.netCredit, legs && legs.netDebit),
       entryLow: firstNum(out.entryLow, out.entryZoneLow, entryBlock.premium && entryBlock.premium.low),
       entryHigh: firstNum(out.entryHigh, out.entryZoneHigh, entryBlock.premium && entryBlock.premium.high),
       trigger: firstNum(out.trigger, out.entryTrigger),
@@ -1322,6 +1322,8 @@
     var strategyNames = {
       BEAR_CALL_SPREAD: "Bear Call Spread",
       BULL_PUT_SPREAD:  "Bull Put Spread",
+      BULL_CALL_SPREAD: "Bull Call Spread",
+      BEAR_PUT_SPREAD: "Bear Put Spread",
       LONG_CALL:        "Long Call",
       LONG_PUT:         "Long Put",
       IRON_CONDOR:      "Iron Condor",
@@ -1398,17 +1400,18 @@
           var cockpitHtml = '';
           var stats = [];
           if (legs.netCredit !== undefined && legs.netCredit !== null) stats.push(cockStat('NET CREDIT', legs.netCredit, legs.netCreditRupees, 'profit'));
+          if (legs.netDebit !== undefined && legs.netDebit !== null) stats.push(cockStat('NET DEBIT', legs.netDebit, legs.netDebitRupees, 'neutral'));
           if (legs.maxProfit) stats.push(cockStat('MAX PROFIT', legs.maxProfit, legs.maxProfitRupees, 'profit'));
           if (legs.maxLoss) stats.push(cockStat('MAX LOSS', legs.maxLoss, legs.maxLossRupees, 'loss'));
           if (stats.length) cockpitHtml = '<div class="cockpit' + (stats.length === 2 ? ' two' : '') + '">' + stats.join('') + '</div>';
           var popValue = Number(legs.pop);
-           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>PROB OF PROFIT</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
+           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>DELTA-BASED POP PROXY</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
           var rows = [];
           if (legs.breakeven) rows.push(["BREAKEVEN", legs.breakeven, "neutral"]);
           if (legs.breakevenLow) rows.push(["BE LOW", legs.breakevenLow, "neutral"]);
           if (legs.breakevenHigh) rows.push(["BE HIGH", legs.breakevenHigh, "neutral"]);
           if (legs.rrr) rows.push(["RISK:REWARD", legs.rrr, "neutral"]);
-          if (plan.entry !== null) rows.push(["ENTRY / NET CREDIT", plan.entry, "neutral"]);
+          if (plan.entry !== null) rows.push([legs.netDebit !== undefined ? "ENTRY / NET DEBIT" : "ENTRY / NET CREDIT", plan.entry, "neutral"]);
           if (plan.target !== null) rows.push(["TARGET / EXIT DEBIT", plan.target, "neutral"]);
           if (plan.stop !== null) rows.push(["STOP / EXIT DEBIT", plan.stop, "loss"]);
           if (plan.waitMinutes) rows.push(["ENTRY VALID FOR", plan.waitMinutes + " MIN", "neutral"]);
@@ -1419,7 +1422,7 @@
            if (popFill && Number.isFinite(popValue)) {
              var clampedPop = Math.max(0, Math.min(100, popValue));
              popFill.style.width = clampedPop + "%";
-             popFill.setAttribute("aria-label", "Probability of profit " + clampedPop + "%");
+             popFill.setAttribute("aria-label", "Delta-based probability proxy " + clampedPop + "%");
            }
         }
       }
@@ -1459,7 +1462,7 @@
   }
 
   // -- Intel panel ------------------------------------------------------------
-  function renderIntel(intel, pcr) {
+  function renderIntel(intel, pcr, volatility) {
     if (!intel) return;
     var card = document.getElementById("intel-card");
     var content = document.getElementById("intel-content");
@@ -1469,6 +1472,12 @@
     var html = "";
     html += '<div class="intel-row"><span class="intel-label">MAX PAIN</span><span class="intel-val">' + (intel.maxPain || "--") + '</span></div>';
     html += '<div class="intel-row"><span class="intel-label">OVERALL PCR</span><span class="intel-val">' + (pcr || "--") + '</span></div>';
+    if (volatility) {
+      html += '<div class="intel-row"><span class="intel-label">INDIA VIX</span><span class="intel-val">' + (volatility.indiaVix !== null ? volatility.indiaVix : "--") + '</span></div>';
+      html += '<div class="intel-row"><span class="intel-label">VOL PRICING</span><span class="intel-val">' + (volatility.richness || "--") + '</span></div>';
+      html += '<div class="intel-row"><span class="intel-label">ATM SKEW</span><span class="intel-val">' + (volatility.skewLabel || "--") + (volatility.atmSkew !== null ? " (" + volatility.atmSkew + ")" : "") + '</span></div>';
+      html += '<div class="intel-row"><span class="intel-label">PRICED MOVE / VIX</span><span class="intel-val">' + (volatility.pricedMoveRatio !== null ? volatility.pricedMoveRatio + "x" : "--") + '</span></div>';
+    }
     if (intel.ceWritingZone && intel.ceWritingZone.length)
       html += '<div class="intel-row"><span class="intel-label">TOP CE WRITING</span><span class="intel-val">' + intel.ceWritingZone.join(", ") + '</span></div>';
     if (intel.peWritingZone && intel.peWritingZone.length)
