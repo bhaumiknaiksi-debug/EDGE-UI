@@ -1405,7 +1405,7 @@
           if (legs.maxLoss) stats.push(cockStat('MAX LOSS', legs.maxLoss, legs.maxLossRupees, 'loss'));
           if (stats.length) cockpitHtml = '<div class="cockpit' + (stats.length === 2 ? ' two' : '') + '">' + stats.join('') + '</div>';
           var popValue = Number(legs.pop);
-           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>PROB OF PROFIT</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
+           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>DELTA-BASED POP PROXY</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
           var rows = [];
           if (legs.breakeven) rows.push(["BREAKEVEN", legs.breakeven, "neutral"]);
           if (legs.breakevenLow) rows.push(["BE LOW", legs.breakevenLow, "neutral"]);
@@ -1422,7 +1422,7 @@
            if (popFill && Number.isFinite(popValue)) {
              var clampedPop = Math.max(0, Math.min(100, popValue));
              popFill.style.width = clampedPop + "%";
-             popFill.setAttribute("aria-label", "Probability of profit " + clampedPop + "%");
+             popFill.setAttribute("aria-label", "Delta-based probability proxy " + clampedPop + "%");
            }
         }
       }
