@@ -594,7 +594,7 @@
         <div class="card-label">THE VIBES</div>
         <div id="bias-badge">--</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">CONFIDENCE</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SIGNAL QUALITY</span>
           <span id="signal-grade" class="grade-badge">--</span>
           <span id="score-text" style="font-family:var(--mono);font-size:9px;color:var(--muted)">--</span>
         </div>
@@ -1329,7 +1329,7 @@
     };
     setText("decision-strategy", strategyNames[strategy] || strategy);
     var validityText = plan.waitMinutes !== null && plan.waitMinutes !== undefined ? "Valid: " + plan.waitMinutes + "m" : "Validity: --";
-    setText("decision-conf", "Confidence: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--") + "  |  " + validityText);
+    setText("decision-conf", "Signal quality: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--") + "  |  " + validityText);
 
     var regimeEl = document.getElementById("regime-tag");
     if (regimeEl) {
