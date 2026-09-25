@@ -517,7 +517,13 @@
   .bias-badge { transition:transform .18s ease, box-shadow .18s ease; }
   .bias-badge:hover { transform:scale(1.02); }
 
-</style>
+
+    .cockpit-wait{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:11px;line-height:1.55;color:var(--muted);letter-spacing:.04em}
+    .cockpit-wait span{color:var(--amber);font-weight:700;margin-right:7px}
+    .lab-empty{margin-top:22px;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted)}
+    .lab-empty-title{font-size:12px;letter-spacing:.16em;color:var(--text);margin-bottom:10px}
+    .lab-empty-copy{font-size:9px;letter-spacing:.13em;line-height:1.8}
+  </style>
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
@@ -917,7 +923,7 @@
     var dot = document.getElementById("dot");
     var txt = document.getElementById("ws-status");
     if (!dot || !txt) return;
-    if (state === "live")        { dot.className="dot live";  txt.textContent="IN THE MIX";       txt.style.color="var(--accent)"; }
+    if (state === "live")        { dot.className="dot live";  txt.textContent="FEED LIVE";       txt.style.color="var(--accent)"; }
     else if (state === "error")  { dot.className="dot error"; txt.textContent="PIPE BROKE";      txt.style.color="var(--red)"; }
     else                         { dot.className="dot";       txt.textContent="WAKING UP"; txt.style.color="var(--muted)"; }
   }
@@ -1473,6 +1479,7 @@
     html += '<div class="intel-row"><span class="intel-label">MAX PAIN</span><span class="intel-val">' + (intel.maxPain || "--") + '</span></div>';
     html += '<div class="intel-row"><span class="intel-label">OVERALL PCR</span><span class="intel-val">' + (pcr || "--") + '</span></div>';
     if (volatility) {
+      html += '<div class="intel-row"><span class="intel-label">NEAR-ATM IV</span><span class="intel-val">' + (volatility.nearAtmIV !== null && volatility.nearAtmIV !== undefined ? volatility.nearAtmIV + "%" : "--") + '</span></div>';
       html += '<div class="intel-row"><span class="intel-label">INDIA VIX</span><span class="intel-val">' + (volatility.indiaVix !== null ? volatility.indiaVix : "--") + '</span></div>';
       html += '<div class="intel-row"><span class="intel-label">VOL PRICING</span><span class="intel-val">' + (volatility.richness || "--") + '</span></div>';
       html += '<div class="intel-row"><span class="intel-label">ATM SKEW</span><span class="intel-val">' + (volatility.skewLabel || "--") + (volatility.atmSkew !== null ? " (" + volatility.atmSkew + ")" : "") + '</span></div>';
