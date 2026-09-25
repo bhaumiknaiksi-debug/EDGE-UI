@@ -1217,6 +1217,15 @@
     return firstNum(leg.ltp, leg.LTP, leg.currentPremium, leg.current, leg.premium, leg.price);
   }
 
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   function strategyDirection(strategy, bias) {
     if (strategy === "BULL_PUT_SPREAD" || strategy === "BULL_CALL_SPREAD" || strategy === "LONG_CALL") return "BULL";
     if (strategy === "BEAR_CALL_SPREAD" || strategy === "BEAR_PUT_SPREAD" || strategy === "LONG_PUT") return "BEAR";
@@ -1400,7 +1409,7 @@
             '</div>';
           var planRows = '<div class="risk-table">';
           if (p.entryLow !== null && p.entryHigh !== null) planRows += '<div class="risk-row"><span class="risk-label">ACCEPTABLE PRICE NOW</span><span class="risk-val neutral">' + p.entryLow + ' - ' + p.entryHigh + '</span></div>';
-          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val neutral">' + esc(p.triggerText) + '</span></div>';
+          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val neutral">' + escapeHtml(p.triggerText) + '</span></div>';
           if (p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val profit">CONFIRMED ✓</span></div>';
           planRows += '<div class="risk-row"><span class="risk-label">PRICE CHECK</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
           if (p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">ENTRY VALID FOR</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
