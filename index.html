@@ -1243,6 +1243,7 @@
       READY_TO_EXECUTE: "EXECUTE",
       WAIT_FOR_TRIGGER: "SIGNAL",
       WAIT_FOR_ENTRY: "SIGNAL",
+      WAIT_FOR_PRICE: "SIGNAL",
       POSITION_BLOCKED: "BLOCKED",
       MARKET_CLOSED: "BLOCKED",
       NO_TRADE: "BLOCKED"
@@ -1251,6 +1252,7 @@
       READY_TO_EXECUTE: "READY TO EXECUTE",
       WAIT_FOR_TRIGGER: "WAIT FOR TRIGGER",
       WAIT_FOR_ENTRY: "WAIT FOR ENTRY",
+      WAIT_FOR_PRICE: "WAIT FOR PRICE",
       POSITION_BLOCKED: "POSITION BLOCKED",
       MARKET_CLOSED: "MARKET CLOSED",
       NO_TRADE: "NO TRADE"
@@ -1272,7 +1274,14 @@
         : (out.reason || ""),
       chase: out.doNotChasePrice,
       source: "backend",
-      backendStatus: backendStatus
+      backendStatus: backendStatus,
+      triggerReady: entryBlock.triggerReady === true,
+      priceReady: entryBlock.priceReady === true,
+      displayState: entryBlock.displayState || null,
+      triggerText: entryBlock.trigger || "",
+      triggerReason: entryBlock.reason || "",
+      executablePrice: entryBlock.execution && entryBlock.execution.current !== undefined ? firstNum(entryBlock.execution.current) : null,
+      chaseLimit: entryBlock.execution && entryBlock.execution.limit !== undefined ? firstNum(entryBlock.execution.limit) : firstNum(entryBlock.premium && entryBlock.premium.doNotChaseAbove, entryBlock.premium && entryBlock.premium.doNotChaseBelow)
     };
 
     if (out.strategy === "WAIT") {
@@ -1385,12 +1394,15 @@
           }
           var p = plan;
           var planHtml = '<div class="single-plan">' +
-            planStat('ENTRY', p.entry, 'TRIGGER / PREMIUM', 'entry') +
+            planStat(p.triggerReady && p.priceReady ? 'BUY NOW' : 'CURRENT PREMIUM', p.executablePrice !== null ? p.executablePrice : p.entry, p.triggerReady ? (p.priceReady ? 'TRIGGER CONFIRMED' : 'WAIT FOR PRICE') : 'PRICE ≠ TRIGGER', 'entry') +
             planStat('TARGET', p.target, 'OPTION PREMIUM', 'target') +
             planStat('STOP-LOSS', p.stop, 'OPTION PREMIUM', 'stop') +
             '</div>';
           var planRows = '<div class="risk-table">';
-          if (p.entryLow !== null && p.entryHigh !== null) planRows += '<div class="risk-row"><span class="risk-label">ENTRY ZONE</span><span class="risk-val neutral">' + p.entryLow + ' - ' + p.entryHigh + '</span></div>';
+          if (p.entryLow !== null && p.entryHigh !== null) planRows += '<div class="risk-row"><span class="risk-label">ACCEPTABLE PRICE NOW</span><span class="risk-val neutral">' + p.entryLow + ' - ' + p.entryHigh + '</span></div>';
+          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val neutral">' + esc(p.triggerText) + '</span></div>';
+          if (p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val profit">CONFIRMED ✓</span></div>';
+          planRows += '<div class="risk-row"><span class="risk-label">PRICE CHECK</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
           if (p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">ENTRY VALID FOR</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
           if (p.holdMinutes) planRows += '<div class="risk-row"><span class="risk-label">MAX HOLD GUIDE</span><span class="risk-val neutral">' + p.holdMinutes + ' MIN</span></div>';
           planRows += '<div class="risk-row"><span class="risk-label">STATUS</span><span class="risk-val ' + ((p.status === 'SIGNAL' || p.status === 'EXECUTE') ? 'profit' : 'neutral') + '">' + (p.action || 'WAIT') + '</span></div>';
