@@ -1253,6 +1253,7 @@
       WAIT_FOR_TRIGGER: "SIGNAL",
       WAIT_FOR_ENTRY: "SIGNAL",
       WAIT_FOR_PRICE: "SIGNAL",
+      WAIT_FOR_LIQUIDITY: "SIGNAL",
       POSITION_BLOCKED: "BLOCKED",
       MARKET_CLOSED: "BLOCKED",
       NO_TRADE: "BLOCKED"
@@ -1262,6 +1263,7 @@
       WAIT_FOR_TRIGGER: "WAIT FOR TRIGGER",
       WAIT_FOR_ENTRY: "WAIT FOR TRIGGER",
       WAIT_FOR_PRICE: "WAIT FOR PRICE",
+      WAIT_FOR_LIQUIDITY: "WAIT FOR LIQUIDITY",
       POSITION_BLOCKED: "POSITION BLOCKED",
       MARKET_CLOSED: "MARKET CLOSED",
       NO_TRADE: "NO TRADE"
@@ -1286,6 +1288,8 @@
       backendStatus: backendStatus,
       triggerReady: entryBlock.triggerReady === true,
       priceReady: entryBlock.priceReady === true,
+      liquidityReady: entryBlock.liquidityReady !== false,
+      liquidity: entryBlock.liquidity || null,
       displayState: entryBlock.displayState || null,
       triggerText: entryBlock.trigger || "",
       triggerReason: entryBlock.reason || "",
@@ -1417,6 +1421,7 @@
           if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val neutral">' + escapeHtml(p.triggerText) + '</span></div>';
           if (p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val profit">CONFIRMED ✓</span></div>';
           planRows += '<div class="risk-row"><span class="risk-label">PRICE CHECK</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
+          if (p.liquidity) planRows += '<div class="risk-row"><span class="risk-label">LIQUIDITY</span><span class="risk-val ' + (p.liquidityReady ? 'profit' : 'loss') + '">' + (p.liquidityReady ? 'PASS ✓' : 'SPREAD TOO WIDE') + (p.liquidity.maxSpreadPct !== undefined ? ' · ' + p.liquidity.maxSpreadPct + '%' : '') + '</span></div>';
           if (p.triggerReady && p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">ENTRY WINDOW</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
           else if (!p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">ENTRY WINDOW</span><span class="risk-val neutral">STARTS ON TRIGGER</span></div>';
           if (p.holdMinutes) planRows += '<div class="risk-row"><span class="risk-label">MAX HOLD GUIDE</span><span class="risk-val neutral">' + p.holdMinutes + ' MIN</span></div>';
