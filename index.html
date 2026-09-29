@@ -781,6 +781,20 @@
       <div class="ev-dimension" id="ev-context"></div>
     </div>
   </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="research-flag">◉ SETUP SCANNER · OBSERVER ONLY</div>
+      <div class="card-label">SETUP INTELLIGENCE · 60M</div>
+      <div class="ev-empty" style="padding-top:0;">Which setups actually survived contact with the market? Sample gate ≠ permission to trade.</div>
+      <div class="ev-dimension" id="ev-setups"></div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="card-label">SETUP COMBINATIONS · 60M</div>
+      <div class="ev-dimension" id="ev-setup-combos"></div>
+    </div>
+  </div>
 <!-- STRIKE ANALYSER -->
   <div class="section-wrap">
     <div class="card full" style="margin-top:0;">
@@ -1638,6 +1652,19 @@
       Object.keys(groups).forEach(function(k){ context[dim.toUpperCase()+" · "+k]=groups[k]; });
     });
     renderEvidenceRows("ev-context",context);
+
+    var scanner={};
+    [
+      ["scannerOpeningRange","OR"],
+      ["scannerVwapContinuation","VWAP CONT"],
+      ["scannerVwapPullback","VWAP PULLBACK"],
+      ["scannerMomentum","MOMENTUM"]
+    ].forEach(function(pair){
+      var groups=(j.dimensions||{})[pair[0]]||{};
+      Object.keys(groups).forEach(function(k){ scanner[pair[1]+" · "+k]=groups[k]; });
+    });
+    renderEvidenceRows("ev-setups",scanner);
+    renderEvidenceRows("ev-setup-combos",j.scannerGroups||{});
   }
   function pollEvidenceIntelligence() {
     fetch(BACKEND+"/evidence/intelligence?minSamples=20")
