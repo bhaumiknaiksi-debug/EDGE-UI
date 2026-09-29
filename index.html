@@ -242,6 +242,33 @@
   }
   .warning-pill::before { content:'!'; font-family:var(--display); font-size:14px; }
 
+  /* EVIDENCE INTELLIGENCE LAB */
+  .evidence-hero { border-color:rgba(0,229,255,.28); background:linear-gradient(165deg,rgba(0,229,255,.07),rgba(10,17,25,.85)); }
+  .research-flag { display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--cyan);border:1px solid rgba(0,229,255,.3);border-radius:20px;padding:4px 8px;margin-bottom:10px; }
+  .evidence-head { display:flex;justify-content:space-between;align-items:flex-end;gap:10px; }
+  .evidence-big { font-family:var(--display);font-size:42px;line-height:1;color:var(--cyan);text-shadow:0 0 14px rgba(0,229,255,.3); }
+  .evidence-caption { font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px; }
+  .evidence-status { font-family:var(--mono);font-size:9px;text-align:right;color:var(--muted); }
+  .evidence-status.good { color:var(--accent); }
+  .ev-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px; }
+  .ev-stat { border:1px solid var(--border);border-radius:10px;padding:10px;background:rgba(255,255,255,.02); }
+  .ev-stat-label { font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--muted); }
+  .ev-stat-val { font-family:var(--display);font-size:24px;margin-top:3px; }
+  .ev-horizons { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px; }
+  .ev-horizon { text-align:center;border:1px solid var(--border);border-radius:9px;padding:8px 3px;background:rgba(255,255,255,.02); }
+  .ev-horizon .h { font-family:var(--mono);font-size:8px;color:var(--muted); }
+  .ev-horizon .v { font-family:var(--display);font-size:18px;margin-top:3px; }
+  .ev-dimension { margin-top:10px; }
+  .ev-row { display:grid;grid-template-columns:minmax(0,1.5fr) .55fr .75fr .75fr;gap:5px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px; }
+  .ev-row:last-child { border-bottom:none; }
+  .ev-row.head { color:var(--muted);font-size:8px;letter-spacing:.5px; }
+  .ev-name { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text); }
+  .ev-num { text-align:right; }
+  .ev-positive { color:var(--accent); } .ev-negative { color:var(--red); } .ev-neutral { color:var(--amber); }
+  .ev-empty { font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--muted);padding:8px 0; }
+  .ev-method { font-family:var(--mono);font-size:8px;line-height:1.6;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px; }
+  .ev-refresh { border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:8px;border-radius:6px;padding:5px 7px; }
+
   /* TRADE DECISION */
   .section-wrap { margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto; }
   .section-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
@@ -720,6 +747,40 @@
 
   </div>
 <div id="tab-lab" class="edge-panel" role="tabpanel">
+  <div class="section-wrap">
+    <div class="card full evidence-hero">
+      <div class="research-flag">◉ RESEARCH ONLY · ZERO LIVE DECISION IMPACT</div>
+      <div class="evidence-head">
+        <div>
+          <div class="card-label">EVIDENCE INTELLIGENCE · WHAT ACTUALLY HAPPENED?</div>
+          <div class="evidence-big" id="ev-episodes">--</div>
+          <div class="evidence-caption">MEASURED EXECUTION EPISODES</div>
+        </div>
+        <div class="evidence-status" id="ev-status">LOADING MEMORY...</div>
+      </div>
+      <div class="ev-grid">
+        <div class="ev-stat"><div class="ev-stat-label">MIN SAMPLE GATE</div><div class="ev-stat-val" id="ev-min-samples">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">AVG MFE / MAE</div><div class="ev-stat-val" id="ev-excursion">--</div></div>
+      </div>
+      <div class="ev-horizons" id="ev-horizons"></div>
+      <div class="ev-method" id="ev-method">Only measured READY_TO_EXECUTE episodes. Descriptive evidence is not permission to trade.</div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div class="card-label" style="margin-bottom:0;">STRATEGY SCOREBOARD · 60M</div>
+        <button class="ev-refresh" type="button" id="ev-refresh">REFRESH</button>
+      </div>
+      <div class="ev-dimension" id="ev-strategy"></div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="card-label">CONTEXT BREAKDOWN · 60M</div>
+      <div class="ev-dimension" id="ev-context"></div>
+    </div>
+  </div>
 <!-- STRIKE ANALYSER -->
   <div class="section-wrap">
     <div class="card full" style="margin-top:0;">
@@ -1527,6 +1588,70 @@
     setSafeHTML(content, html);
   }
 
+  // -- Evidence Intelligence --------------------------------------------------
+  var evidenceTimer = null;
+  function pctTone(v) {
+    var n=Number(v); if(!Number.isFinite(n)) return "";
+    return n>0 ? "ev-positive" : n<0 ? "ev-negative" : "ev-neutral";
+  }
+  function evFmt(v, suffix) {
+    var n=Number(v); return Number.isFinite(n) ? n.toFixed(2)+(suffix||"") : "--";
+  }
+  function metric60(m) {
+    if(!m || !m.horizons) return null;
+    return m.horizons["60"] || m.horizons[60] || null;
+  }
+  function renderEvidenceRows(target, groups, namePrefix) {
+    var el=document.getElementById(target); if(!el) return;
+    var rows=[];
+    Object.keys(groups||{}).forEach(function(name){
+      var m=groups[name], h=metric60(m);
+      rows.push({name:(namePrefix||"")+name,samples:Number(m.samples)||0,qualified:!!m.qualified,win:h&&h.winRatePct,ret:h&&h.avgReturnPct});
+    });
+    rows.sort(function(a,b){ return b.samples-a.samples; });
+    if(!rows.length){ setSafeHTML(el,'<div class="ev-empty">NOT ENOUGH MEASURED EPISODES YET. EDGE IS WATCHING, NOT INVENTING.</div>'); return; }
+    var html='<div class="ev-row head"><span>GROUP</span><span class="ev-num">N</span><span class="ev-num">WIN</span><span class="ev-num">AVG</span></div>';
+    rows.slice(0,8).forEach(function(r){
+      html+='<div class="ev-row"><span class="ev-name">'+escapeHtml(r.name)+(r.qualified?' ✓':'')+'</span><span class="ev-num">'+r.samples+'</span><span class="ev-num">'+(Number.isFinite(Number(r.win))?Number(r.win).toFixed(1)+'%':'--')+'</span><span class="ev-num '+pctTone(r.ret)+'">'+(Number.isFinite(Number(r.ret))?Number(r.ret).toFixed(2)+'%':'--')+'</span></div>';
+    });
+    setSafeHTML(el,html);
+  }
+  function renderEvidenceIntelligence(j) {
+    setText("ev-episodes",j.measuredEpisodes||0);
+    setText("ev-min-samples",j.minSamples||20);
+    var overall=j.overall||{};
+    setText("ev-excursion",evFmt(overall.avgMfePct,"%")+" / "+evFmt(overall.avgMaePct,"%"));
+    var hs=document.getElementById("ev-horizons"), html="";
+    [15,30,60,120].forEach(function(h){
+      var m=overall.horizons && (overall.horizons[String(h)]||overall.horizons[h]);
+      html+='<div class="ev-horizon"><div class="h">'+h+'M WIN</div><div class="v '+pctTone(m&&m.avgReturnPct)+'">'+(m&&Number.isFinite(Number(m.winRatePct))?Number(m.winRatePct).toFixed(1)+'%':'--')+'</div></div>';
+    });
+    setSafeHTML(hs,html);
+    var st=document.getElementById("ev-status");
+    if(st){ st.textContent=(overall.qualified?"SAMPLE GATE MET":"BUILDING SAMPLE")+(j.generatedAt?" · "+new Date(j.generatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):""); st.className="evidence-status"+(overall.qualified?" good":""); }
+    var method=j.methodology||{};
+    setText("ev-method",(method.population||"MEASURED episodes only")+" · "+(method.qualification||"Qualification is a sample-count marker, not proof of edge.")+" · "+(method.friction||"Friction model pending."));
+    renderEvidenceRows("ev-strategy",(j.dimensions||{}).strategy||{});
+    var context={};
+    ["regime","volatility","session","openingRange","vwapSide","vwapSlope","relativeVolume","atr"].forEach(function(dim){
+      var groups=(j.dimensions||{})[dim]||{};
+      Object.keys(groups).forEach(function(k){ context[dim.toUpperCase()+" · "+k]=groups[k]; });
+    });
+    renderEvidenceRows("ev-context",context);
+  }
+  function pollEvidenceIntelligence() {
+    fetch(BACKEND+"/evidence/intelligence?minSamples=20")
+      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+      .then(renderEvidenceIntelligence)
+      .catch(function(){ var st=document.getElementById("ev-status"); if(st){st.textContent="EVIDENCE PIPE UNAVAILABLE";st.className="evidence-status";} });
+  }
+  function startEvidenceIntelligence() {
+    pollEvidenceIntelligence();
+    clearInterval(evidenceTimer);
+    evidenceTimer=setInterval(pollEvidenceIntelligence,60000);
+    var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
+  }
+
   // -- Strike analyser --------------------------------------------------------
   function doAnalyseStrike() {
     var strikeVal = parseInt(document.getElementById("strike-input").value);
@@ -1666,6 +1791,7 @@
     startPolling();
     startMarketStatusTimer();
     startStaleChecker();
+    startEvidenceIntelligence();
   });
 
   if ("serviceWorker" in navigator) {
