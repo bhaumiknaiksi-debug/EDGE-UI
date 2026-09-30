@@ -713,6 +713,11 @@
     .edge-state-dock.compact{width:min(260px,calc(100% - 28px));grid-template-columns:10px minmax(0,1fr) 16px;padding:7px 10px}
     .edge-state-dock.compact .dock-main small{display:none}.edge-state-dock.compact .dock-main strong{font-size:17px}
     body:not(.pro-mode) #tab-lab .ev-method,body:not(.pro-mode) #tab-lab .ev-oos-row.head{font-family:var(--sans)}
+    .score-honesty{font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted);margin-top:7px}
+    .evidence-health-card{border-color:rgba(0,229,255,.13);background:radial-gradient(circle at 90% 0,rgba(0,229,255,.055),transparent 30%),var(--surface)}
+    .health-hero{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.health-hero>div{padding:12px;border-radius:12px;background:rgba(0,229,255,.025);border:1px solid rgba(0,229,255,.08)}.health-hero span{display:block;font-family:var(--mono);font-size:7px;line-height:1.4;color:var(--muted);letter-spacing:.7px}.health-hero strong{display:block;font-family:var(--display);font-size:32px;font-weight:400;margin-top:4px}
+    .health-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.health-row{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.05)}.health-row span{display:block;font-size:8px;color:var(--muted)}.health-row strong{display:block;font-family:var(--mono);font-size:8px;font-weight:400;color:#bdcbd2;margin-top:4px;overflow-wrap:anywhere}
+    .health-alert{margin-top:9px;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,170,0,.16);background:rgba(255,170,0,.035);font-size:9px;line-height:1.55;color:#d8bf8e}.health-alert.good{border-color:rgba(0,229,255,.12);background:rgba(0,229,255,.025);color:#9ecbd0}.health-alert.bad{border-color:rgba(255,51,102,.2);background:rgba(255,51,102,.035);color:#dda2b1}@media(max-width:360px){.health-grid{grid-template-columns:1fr}.health-hero strong{font-size:27px}}
   </style>
 </head>
 <body>
@@ -861,11 +866,11 @@
         <div class="card-label">TECHNICAL MARKET BIAS</div>
         <div id="bias-badge">--</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
-          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SIGNAL QUALITY</span>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">HEURISTIC SCORE</span>
           <span id="signal-grade" class="grade-badge">--</span>
           <span id="score-text" style="font-family:var(--mono);font-size:9px;color:var(--muted)">--</span>
         </div>
-        <div class="score-track"><div id="score-fill" style="width:50%"></div></div>
+        <div class="score-track"><div id="score-fill" style="width:50%"></div></div><div class="score-honesty">Heuristic strength only · not a probability of profit or observed win rate.</div>
       </div>
       <div class="bias-right">
         <div class="card-label">PCR</div>
@@ -991,6 +996,15 @@
       <div class="lab-path">
         <span>OBSERVE</span><i>→</i><span>TEST</span><i>→</i><span>REPEAT</span><i>→</i><span>REVIEW</span>
       </div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full evidence-health-card">
+      <div class="ev-head"><div><div class="card-label">EVIDENCE HEALTH</div><div class="ev-sub">Is EDGE actually remembering today?</div></div><div class="ev-oos-status wait" id="health-status">CHECKING</div></div>
+      <div class="health-hero"><div><span>VERIFIED MARKET DAYS</span><strong id="health-days">--</strong></div><div><span>NO-TRADE DAYS RECORDED</span><strong id="health-no-trade">--</strong></div></div>
+      <div class="health-grid"><div class="health-row"><span>Last evidence append</span><strong id="health-append">--</strong></div><div class="health-row"><span>Archive backup</span><strong id="health-backup">--</strong></div><div class="health-row"><span>Durability proof</span><strong id="health-verify">--</strong></div><div class="health-row"><span>Outcome harvester</span><strong id="health-harvest">--</strong></div><div class="health-row"><span>READY episodes today</span><strong id="health-ready">--</strong></div><div class="health-row"><span>Measured outcomes</span><strong id="health-measured">--</strong></div><div class="health-row"><span>Missing sessions</span><strong id="health-missing">--</strong></div><div class="health-row"><span>Local durable store</span><strong id="health-store">--</strong></div></div>
+      <div class="health-alert" id="health-alert">Health data has not loaded yet. Missing data is not treated as healthy.</div>
+      <div class="ev-method">A verified day requires retained market evidence plus a successful archive round-trip proof. This measures collection integrity, not trading performance.</div>
     </div>
   </div>
   <div class="section-wrap">
@@ -2050,7 +2064,7 @@
           if (legs.maxLoss) stats.push(cockStat('MAX LOSS', legs.maxLoss, legs.maxLossRupees, 'loss'));
           if (stats.length) cockpitHtml = '<div class="cockpit' + (stats.length === 2 ? ' two' : '') + '">' + stats.join('') + '</div>';
           var popValue = Number(legs.pop);
-           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>DELTA-BASED POP PROXY</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
+           var popHtml = Number.isFinite(popValue) ? '<div class="pop-wrap"><div class="pop-head"><span>DELTA-BASED ESTIMATE</span><span class="pop-pct">' + popValue + '%</span></div><div class="pop-track"><div class="pop-fill"></div></div></div>' : '';
           var rows = [];
           if (legs.breakeven) rows.push(["BREAKEVEN", legs.breakeven, "neutral"]);
           if (legs.breakevenLow) rows.push(["BE LOW", legs.breakevenLow, "neutral"]);
@@ -2067,7 +2081,7 @@
            if (popFill && Number.isFinite(popValue)) {
              var clampedPop = Math.max(0, Math.min(100, popValue));
              popFill.style.width = clampedPop + "%";
-             popFill.setAttribute("aria-label", "Delta-based probability proxy " + clampedPop + "%");
+             popFill.setAttribute("aria-label", "Delta-based estimate " + clampedPop + "%; not an observed win rate");
            }
         }
       }
@@ -2147,6 +2161,10 @@
     if(!m || !m.horizons) return null;
     return m.horizons["60"] || m.horizons[60] || null;
   }
+  function healthTime(v){if(!v)return"--";var d=new Date(v);if(Number.isNaN(d.getTime()))return"--";return d.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+  function renderEvidenceHealth(h){if(!h||h.version!=="EVIDENCE_HEALTH_V1"){setText("health-status","UNAVAILABLE");setText("health-days","--");setText("health-no-trade","--");["health-append","health-backup","health-verify","health-harvest","health-ready","health-measured","health-missing","health-store"].forEach(function(id){setText(id,"--");});var a=document.getElementById("health-alert");if(a){a.className="health-alert bad";a.textContent="Evidence Health is unavailable. Missing health data is not treated as zero or healthy.";}return;}setText("health-status",h.healthy?"HEALTHY":"ATTENTION");var st=document.getElementById("health-status");if(st)st.className="ev-oos-status "+(h.healthy?"good":"wait");setText("health-days",h.verifiedMarketDays);setText("health-no-trade",h.noTradeDays);setText("health-append",healthTime(h.lastAppend));setText("health-backup",healthTime(h.archive&&h.archive.lastBackup));var v=h.archive&&h.archive.lastVerification;setText("health-verify",v?(v.ok?"PASSED · "+healthTime(v.timestamp):"FAILED · "+healthTime(v.timestamp)):"NOT PROVEN");setText("health-harvest",(h.harvester&&h.harvester.lastError)?"ERROR":healthTime(h.harvester&&h.harvester.lastRun));setText("health-ready",h.today&&h.today.readyEpisodes);setText("health-measured",h.harvester&&h.harvester.measured);setText("health-missing",Array.isArray(h.missingSessions)?h.missingSessions.length:"--");setText("health-store",h.storage&&h.storage.durable?"DURABLE":"NOT CONFIRMED");var alert=document.getElementById("health-alert");if(alert){var issues=Array.isArray(h.issues)?h.issues:[];alert.className="health-alert "+(h.healthy?"good":"bad");alert.textContent=h.healthy?"Collection checks are currently healthy. Last append: "+healthTime(h.lastAppend)+".":issues.length?"Attention: "+issues.join(" · ").replace(/_/g," "):"Health could not be confirmed.";}}
+  function pollEvidenceHealth(){fetch(BACKEND+"/evidence/health").then(function(r){if(!r.ok)throw new Error("health "+r.status);return r.json();}).then(renderEvidenceHealth).catch(function(){renderEvidenceHealth(null);});}
+
   function renderEvidenceRows(target, groups, namePrefix) {
     var el=document.getElementById(target); if(!el) return;
     var rows=[];
@@ -2360,6 +2378,7 @@
   }
   function startEvidenceIntelligence() {
     pollEvidenceIntelligence();
+    pollEvidenceHealth();
     clearInterval(evidenceTimer);
     evidenceTimer=setInterval(pollEvidenceIntelligence,60000);
     var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
