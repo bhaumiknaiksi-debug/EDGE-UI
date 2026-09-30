@@ -1707,10 +1707,12 @@
     fm=fm||{};
     var cp=fm.calibratedProfile;
     if(!cp) return fm.basis||"No calibrated cost profile.";
-    return "1-lot research cost profile · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
+    var slip=Number(fm.slippageBps)||0;
+    return "Recorded lot sizing when available (1-lot fallback) · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
       "/executed order · STT "+cp.sttSellPct+"% sell · exchange "+cp.exchangeTransactionPct+
-      "% premium · stamp "+cp.stampDutyBuyPct+"% buy · GST "+cp.gstPct+
-      "% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+"/crore.";
+      "% premium · IPFT ₹"+cp.ipftPerCroreRupees+"/crore · stamp "+cp.stampDutyBuyPct+
+      "% buy · GST "+cp.gstPct+"% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+
+      "/crore · slippage stress "+slip+" bps.";
   }
   function renderWalkForwardRows(target,groups) {
     var el=document.getElementById(target); if(!el) return;
