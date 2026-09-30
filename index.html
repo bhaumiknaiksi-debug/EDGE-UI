@@ -2002,7 +2002,7 @@
           if (legs.buyLeg)  legsHtml += legCardHtml('BUY', legs.buyLeg);
         }
         legsHtml += '</div>';
-        if (legs.lotSize) legsHtml += '<div class="lot-note">LOT SIZE: ' + legs.lotSize + ' UNITS</div>';
+        if (legs.lotSize) legsHtml += '<div class="lot-note' + (executionReady ? '' : ' pro-only') + '">LOT SIZE: ' + legs.lotSize + ' UNITS</div>';
 
         if (legs.single) {
           function planStat(label, val, sub, tone) {
