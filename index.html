@@ -615,6 +615,37 @@
     .gate-state.pass{color:var(--accent)}.gate-state.wait{color:var(--amber)}.gate-state.block{color:var(--red)}
     @media(max-width:390px){header{padding:9px 12px}.status-bar{gap:6px}.reconnect-btn{display:none}.human-title{font-size:28px}.human-metrics{grid-template-columns:1fr 1fr}.edge-tab{font-size:8px}}
     @media(prefers-reduced-motion:reduce){.pulse-marker{transition:none}}
+    /* Battlefield + explainability */
+    .battlefield-card{padding-bottom:16px}
+    .battle-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .battle-title{font-size:14px;font-weight:500;line-height:1.35;max-width:270px}
+    .battle-now{font-family:var(--display);font-size:23px;letter-spacing:1px;color:var(--text);white-space:nowrap}
+    .battle-track{position:relative;height:220px;margin-top:16px;border-radius:15px;border:1px solid rgba(255,255,255,.06);background:
+      linear-gradient(180deg,rgba(255,255,255,.015),rgba(255,255,255,.035));
+      overflow:hidden}
+    .battle-track::before{content:'';position:absolute;left:50%;top:16px;bottom:16px;width:1px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.18) 15%,rgba(255,255,255,.18) 85%,transparent)}
+    .battle-level{position:absolute;left:12px;right:12px;transform:translateY(-50%);display:grid;grid-template-columns:minmax(88px,1fr) 28px minmax(88px,1fr);align-items:center;gap:7px;transition:top .6s cubic-bezier(.2,.8,.2,1)}
+    .battle-level::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(255,255,255,.08)}
+    .battle-label,.battle-value{position:relative;z-index:1;background:#091019;padding:3px 6px;border-radius:6px;font-family:var(--mono);font-size:8px}
+    .battle-label{justify-self:start;color:var(--muted);letter-spacing:.6px}.battle-value{justify-self:end;color:var(--text);font-size:9px}
+    .battle-dot{position:relative;z-index:2;width:10px;height:10px;border-radius:50%;justify-self:center;background:#81929c;border:2px solid #091019;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+    .battle-level.current .battle-dot{width:15px;height:15px;background:var(--text);box-shadow:0 0 18px rgba(226,238,242,.38)}
+    .battle-level.current .battle-label,.battle-level.current .battle-value{color:var(--text)}
+    .battle-level.trigger .battle-dot{background:var(--amber);box-shadow:0 0 16px rgba(255,170,0,.4)}
+    .battle-level.trigger .battle-label,.battle-level.trigger .battle-value{color:var(--amber)}
+    .battle-level.range .battle-dot{background:var(--cyan);box-shadow:0 0 13px rgba(0,229,255,.25)}
+    .battle-empty{display:grid;place-items:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.8px;text-align:center;padding:20px}
+    .battle-note{font-family:var(--mono);font-size:8px;color:var(--muted);line-height:1.5;margin-top:9px}
+    .why-card{padding:0}
+    .why-card summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .why-card summary::-webkit-details-marker{display:none}.why-card summary strong{display:block;font-size:13px;font-weight:500;margin-top:3px}
+    .why-chevron{font-size:18px;color:var(--muted);transition:transform .2s ease}.why-card[open] .why-chevron{transform:rotate(180deg)}
+    .why-body{padding:0 18px 17px;border-top:1px solid rgba(255,255,255,.055)}
+    .why-thesis{font-size:12px;line-height:1.6;color:#aebcc4;padding:13px 0 6px}
+    .why-factors{display:grid;gap:6px;margin-top:5px}
+    .why-factor{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055);font-size:10px}
+    .why-factor-state{font-family:var(--mono);font-size:8px;white-space:nowrap}.why-factor-state.up{color:#a8d8ca}.why-factor-state.down{color:#e0a2b2}.why-factor-state.flat{color:var(--muted)}
+    .why-tech-note{font-family:var(--mono);font-size:7px;line-height:1.6;color:var(--muted);margin-top:10px}
   </style>
 </head>
 <body>
@@ -726,6 +757,34 @@
     </section>
   </div>
 
+  <div class="human-shell">
+    <section class="human-card battlefield-card">
+      <div class="battle-head">
+        <div>
+          <div class="human-kicker">TODAY'S BATTLEFIELD</div>
+          <div class="battle-title">Where price is sitting — and what matters next.</div>
+        </div>
+        <div class="battle-now" id="battle-now">--</div>
+      </div>
+      <div class="battle-track" id="battle-track">
+        <div class="battle-empty">Waiting for live market levels…</div>
+      </div>
+      <div class="battle-note" id="battle-note">Levels are context, not a trade signal.</div>
+    </section>
+
+    <details class="human-card why-card" id="why-card">
+      <summary>
+        <span><span class="human-kicker">WHY?</span><strong>Why EDGE sees the market this way</strong></span>
+        <span class="why-chevron">⌄</span>
+      </summary>
+      <div class="why-body">
+        <div class="why-thesis" id="why-thesis">EDGE is waiting for the backend explanation.</div>
+        <div class="why-factors" id="why-factors"></div>
+        <div class="why-tech-note">These explanations translate backend evidence. They do not create or upgrade a signal.</div>
+      </div>
+    </details>
+  </div>
+
   <!-- MAIN GRID -->
   <div class="grid">
 
@@ -750,8 +809,8 @@
     </div>
 
     <!-- SR LEVELS -->
-    <div class="card full">
-      <div class="card-label">KEY MARKET LEVELS</div>
+    <div class="card full pro-only">
+      <div class="card-label">KEY MARKET LEVELS · TECHNICAL</div>
       <div class="sr-grid">
         <div class="sr-col">
           <div class="sr-tag">SUPPORT ZONE</div>
@@ -1009,12 +1068,12 @@
     return "neut";
   }
   function biasShort(b) {
-    if (!b) return "NEUT";
-    if (b === "BULLISH") return "BULL";
-    if (b === "MILD_BULLISH") return "M.BULL";
-    if (b === "BEARISH") return "BEAR";
-    if (b === "MILD_BEARISH") return "M.BEAR";
-    return "NEUT";
+    if (!b) return "MIXED";
+    if (b === "BULLISH") return "BUYERS";
+    if (b === "MILD_BULLISH") return "LEAN ↑";
+    if (b === "BEARISH") return "SELLERS";
+    if (b === "MILD_BEARISH") return "LEAN ↓";
+    return "MIXED";
   }
   // -- Safe rendering + decision validation ----------------------------------
   // Dynamic backend text is parsed in a detached document, sanitised, then
@@ -1304,6 +1363,8 @@
 
     // Human-first presentation uses the same backend decision; it never creates a new one.
     renderHumanSummary(d);
+    renderBattlefield(d);
+    renderWhy(d.explain,d.bias);
 
     // Decision
     renderDecision(d, d.decision, (d.signalQuality !== undefined ? d.signalQuality : d.confidence), d.bias, d.ivRegime, d.explain);
@@ -1484,6 +1545,72 @@
     if (strategy === "IRON_CONDOR") return "RANGE";
     var b = String(bias || "").toUpperCase();
     return b.indexOf("BULL") >= 0 ? "BULL" : b.indexOf("BEAR") >= 0 ? "BEAR" : "NEUTRAL";
+  }
+
+  function humanFactorLabel(label) {
+    var raw=String(label||"");
+    var u=raw.toUpperCase();
+    if(u.indexOf("PCR")>=0) return "Options positioning";
+    if(u.indexOf("VWAP")>=0) return "Price vs today's average";
+    if(u.indexOf("FUTURE")>=0) return "Futures activity";
+    if(u.indexOf("OPTION")>=0&&u.indexOf("FLOW")>=0) return "Options activity";
+    if(u.indexOf("TREND")>=0||u.indexOf("MOMENT")>=0) return "Short-term direction";
+    if(u.indexOf("OI")>=0) return "Trader positioning";
+    if(u.indexOf("MAX PAIN")>=0) return "Options concentration";
+    if(u.indexOf("IV")>=0||u.indexOf("VOL")>=0) return "Volatility / option pricing";
+    return raw.replace(/_/g," ").toLowerCase().replace(/\b\w/g,function(c){return c.toUpperCase();});
+  }
+
+  function renderWhy(explain,bias) {
+    var thesis=document.getElementById("why-thesis"), factors=document.getElementById("why-factors");
+    if(thesis) thesis.textContent=(explain&&explain.thesis)||humanBiasView(bias).copy;
+    if(!factors) return;
+    var list=(explain&&Array.isArray(explain.factors))?explain.factors:[];
+    if(!list.length){setSafeHTML(factors,'<div class="battle-note">No factor breakdown is available from the backend yet.</div>');return;}
+    var html="";
+    list.slice(0,6).forEach(function(f){
+      var n=finiteNum(f.value), cls=n===null||n===0?"flat":n>0?"up":"down";
+      var state=n===null?"CONTEXT":n>0?"SUPPORTS UPSIDE":n<0?"SUPPORTS DOWNSIDE":"NEUTRAL";
+      html+='<div class="why-factor"><span>'+escapeHtml(humanFactorLabel(f.label))+'</span><span class="why-factor-state '+cls+'">'+state+'</span></div>';
+    });
+    setSafeHTML(factors,html);
+  }
+
+  function renderBattlefield(d) {
+    var track=document.getElementById("battle-track"); if(!track) return;
+    var spot=finiteNum(d&&d.spot), support=finiteNum(d&&d.support&&d.support.strike), resistance=finiteNum(d&&d.resistance&&d.resistance.strike);
+    var raw=validateDecision(d&&d.decision);
+    var made=makeActionablePlan(d||{},raw,(d&&d.signalQuality!==undefined?d.signalQuality:d&&d.confidence)||0,d&&d.bias,d&&d.ivRegime);
+    var plan=made.actionable||{}, trigger=finiteNum(plan.trigger);
+    var levels=[];
+    function push(kind,label,value){
+      if(value===null)return;
+      var existing=levels.find(function(x){return Math.abs(x.value-value)<0.0001;});
+      if(existing){existing.kind+=" "+kind;existing.label+=" · "+label;return;}
+      levels.push({kind:kind,label:label,value:value});
+    }
+    push("range","Resistance",resistance); push("trigger","EDGE confirmation",trigger); push("current","NIFTY now",spot); push("range","Support",support);
+    track.replaceChildren();
+    if(!levels.length){
+      var empty=document.createElement("div");empty.className="battle-empty";empty.textContent="Waiting for live market levels…";track.appendChild(empty);setText("battle-now","--");return;
+    }
+    var vals=levels.map(function(x){return x.value;}), max=Math.max.apply(null,vals), min=Math.min.apply(null,vals);
+    if(max===min){max+=1;min-=1;}
+    var pad=(max-min)*.12;max+=pad;min-=pad;
+    levels.sort(function(a,b){return b.value-a.value;});
+    levels.forEach(function(x){
+      var top=8+((max-x.value)/(max-min))*84;
+      var row=document.createElement("div");row.className="battle-level "+x.kind;row.style.top=top.toFixed(2)+"%";
+      var label=document.createElement("span");label.className="battle-label";label.textContent=x.label;
+      var dot=document.createElement("span");dot.className="battle-dot";
+      var value=document.createElement("span");value.className="battle-value";value.textContent=Number(x.value).toLocaleString("en-IN");
+      row.appendChild(label);row.appendChild(dot);row.appendChild(value);track.appendChild(row);
+    });
+    setText("battle-now",spot!==null?spot.toLocaleString("en-IN"):"--");
+    var note="Support and resistance are market context — not instructions.";
+    if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) note="EDGE is waiting for confirmation: "+plan.triggerText;
+    else if(plan.backendStatus==="READY_TO_EXECUTE") note="The backend's final execution gate is READY. Open Action for exact trade details.";
+    setText("battle-note",note);
   }
 
   function humanBiasView(bias) {
