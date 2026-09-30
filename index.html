@@ -274,6 +274,9 @@
   .ev-oos-status { display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:4px 7px;border-radius:20px;border:1px solid var(--border);color:var(--muted); }
   .ev-oos-status.good { color:var(--accent);border-color:rgba(0,255,136,.28); }
   .ev-oos-status.wait { color:var(--amber);border-color:rgba(255,170,0,.28); }
+  .ev-wf-row { display:grid;grid-template-columns:minmax(0,1.45fr) .65fr .52fr .72fr .72fr;gap:5px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px; }
+  .ev-wf-row:last-child { border-bottom:none; }
+  .ev-wf-row.head { color:var(--muted);letter-spacing:.4px; }
 
   /* TRADE DECISION */
   .section-wrap { margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto; }
@@ -814,6 +817,23 @@
       </div>
       <div class="ev-method" id="ev-oos-cutoff">Newest observations stay untouched until the holdout check.</div>
       <div class="ev-dimension" id="ev-oos-groups"></div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="research-flag">◉ WALK-FORWARD · EXPANDING WINDOW</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div class="card-label" style="margin-bottom:0;">REPLICATION CHECK · 60M</div>
+        <div class="ev-oos-status wait" id="ev-wf-status">WAITING FOR FOLDS</div>
+      </div>
+      <div class="ev-grid">
+        <div class="ev-stat"><div class="ev-stat-label">FOLDS</div><div class="ev-stat-val" id="ev-wf-folds">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">FORWARD TEST N</div><div class="ev-stat-val" id="ev-wf-test">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">COST PROFILE</div><div class="ev-stat-val" id="ev-wf-profile" style="font-size:14px;">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">NET 60M COVERAGE</div><div class="ev-stat-val" id="ev-wf-net">--</div></div>
+      </div>
+      <div class="ev-method" id="ev-wf-method">Forward blocks must repeat before EDGE treats a pattern as replicated evidence.</div>
+      <div class="ev-dimension" id="ev-wf-groups"></div>
     </div>
   </div>
 <!-- STRIKE ANALYSER -->
@@ -1674,6 +1694,44 @@
     });
     setSafeHTML(el,html);
   }
+  function frictionLabel(fm) {
+    fm=fm||{};
+    if(fm.mode==="CALIBRATED_PROFILE" && fm.calibratedProfile){
+      var cp=fm.calibratedProfile;
+      return (cp.broker||"BROKER")+" · ₹"+(cp.brokeragePerExecutedOrderRupees||0)+"/ORDER";
+    }
+    if(fm.mode==="STRESS") return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
+    return "GROSS ONLY";
+  }
+  function frictionDetail(fm) {
+    fm=fm||{};
+    var cp=fm.calibratedProfile;
+    if(!cp) return fm.basis||"No calibrated cost profile.";
+    return "1-lot research cost profile · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
+      "/executed order · STT "+cp.sttSellPct+"% sell · exchange "+cp.exchangeTransactionPct+
+      "% premium · stamp "+cp.stampDutyBuyPct+"% buy · GST "+cp.gstPct+
+      "% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+"/crore.";
+  }
+  function renderWalkForwardRows(target,groups) {
+    var el=document.getElementById(target); if(!el) return;
+    var rows=[];
+    Object.keys(groups||{}).forEach(function(name){
+      var g=groups[name]||{},agg=g.aggregateTest||{},gross=metric60(agg.gross),net=metric60(agg.frictionAdjusted);
+      rows.push({
+        name:name,replicated:!!g.replicatedAcrossFolds,
+        folds:(Number(g.eligibleFolds)||0)+"/"+(Number(g.totalFolds)||0),
+        n:Number(agg.gross&&agg.gross.samples)||0,
+        gross:gross&&gross.avgReturnPct,net:net&&net.avgReturnPct
+      });
+    });
+    rows.sort(function(a,b){return b.n-a.n;});
+    if(!rows.length){setSafeHTML(el,'<div class="ev-empty">NO WALK-FORWARD FOLDS YET. MORE MEASURED EXECUTION EPISODES ARE REQUIRED.</div>');return;}
+    var html='<div class="ev-wf-row head"><span>SETUP</span><span class="ev-num">FOLDS</span><span class="ev-num">N</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
+    rows.slice(0,8).forEach(function(r){
+      html+='<div class="ev-wf-row"><span class="ev-name">'+escapeHtml(r.name)+(r.replicated?' ✓':'')+'</span><span class="ev-num">'+r.folds+'</span><span class="ev-num">'+r.n+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(Number.isFinite(Number(r.gross))?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(Number.isFinite(Number(r.net))?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
+    });
+    setSafeHTML(el,html);
+  }
   function renderEvidenceIntelligence(j) {
     setText("ev-episodes",j.measuredEpisodes||0);
     setText("ev-min-samples",j.minSamples||20);
@@ -1722,9 +1780,26 @@
       if(oos){oos.textContent=validation.enoughForHoldout?"HOLDOUT GATE MET":"BUILDING HOLDOUT";oos.className="ev-oos-status "+(validation.enoughForHoldout?"good":"wait");}
       setText("ev-oos-split",(validation.trainEpisodes||0)+" / "+(validation.testEpisodes||0));
       var fm=validation.frictionModel||{};
-      setText("ev-oos-friction",fm.configured?((fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG"):"GROSS ONLY");
+      setText("ev-oos-friction",frictionLabel(fm));
       setText("ev-oos-cutoff",(validation.cutoffTimestamp?"Holdout starts "+new Date(validation.cutoffTimestamp).toLocaleString("en-IN")+". ":"")+(validation.methodology||"Chronological holdout; no shuffle."));
       renderOosRows("ev-oos-groups",validation.scannerGroups||{});
+    }
+
+    var wf=j.walkForward||null, wfs=document.getElementById("ev-wf-status");
+    if(!wf){
+      if(wfs){wfs.textContent="V4 NOT AVAILABLE";wfs.className="ev-oos-status wait";}
+      setText("ev-wf-folds","--");setText("ev-wf-test","--");setText("ev-wf-profile","--");setText("ev-wf-net","--");
+      setText("ev-wf-method","Waiting for Evidence Intelligence V4.");
+      renderWalkForwardRows("ev-wf-groups",{});
+    } else {
+      if(wfs){wfs.textContent=wf.enoughForWalkForward?"REPLICATION GATE MET":"BUILDING FOLDS";wfs.className="ev-oos-status "+(wf.enoughForWalkForward?"good":"wait");}
+      setText("ev-wf-folds",wf.foldCount||0);
+      var agg=wf.aggregateTest||{},gross=agg.gross||{},net=agg.frictionAdjusted||{},net60=metric60(net);
+      setText("ev-wf-test",gross.samples||0);
+      setText("ev-wf-profile",frictionLabel(wf.frictionModel||{}));
+      setText("ev-wf-net",(net60&&Number.isFinite(Number(net60.measured)))?net60.measured:"--");
+      setText("ev-wf-method",(wf.methodology||"Expanding-window forward validation.")+" · "+frictionDetail(wf.frictionModel||{}));
+      renderWalkForwardRows("ev-wf-groups",wf.scannerGroups||{});
     }
   }
   function pollEvidenceIntelligence() {
