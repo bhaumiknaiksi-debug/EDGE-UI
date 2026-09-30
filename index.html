@@ -1583,19 +1583,30 @@
     var made=makeActionablePlan(d||{},raw,(d&&d.signalQuality!==undefined?d.signalQuality:d&&d.confidence)||0,d&&d.bias,d&&d.ivRegime);
     var plan=made.actionable||{}, trigger=finiteNum(plan.trigger);
     var levels=[];
-    function push(kind,label,value){if(value===null)return;if(levels.some(function(x){return Math.abs(x.value-value)<0.0001&&x.kind!==kind;})){if(kind!=="current"&&kind!=="trigger")return;}levels.push({kind:kind,label:label,value:value});}
+    function push(kind,label,value){
+      if(value===null)return;
+      var existing=levels.find(function(x){return Math.abs(x.value-value)<0.0001;});
+      if(existing){existing.kind+=" "+kind;existing.label+=" · "+label;return;}
+      levels.push({kind:kind,label:label,value:value});
+    }
     push("range","Resistance",resistance); push("trigger","EDGE confirmation",trigger); push("current","NIFTY now",spot); push("range","Support",support);
-    if(!levels.length){setSafeHTML(track,'<div class="battle-empty">Waiting for live market levels…</div>');setText("battle-now","--");return;}
+    track.replaceChildren();
+    if(!levels.length){
+      var empty=document.createElement("div");empty.className="battle-empty";empty.textContent="Waiting for live market levels…";track.appendChild(empty);setText("battle-now","--");return;
+    }
     var vals=levels.map(function(x){return x.value;}), max=Math.max.apply(null,vals), min=Math.min.apply(null,vals);
     if(max===min){max+=1;min-=1;}
     var pad=(max-min)*.12;max+=pad;min-=pad;
     levels.sort(function(a,b){return b.value-a.value;});
-    var html="";
     levels.forEach(function(x){
       var top=8+((max-x.value)/(max-min))*84;
-      html+='<div class="battle-level '+x.kind+'" style="top:'+top.toFixed(2)+'%"><span class="battle-label">'+escapeHtml(x.label)+'</span><span class="battle-dot"></span><span class="battle-value">'+Number(x.value).toLocaleString("en-IN")+'</span></div>';
+      var row=document.createElement("div");row.className="battle-level "+x.kind;row.style.top=top.toFixed(2)+"%";
+      var label=document.createElement("span");label.className="battle-label";label.textContent=x.label;
+      var dot=document.createElement("span");dot.className="battle-dot";
+      var value=document.createElement("span");value.className="battle-value";value.textContent=Number(x.value).toLocaleString("en-IN");
+      row.appendChild(label);row.appendChild(dot);row.appendChild(value);track.appendChild(row);
     });
-    setSafeHTML(track,html);setText("battle-now",spot!==null?spot.toLocaleString("en-IN"):"--");
+    setText("battle-now",spot!==null?spot.toLocaleString("en-IN"):"--");
     var note="Support and resistance are market context — not instructions.";
     if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) note="EDGE is waiting for confirmation: "+plan.triggerText;
     else if(plan.backendStatus==="READY_TO_EXECUTE") note="The backend's final execution gate is READY. Open Action for exact trade details.";
