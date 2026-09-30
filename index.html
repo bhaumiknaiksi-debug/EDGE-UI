@@ -823,6 +823,21 @@
   </div>
   <div class="section-wrap">
     <div class="card full">
+      <div class="research-flag">◉ CANDIDATE REGISTRY · RESEARCH TRIAGE ONLY</div>
+      <div class="card-label">SETUP EVIDENCE FUNNEL · 60M</div>
+      <div class="ev-grid">
+        <div class="ev-stat"><div class="ev-stat-label">OBSERVING</div><div class="ev-stat-val" id="ev-cand-observing">0</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">SAMPLE QUALIFIED</div><div class="ev-stat-val" id="ev-cand-sample">0</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">HOLDOUT AVAILABLE</div><div class="ev-stat-val" id="ev-cand-holdout">0</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">REPLICATED</div><div class="ev-stat-val" id="ev-cand-replicated">0</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">RESEARCH CANDIDATES</div><div class="ev-stat-val" id="ev-cand-ready">0</div></div>
+      </div>
+      <div class="ev-dimension" id="ev-candidates"></div>
+      <div class="ev-method" id="ev-cand-method">A research candidate is not a live signal and cannot promote itself into the decision engine.</div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
       <div class="research-flag">◉ CHRONOLOGICAL HOLDOUT · NO SHUFFLE</div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <div class="card-label" style="margin-bottom:0;">OUT-OF-SAMPLE REALITY CHECK · 60M</div>
@@ -1754,6 +1769,22 @@
     });
     setSafeHTML(el,html);
   }
+  function renderCandidateRegistry(reg) {
+    var el=document.getElementById("ev-candidates");
+    if(!reg){
+      setText("ev-cand-observing","--");setText("ev-cand-sample","--");setText("ev-cand-holdout","--");setText("ev-cand-replicated","--");setText("ev-cand-ready","--");
+      setSafeHTML(el,'<div class="ev-empty">V6 CANDIDATE REGISTRY IS NOT AVAILABLE FROM THE BACKEND YET.</div>');
+      setText("ev-cand-method","Waiting for Evidence Intelligence V6 candidate data. No zero-count inference is made.");
+      return;
+    }
+    var counts=reg.counts||{};
+    setText("ev-cand-observing",counts.OBSERVING||0);setText("ev-cand-sample",counts.SAMPLE_QUALIFIED||0);setText("ev-cand-holdout",counts.HOLDOUT_AVAILABLE||0);setText("ev-cand-replicated",counts.REPLICATED||0);setText("ev-cand-ready",counts.RESEARCH_CANDIDATE||0);
+    var rows=reg.candidates||[];
+    if(!rows.length){setSafeHTML(el,'<div class="ev-empty">NO CANDIDATE COMBINATIONS YET. EDGE NEEDS MEASURED EXECUTION EPISODES.</div>');setText("ev-cand-method",(reg&&reg.methodology)||"Research triage only; no live-decision impact.");return;}
+    var html='<div class="ev-oos-row head"><span>CANDIDATE</span><span class="ev-num">N</span><span class="ev-num">FOLDS</span><span class="ev-num">NET MED</span><span class="ev-num">NET WORST</span></div>';
+    rows.slice(0,10).forEach(function(c){var o=c.observed||{};html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(c.status+" · "+c.key)+'</span><span class="ev-num">'+(c.measuredEpisodes||0)+'</span><span class="ev-num">'+(o.positiveFolds||0)+'/'+(o.validFolds||0)+'</span><span class="ev-num '+pctTone(o.medianNetFoldReturnPct)+'">'+(finiteResearchNumber(o.medianNetFoldReturnPct)?Number(o.medianNetFoldReturnPct).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(o.worstNetFoldReturnPct)+'">'+(finiteResearchNumber(o.worstNetFoldReturnPct)?Number(o.worstNetFoldReturnPct).toFixed(2)+'%':'--')+'</span></div>';});
+    setSafeHTML(el,html);setText("ev-cand-method",reg.methodology||"Research triage only; no live-decision impact.");
+  }
   function renderResearchGovernance(g) {
     var st=document.getElementById("ev-gov-status");
     if(!g){
@@ -1777,6 +1808,7 @@
   }
   function renderEvidenceIntelligence(j) {
     renderResearchGovernance(j.governance||null);
+    renderCandidateRegistry(j.candidates||null);
     setText("ev-episodes",j.measuredEpisodes||0);
     setText("ev-min-samples",j.minSamples||20);
     var overall=j.overall||{};
