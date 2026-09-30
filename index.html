@@ -689,6 +689,22 @@
     .funnel-row.candidate strong{color:var(--cyan);text-shadow:0 0 14px rgba(0,229,255,.22)}
     .funnel-stop{margin-top:10px;padding:9px 10px;border-radius:10px;border:1px dashed rgba(255,255,255,.08);font-family:var(--mono);font-size:7px;line-height:1.6;color:var(--muted);text-align:center}
     @media(max-width:380px){.funnel-row{grid-template-columns:minmax(105px,1.2fr) minmax(48px,.8fr) 28px;gap:7px}.funnel-copy small{display:none}}
+    /* Mobile-first state dock + sticky hierarchy */
+    header{position:relative;top:auto}
+    .edge-tabs{top:env(safe-area-inset-top);z-index:40;border-radius:0 0 14px 14px;margin-bottom:10px;border-top:0}
+    body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+    .edge-state-dock{position:fixed;z-index:50;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(438px,calc(100% - 24px));display:grid;grid-template-columns:12px minmax(0,1fr) 20px;align-items:center;gap:10px;padding:11px 13px;border-radius:16px;border:1px solid rgba(255,170,0,.25);background:rgba(7,14,20,.92);backdrop-filter:blur(16px);color:var(--text);box-shadow:0 16px 50px rgba(0,0,0,.48);cursor:pointer;text-align:left}
+    .edge-state-dock.ready{border-color:rgba(0,255,136,.32);box-shadow:0 16px 50px rgba(0,0,0,.48),0 0 24px rgba(0,255,136,.06)}
+    .edge-state-dock.blocked,.edge-state-dock.closed{border-color:rgba(255,51,102,.26)}
+    .edge-state-dock.hidden{display:none}
+    .dock-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px rgba(255,170,0,.45)}
+    .edge-state-dock.ready .dock-dot{background:var(--accent);box-shadow:0 0 13px rgba(0,255,136,.5)}
+    .edge-state-dock.blocked .dock-dot,.edge-state-dock.closed .dock-dot{background:var(--red);box-shadow:0 0 13px rgba(255,51,102,.45)}
+    .dock-main{min-width:0;display:flex;align-items:baseline;gap:8px}.dock-main strong{font-family:var(--display);font-size:19px;letter-spacing:1px;font-weight:400;white-space:nowrap}.dock-main small{font-size:9px;color:#9eb0ba;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dock-arrow{font-size:16px;color:var(--muted);text-align:right}
+    .edge-state-dock:active{transform:translateX(-50%) scale(.985)}
+    @media(min-width:700px){.edge-state-dock{bottom:18px}}
+    @media(prefers-reduced-motion:reduce){.edge-state-dock:active{transform:translateX(-50%)}}
   </style>
 </head>
 <body>
@@ -1110,6 +1126,12 @@
 
   <footer>EDGE · decision support, not order execution · backend truth first</footer>
 </div>
+
+<button class="edge-state-dock watch" id="edge-state-dock" type="button" data-jump-tab="trade" aria-label="Open current EDGE decision">
+  <span class="dock-dot" id="dock-dot"></span>
+  <span class="dock-main"><strong id="dock-state">WAIT</strong><small id="dock-copy">Checking the market…</small></span>
+  <span class="dock-arrow">→</span>
+</button>
 
 <dialog class="edge-explainer" id="edge-explainer" aria-labelledby="explain-sheet-title">
   <div class="explain-handle"></div>
@@ -1765,6 +1787,8 @@
     var plan=made.actionable||{}, view=humanDecisionView(plan,made.strategy,d&&d.bias);
     var glance=document.getElementById("decision-glance"); if(glance) glance.className="human-card decision-glance "+view.kind;
     setText("glance-state",view.badge); setText("glance-title",view.headline); setText("glance-copy",view.copy); setText("glance-icon",view.icon);
+    var dock=document.getElementById("edge-state-dock"); if(dock) dock.className="edge-state-dock "+view.kind;
+    setText("dock-state",view.badge); setText("dock-copy",view.headline);
     var watch="";
     if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) watch="Watching for: "+plan.triggerText;
     else if(plan.backendStatus==="WAIT_FOR_PRICE"&&(plan.entryLow!==null||plan.entryHigh!==null)) watch="Waiting for the option price to return to EDGE's acceptable entry range.";
@@ -2467,6 +2491,7 @@
     function showTab(name){
       tabs.forEach(function(t){ var on=t.getAttribute('data-edge-tab')===name; t.classList.toggle('active',on); t.setAttribute('aria-selected',on?'true':'false'); });
       Object.keys(panels).forEach(function(k){ if(panels[k]) panels[k].classList.toggle('active',k===name); });
+      var dock=document.getElementById('edge-state-dock'); if(dock) dock.classList.toggle('hidden',name==='lab');
       try { sessionStorage.setItem('edge.activeTab',name); } catch(e) {}
     }
     tabs.forEach(function(t){ t.addEventListener('click',function(){ showTab(t.getAttribute('data-edge-tab')); }); });
