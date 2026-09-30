@@ -1356,7 +1356,7 @@
     var entryBlock = out.entry || {};
     var timing = entryBlock.timing || {};
     var risk = out.risk || {};
-    var orchestration = (d && d.orchestration) || {};
+    var orchestration = out.orchestration || (d && d.orchestration) || {};
     var position = out.position || (d && d.position) || {};
 
     // The vNext backend is authoritative. Financial levels and timing now live
@@ -1402,6 +1402,9 @@
       chase: out.doNotChasePrice,
       source: "backend",
       backendStatus: backendStatus,
+      // Entry checks alone never authorize a purchase. Fail closed unless
+      // the authoritative final gate explicitly permits execution too.
+      executionAllowed: backendStatus === 'READY_TO_EXECUTE' && orchestration.executionAllowed === true && entryBlock.triggerReady === true && entryBlock.priceReady === true,
       triggerReady: entryBlock.triggerReady === true,
       priceReady: entryBlock.priceReady === true,
       liquidityReady: entryBlock.liquidityReady !== false,
@@ -1525,7 +1528,7 @@
           }
           var p = plan;
           var planHtml = '<div class="single-plan">' +
-            planStat(p.triggerReady && p.priceReady ? 'BUY NOW' : 'CURRENT PREMIUM', p.executablePrice !== null ? p.executablePrice : p.entry, p.triggerReady ? (p.priceReady ? 'TRIGGER CONFIRMED' : 'WAIT FOR PRICE') : 'PRICE ≠ TRIGGER', 'entry') +
+            planStat(p.executionAllowed ? 'BUY NOW' : 'CURRENT PREMIUM', p.executablePrice !== null ? p.executablePrice : p.entry, p.executionAllowed ? 'TRIGGER CONFIRMED' : (p.backendStatus === 'READY_TO_EXECUTE' || !p.backendStatus ? 'EXECUTION NOT AUTHORIZED' : escapeHtml(p.action)), 'entry') +
             planStat('TARGET', p.target, 'OPTION PREMIUM', 'target') +
             planStat('STOP-LOSS', p.stop, 'OPTION PREMIUM', 'stop') +
             '</div>';
