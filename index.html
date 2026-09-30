@@ -705,6 +705,14 @@
     .edge-state-dock:active{transform:translateX(-50%) scale(.985)}
     @media(min-width:700px){.edge-state-dock{bottom:18px}}
     @media(prefers-reduced-motion:reduce){.edge-state-dock:active{transform:translateX(-50%)}}
+    /* V1.1 cleanup */
+    .candidate-lock{margin:12px 0;padding:15px;border-radius:14px;border:1px solid rgba(255,170,0,.2);background:rgba(255,170,0,.035)}
+    .candidate-lock-kicker{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--amber)}
+    .candidate-lock-title{font-size:13px;font-weight:600;line-height:1.45;margin-top:6px}.candidate-lock-copy{font-size:10px;line-height:1.55;color:var(--muted);margin-top:5px}
+    .edge-state-dock{padding:9px 12px;min-height:52px;transition:width .2s ease,padding .2s ease,opacity .2s ease}
+    .edge-state-dock.compact{width:min(260px,calc(100% - 28px));grid-template-columns:10px minmax(0,1fr) 16px;padding:7px 10px}
+    .edge-state-dock.compact .dock-main small{display:none}.edge-state-dock.compact .dock-main strong{font-size:17px}
+    body:not(.pro-mode) #tab-lab .ev-method,body:not(.pro-mode) #tab-lab .ev-oos-row.head{font-family:var(--sans)}
   </style>
 </head>
 <body>
@@ -1647,6 +1655,7 @@
     if(u.indexOf("VWAP")>=0) return "Price vs today's average";
     if(u.indexOf("FUTURE")>=0) return "Futures activity";
     if(u.indexOf("OPTION")>=0&&u.indexOf("FLOW")>=0) return "Options activity";
+    if(u.indexOf("SIGNALS ALIGNED")>=0) return "Cross-check agreement";
     if(u.indexOf("TREND")>=0||u.indexOf("MOMENT")>=0) return "Short-term direction";
     if(u.indexOf("OI")>=0) return "Trader positioning";
     if(u.indexOf("MAX PAIN")>=0) return "Options concentration";
@@ -1656,7 +1665,13 @@
 
   function renderWhy(explain,bias) {
     var thesis=document.getElementById("why-thesis"), factors=document.getElementById("why-factors");
-    if(thesis) thesis.textContent=(explain&&explain.thesis)||humanBiasView(bias).copy;
+    if(thesis) {
+      var hv=humanBiasView(bias), factorList=(explain&&Array.isArray(explain.factors))?explain.factors:[];
+      var up=factorList.filter(function(f){var n=finiteNum(f.value);return n!==null&&n>0;}).length;
+      var down=factorList.filter(function(f){var n=finiteNum(f.value);return n!==null&&n<0;}).length;
+      var evidenceCopy=down>up?"Several market inputs currently lean downward, while others remain mixed.":up>down?"Several market inputs currently lean upward, while others remain mixed.":"The market inputs are mixed, so EDGE does not see a clean directional agreement.";
+      thesis.textContent=evidenceCopy+" "+hv.copy;
+    }
     if(!factors) return;
     var list=(explain&&Array.isArray(explain.factors))?explain.factors:[];
     if(!list.length){setSafeHTML(factors,'<div class="battle-note">No factor breakdown is available from the backend yet.</div>');return;}
@@ -1734,6 +1749,18 @@
     if(typeof dlg.showModal==="function") dlg.showModal(); else dlg.setAttribute("open","");
   }
 
+  function humanTriggerText(text) {
+    var t=String(text||"");
+    var l=t.toLowerCase();
+    if(l.indexOf("break support")>=0) return "Wait for NIFTY to move below support and show continued downward momentum.";
+    if(l.indexOf("reclaim resistance")>=0) return "Wait for NIFTY to move above resistance and show continued upward momentum.";
+    if(l.indexOf("support hold")>=0) return "Wait for support to hold with clear upward confirmation.";
+    if(l.indexOf("rejection")>=0&&l.indexOf("resistance")>=0) return "Wait for price to reject resistance with clear downward confirmation.";
+    if(l.indexOf("short-call")>=0) return "Wait for price to confirm weakness below the key resistance area.";
+    if(l.indexOf("short strikes")>=0||l.indexOf("short-strike")>=0) return "Wait for price to remain inside the expected range without a strong directional move.";
+    return t.replace(/\bspot\b/gi,"NIFTY").replace(/\bnegative momentum\b/gi,"continued downward momentum").replace(/\bpositive momentum\b/gi,"continued upward momentum");
+  }
+
   function humanBiasView(bias) {
     var b=String(bias||"").toUpperCase();
     if(b==="BULLISH") return {title:"Buyers have the edge",copy:"Price and positioning are leaning upward. EDGE still waits for the entry gates before treating that as a trade.",direction:"Bullish",position:82,tone:"bull"};
@@ -1790,7 +1817,7 @@
     var dock=document.getElementById("edge-state-dock"); if(dock) dock.className="edge-state-dock "+view.kind;
     setText("dock-state",view.badge); setText("dock-copy",view.headline);
     var watch="";
-    if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) watch="Watching for: "+plan.triggerText;
+    if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) watch="Watching for: "+humanTriggerText(plan.triggerText);
     else if(plan.backendStatus==="WAIT_FOR_PRICE"&&(plan.entryLow!==null||plan.entryHigh!==null)) watch="Waiting for the option price to return to EDGE's acceptable entry range.";
     else if(plan.backendStatus==="WAIT_FOR_LIQUIDITY") watch="Waiting for cleaner bid/ask conditions.";
     else if(plan.backendStatus==="READY_TO_EXECUTE") watch="Backend state: READY TO EXECUTE. Open Action for the exact contract, entry, stop and targets.";
@@ -1940,7 +1967,7 @@
       var gateHtml="";
       gateHtml+=humanGateHtml("Market confirmation",true,plan.triggerReady,"WAITING");
       gateHtml+=humanGateHtml("Entry price",true,plan.priceReady,"NOT ACCEPTABLE");
-      gateHtml+=humanGateHtml("Easy to enter & exit",!!plan.liquidity,plan.liquidityReady,"TOO WIDE");
+      gateHtml+=humanGateHtml("Easy to enter & exit",!!plan.liquidity,plan.liquidityReady,(plan.liquidity&&finiteNum(plan.liquidity.maxSpreadPct)===null)?"QUOTE NOT USABLE":"TOO WIDE");
       setSafeHTML(gates,gateHtml);
     }
 
@@ -1949,13 +1976,14 @@
       setSafeHTML(wrap, "");
       var legs = dec.tradeLegs;
       if (legs && strategy !== "WAIT" && isSignal) {
-        var legsHtml = '<div class="legs-stack">';
+        var executionReady=plan.backendStatus==="READY_TO_EXECUTE";
+        var legsHtml = executionReady ? '<div class="legs-stack">' : '<div class="candidate-lock"><div class="candidate-lock-kicker">POSSIBLE TRADE · LOCKED</div><div class="candidate-lock-title">EDGE has a structure in mind, but it is not cleared for entry.</div><div class="candidate-lock-copy">The exact contract stays hidden until market confirmation, price and liquidity all pass.</div></div><div class="legs-stack pro-only">';
         function legCardHtml(action, leg) {
           if (!leg) return '';
           var cls = action.toLowerCase();
           return '<div class="leg-card ' + cls + '">' +
             '<div class="leg-left">' +
-              '<div class="leg-action ' + cls + '">' + action + '</div>' +
+              '<div class="leg-action ' + cls + '">' + (executionReady?action:'CANDIDATE') + '</div>' +
               '<div class="leg-contract">' + (leg.contractId || ('NIFTY ' + leg.strike + ' ' + leg.type)) + '</div>' +
             '</div>' +
             '<div class="leg-right">' +
@@ -1983,20 +2011,24 @@
               (sub ? '<div class="plan-sub">' + sub + '</div>' : '') + '</div>';
           }
           var p = plan;
-          var planHtml = '<div class="single-plan">' +
+          var planHtml = '<div class="single-plan' + (executionReady ? '' : ' pro-only') + '">' +
             planStat(p.backendStatus === 'READY_TO_EXECUTE' ? 'ENTRY NOW' : 'CURRENT OPTION PRICE', p.executablePrice !== null ? p.executablePrice : p.entry, p.backendStatus === 'READY_TO_EXECUTE' ? 'ALL ENTRY GATES PASSED' : (p.triggerReady ? (p.priceReady ? 'FINAL GATE NOT READY' : 'WAITING FOR PRICE') : 'WAITING FOR MARKET CONFIRMATION'), 'entry') +
             planStat('TARGET', p.target, 'OPTION PREMIUM', 'target') +
-            planStat('STOP-LOSS', p.stop, 'OPTION PREMIUM', 'stop') +
+            planStat('STOP-LOSS', p.stop, (p.stop!==null&&p.stop<=0.05?'STRUCTURAL FLOOR · NEAR-TOTAL PREMIUM RISK':'OPTION PREMIUM'), 'stop') +
             '</div>';
           var planRows = '<div class="risk-table">';
           if (p.entryLow !== null || p.entryHigh !== null) {
             var priceRule = p.entryLow !== null && p.entryHigh !== null ? (p.entryLow + ' - ' + p.entryHigh) : (p.entryHigh !== null ? ('≤ ' + p.entryHigh) : ('≥ ' + p.entryLow));
             planRows += '<div class="risk-row"><span class="risk-label">PRICE LIMIT</span><span class="risk-val neutral">' + priceRule + '</span></div>';
           }
-          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET CONFIRMATION</span><span class="risk-val neutral">' + escapeHtml(p.triggerText) + '</span></div>';
+          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET CONFIRMATION</span><span class="risk-val neutral">' + escapeHtml(humanTriggerText(p.triggerText)) + '</span></div>';
           if (p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val profit">CONFIRMED ✓</span></div>';
           planRows += '<div class="risk-row"><span class="risk-label">ENTRY PRICE</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
-          if (p.liquidity) planRows += '<div class="risk-row"><span class="risk-label">LIQUIDITY</span><span class="risk-val ' + (p.liquidityReady ? 'profit' : 'loss') + '">' + (p.liquidityReady ? 'PASS ✓' : 'SPREAD TOO WIDE') + (p.liquidity.maxSpreadPct !== undefined ? ' · ' + p.liquidity.maxSpreadPct + '%' : '') + '</span></div>';
+          if (p.liquidity) {
+            var spreadPct=finiteNum(p.liquidity.maxSpreadPct);
+            var liqFail=p.liquidity.reason==="VALID_BID_ASK_REQUIRED"||p.liquidity.reason==="POSITIVE_BID_ASK_REQUIRED"||p.liquidity.reason==="QUOTE_UNAVAILABLE"?"LIVE QUOTE NOT USABLE":"TOO EXPENSIVE TO ENTER / EXIT";
+            planRows += '<div class="risk-row"><span class="risk-label">EASY TO ENTER & EXIT</span><span class="risk-val ' + (p.liquidityReady ? 'profit' : 'loss') + '">' + (p.liquidityReady ? 'GOOD ✓' : liqFail) + (spreadPct!==null ? ' · <span class="pro-inline">'+spreadPct+'%</span>' : '') + '</span></div>';
+          }
           if (p.triggerReady && p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">TIME TO ENTER</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
           else if (!p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">ENTRY WINDOW</span><span class="risk-val neutral">STARTS ON TRIGGER</span></div>';
           if (p.holdMinutes) planRows += '<div class="risk-row"><span class="risk-label">MAX HOLDING GUIDE</span><span class="risk-val neutral">' + p.holdMinutes + ' MIN</span></div>';
@@ -2237,14 +2269,14 @@
     }
     var gates=g.gates||{},o=g.observed||{},th=g.thresholds||{};
     var reviewReady=g.status==="REVIEW_READY";
-    if(st){st.textContent=String(g.status||"UNKNOWN").replace(/_/g," ");st.className="ev-oos-status "+(reviewReady?"good":"wait");}
+    if(st){var gs=String(g.status||"UNKNOWN");var simpleGs={INSUFFICIENT_DATA:"NEEDS MORE DATA",ACCUMULATING_VALIDATION:"BUILDING EVIDENCE",REPLICATED_RESEARCH:"REPEATING SO FAR",REVIEW_READY:"READY FOR HUMAN REVIEW"};st.innerHTML=escapeHtml(simpleGs[gs]||gs.replace(/_/g," "))+'<span class="pro-inline"> · '+escapeHtml(gs.replace(/_/g," "))+'</span>';st.className="ev-oos-status "+(reviewReady?"good":"wait");}
     setText("ev-gov-samples",(o.measuredEpisodes||0)+" / "+(th.minMeasuredEpisodes||"--"));
     setText("ev-gov-folds",(o.validFolds||0)+" / "+(th.minValidFolds||"--"));
     setText("ev-gov-positive",(o.positiveFolds||0)+" / "+(o.validFolds||0));
     setText("ev-gov-net",(finiteResearchNumber(o.medianNetFoldReturnPct)?Number(o.medianNetFoldReturnPct).toFixed(2)+"%":"--")+" / "+(finiteResearchNumber(o.worstNetFoldReturnPct)?Number(o.worstNetFoldReturnPct).toFixed(2)+"%":"--"));
-    var labels=[["SAMPLE SUFFICIENT",gates.sampleSufficient],["HOLDOUT READY",gates.holdoutReady],["REPLICATED",gates.replicated],["REAL COST MODEL",gates.frictionConfigured],["COST-ADJUSTED STABLE",gates.costAdjustedStable]];
+    var labels=[["ENOUGH OBSERVATIONS","SAMPLE SUFFICIENT",gates.sampleSufficient],["TESTED ON LATER DATA","HOLDOUT READY",gates.holdoutReady],["REPEATED ACROSS TIME","REPLICATED",gates.replicated],["REAL TRADING COSTS INCLUDED","REAL COST MODEL",gates.frictionConfigured],["STILL HOLDS AFTER COSTS","COST-ADJUSTED STABLE",gates.costAdjustedStable]];
     var html='<div class="ev-row head"><span>GATE</span><span class="ev-num">STATE</span><span></span><span></span></div>';
-    labels.forEach(function(x){html+='<div class="ev-row"><span class="ev-name">'+x[0]+'</span><span class="ev-num '+(x[1]?"ev-positive":"ev-neutral")+'">'+(x[1]?"MET":"NOT MET")+'</span><span></span><span></span></div>';});
+    labels.forEach(function(x){html+='<div class="ev-row"><span class="ev-name">'+x[0]+' <span class="pro-inline">· '+x[1]+'</span></span><span class="ev-num '+(x[2]?"ev-positive":"ev-neutral")+'">'+(x[2]?"YES":"NOT YET")+'</span><span></span><span></span></div>';});
     setSafeHTML(document.getElementById("ev-gov-gates"),html);
     setText("ev-gov-method",(g.interpretation||"Research maturity only.")+(finiteResearchNumber(o.netDispersionStdDevPct)?" · Net fold dispersion "+Number(o.netDispersionStdDevPct).toFixed(2)+"%.":""));
   }
@@ -2500,6 +2532,12 @@
     Array.prototype.slice.call(document.querySelectorAll('[data-jump-tab]')).forEach(function(b){
       b.addEventListener('click',function(){ showTab(b.getAttribute('data-jump-tab')); window.scrollTo({top:0,behavior:'smooth'}); });
     });
+  })();
+
+  (function initStateDock(){
+    var dock=document.getElementById('edge-state-dock'),lastY=window.scrollY;
+    if(!dock)return;
+    window.addEventListener('scroll',function(){var y=window.scrollY;dock.classList.toggle('compact',y>260&&y>=lastY-8);lastY=y;},{passive:true});
   })();
 
   (function initExplainers(){
