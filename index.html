@@ -2380,7 +2380,7 @@
     pollEvidenceIntelligence();
     pollEvidenceHealth();
     clearInterval(evidenceTimer);
-    evidenceTimer=setInterval(pollEvidenceIntelligence,60000);
+    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();},60000);
     var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
   }
 
