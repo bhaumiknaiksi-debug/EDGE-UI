@@ -565,12 +565,9 @@
     .view-btn{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:5px 7px;border-radius:999px;cursor:pointer}
     .view-btn.active{background:rgba(226,238,242,.1);color:var(--text)}
     .reconnect-btn{margin-left:2px;padding:5px 8px;background:transparent;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-family:var(--mono);font-size:7px;letter-spacing:1px;cursor:pointer}
-    .pro-only{display:none!important}
+    body:not(.pro-mode) .pro-only{display:none!important}
     .pro-inline{display:none}
-    body.pro-mode .pro-only{display:block!important}
     body.pro-mode .pro-inline{display:inline}
-    body.pro-mode .bias-card{display:flex!important}
-    body.pro-mode .sr-sub.pro-only{display:block!important}
 
     .human-shell{position:relative;z-index:1;width:calc(100% - 28px);max-width:452px;margin:0 auto 10px;display:grid;gap:10px}
     .human-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:20px;padding:18px;background:
@@ -1701,7 +1698,7 @@
     if (wrap) {
       setSafeHTML(wrap, "");
       var legs = dec.tradeLegs;
-      if (legs && strategy !== "WAIT") {
+      if (legs && strategy !== "WAIT" && isSignal) {
         var legsHtml = '<div class="legs-stack">';
         function legCardHtml(action, leg) {
           if (!leg) return '';
