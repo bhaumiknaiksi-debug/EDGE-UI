@@ -559,24 +559,87 @@
     .lab-empty{margin-top:22px;padding:34px 18px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted)}
     .lab-empty-title{font-size:12px;letter-spacing:.16em;color:var(--text);margin-bottom:10px}
     .lab-empty-copy{font-size:9px;letter-spacing:.13em;line-height:1.8}
+
+    /* HUMAN INTERFACE V1 · presentation only */
+    .view-toggle{display:flex;gap:2px;padding:2px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.025)}
+    .view-btn{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--mono);font-size:7px;letter-spacing:1px;padding:5px 7px;border-radius:999px;cursor:pointer}
+    .view-btn.active{background:rgba(226,238,242,.1);color:var(--text)}
+    .reconnect-btn{margin-left:2px;padding:5px 8px;background:transparent;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-family:var(--mono);font-size:7px;letter-spacing:1px;cursor:pointer}
+    .pro-only{display:none!important}
+    .pro-inline{display:none}
+    body.pro-mode .pro-only{display:block!important}
+    body.pro-mode .pro-inline{display:inline}
+    body.pro-mode .bias-card{display:flex!important}
+    body.pro-mode .sr-sub.pro-only{display:block!important}
+
+    .human-shell{position:relative;z-index:1;width:calc(100% - 28px);max-width:452px;margin:0 auto 10px;display:grid;gap:10px}
+    .human-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:20px;padding:18px;background:
+      radial-gradient(circle at 88% 8%,rgba(0,229,255,.09),transparent 30%),
+      linear-gradient(165deg,rgba(17,28,39,.92),rgba(6,11,17,.94));
+      box-shadow:0 18px 45px rgba(0,0,0,.25)}
+    .human-card::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.035),transparent 28%)}
+    .human-kicker{font-family:var(--mono);font-size:8px;letter-spacing:2.2px;color:var(--muted);margin-bottom:9px}
+    .human-pulse-head,.glance-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+    .human-title{font-family:var(--display);font-size:31px;line-height:1;letter-spacing:.7px}
+    .human-copy,.decision-human-copy{font-size:12px;line-height:1.55;color:#9eb0ba;margin-top:7px;max-width:34em}
+    .pulse-orb{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,170,0,.35);background:rgba(255,170,0,.08);box-shadow:0 0 22px rgba(255,170,0,.08)}
+    .pulse-orb span{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 13px currentColor}
+    .pulse-orb.bull{border-color:rgba(0,255,136,.36);background:rgba(0,255,136,.07)} .pulse-orb.bull span{background:var(--accent)}
+    .pulse-orb.bear{border-color:rgba(255,51,102,.36);background:rgba(255,51,102,.07)} .pulse-orb.bear span{background:var(--red)}
+    .pulse-scale{position:relative;height:18px;margin-top:17px}
+    .pulse-line{position:absolute;left:0;right:0;top:8px;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,51,102,.8),rgba(255,170,0,.65) 50%,rgba(0,255,136,.8))}
+    .pulse-marker{position:absolute;top:2px;width:14px;height:14px;border:3px solid var(--bg);border-radius:50%;background:var(--text);box-shadow:0 0 0 1px rgba(255,255,255,.3),0 0 18px rgba(226,238,242,.28);transform:translateX(-50%);transition:left .6s cubic-bezier(.2,.8,.2,1)}
+    .pulse-scale-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;letter-spacing:1px;color:var(--muted)}
+    .human-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:15px}
+    .human-metric{padding:10px 11px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.025)}
+    .hm-label{display:block;font-family:var(--mono);font-size:7px;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+    .human-metric strong{font-size:11px;font-weight:500;color:var(--text)}
+    .decision-glance{border-color:rgba(255,170,0,.2)}
+    .decision-glance.ready{border-color:rgba(0,255,136,.32);box-shadow:0 18px 50px rgba(0,255,136,.055)}
+    .decision-glance.blocked,.decision-glance.closed{border-color:rgba(255,51,102,.22)}
+    .glance-state{font-family:var(--display);font-size:36px;line-height:.95;letter-spacing:1.5px;color:var(--amber)}
+    .decision-glance.ready .glance-state{color:var(--accent);text-shadow:0 0 22px rgba(0,255,136,.24)}
+    .decision-glance.blocked .glance-state,.decision-glance.closed .glance-state{color:var(--red)}
+    .glance-title{font-size:16px;font-weight:500;margin-top:7px}
+    .glance-icon{width:42px;height:42px;border-radius:13px;border:1px solid rgba(255,170,0,.24);display:grid;place-items:center;color:var(--amber);background:rgba(255,170,0,.06);font-size:12px}
+    .decision-glance.ready .glance-icon{color:var(--accent);border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.06)}
+    .decision-glance.blocked .glance-icon,.decision-glance.closed .glance-icon{color:var(--red);border-color:rgba(255,51,102,.25);background:rgba(255,51,102,.05)}
+    .glance-watch{margin-top:14px;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);font-family:var(--mono);font-size:9px;line-height:1.55;color:#a9bac3}
+    .glance-cta{width:100%;margin-top:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.035);color:var(--text);font-family:var(--mono);font-size:8px;letter-spacing:1.3px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+    .glance-cta:active{transform:scale(.99)}
+    .decision-card{border-width:1px;border-radius:20px;background:linear-gradient(165deg,rgba(14,26,35,.96),rgba(5,10,15,.96));box-shadow:0 20px 50px rgba(0,0,0,.26)}
+    .decision-card.ready{border-color:rgba(0,255,136,.36)}
+    .decision-card.watch{border-color:rgba(255,170,0,.28)}
+    .decision-card.blocked,.decision-card.closed{border-color:rgba(255,51,102,.28)}
+    .decision-human-copy{margin:3px 0 13px}
+    .gate-list{display:grid;grid-template-columns:1fr;gap:6px;margin:12px 0}
+    .gate-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);font-size:10px}
+    .gate-name{color:#a7b7c0}.gate-state{font-family:var(--mono);font-size:8px;letter-spacing:.8px}
+    .gate-state.pass{color:var(--accent)}.gate-state.wait{color:var(--amber)}.gate-state.block{color:var(--red)}
+    @media(max-width:390px){header{padding:9px 12px}.status-bar{gap:6px}.reconnect-btn{display:none}.human-title{font-size:28px}.human-metrics{grid-template-columns:1fr 1fr}.edge-tab{font-size:8px}}
+    @media(prefers-reduced-motion:reduce){.pulse-marker{transition:none}}
   </style>
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
-  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">RADAR<small>what's up?</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">TRADE<small>what do I do?</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">FLOW<small>what's underneath?</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">LAB<small>poke the market</small></button>
+  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">MARKET<small>what's happening?</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">ACTION<small>what should I do?</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">DETAILS<small>show me the data</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">LAB<small>does it actually work?</small></button>
 </nav>
 
   <!-- HEADER -->
   <header>
-    <div><div class="logo">EDGE <span>NIFTY CHAOS DECODER</span></div></div>
+    <div><div class="logo">EDGE <span>HUMAN SIGNAL TERMINAL</span></div></div>
     <div class="status-bar">
       <div class="dot" id="dot"></div>
       <span id="ws-status">CONNECTING</span>
       <span id="last-update" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
-      <button onclick="forceReconnect()" style="margin-left:8px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--mono);font-size:8px;letter-spacing:1px;cursor:pointer;">POKE THE PIPE</button>
+      <div class="view-toggle" aria-label="Display detail">
+        <button class="view-btn active" type="button" data-view-mode="simple">SIMPLE</button>
+        <button class="view-btn" type="button" data-view-mode="pro">PRO</button>
+      </div>
+      <button onclick="forceReconnect()" class="reconnect-btn">RECONNECT</button>
     </div>
   </header>
 
@@ -617,7 +680,7 @@
   <!-- SPOT HERO -->
   <div class="spot-hero">
     <div>
-      <div class="spot-label">NIFTY 50 · THE SUSPECT</div>
+      <div class="spot-label">NIFTY 50 · RIGHT NOW</div>
       <div id="spot-price" aria-live="polite">--</div>
     </div>
     <div class="expiry-meta">
@@ -627,13 +690,52 @@
     </div>
   </div>
 
+  <!-- HUMAN-FIRST SUMMARY · PRESENTATION ONLY -->
+  <div class="human-shell">
+    <section class="human-card pulse-hero" aria-live="polite">
+      <div class="human-kicker">MARKET RIGHT NOW</div>
+      <div class="human-pulse-head">
+        <div>
+          <div class="human-title" id="human-bias-title">Reading the market…</div>
+          <div class="human-copy" id="human-bias-copy">EDGE is waiting for enough live data to describe the market clearly.</div>
+        </div>
+        <div class="pulse-orb neutral" id="pulse-orb"><span></span></div>
+      </div>
+      <div class="pulse-scale" aria-hidden="true">
+        <div class="pulse-line"></div>
+        <div class="pulse-marker" id="pulse-marker" style="left:50%"></div>
+      </div>
+      <div class="pulse-scale-labels"><span>SELLERS</span><span>BALANCED</span><span>BUYERS</span></div>
+      <div class="human-metrics">
+        <div class="human-metric"><span class="hm-label">Direction</span><strong id="human-direction">--</strong></div>
+        <div class="human-metric"><span class="hm-label">Option pricing</span><strong id="human-options">--</strong></div>
+        <div class="human-metric"><span class="hm-label">Likely range</span><strong id="human-range">--</strong></div>
+        <div class="human-metric"><span class="hm-label">Key levels</span><strong id="human-levels">--</strong></div>
+      </div>
+    </section>
+
+    <section class="human-card decision-glance watch" id="decision-glance">
+      <div class="human-kicker">EDGE DECISION</div>
+      <div class="glance-row">
+        <div>
+          <div class="glance-state" id="glance-state">WAIT</div>
+          <div class="glance-title" id="glance-title">EDGE is checking the setup.</div>
+          <div class="human-copy" id="glance-copy">No action is being suggested until the backend's required entry checks agree.</div>
+        </div>
+        <div class="glance-icon" id="glance-icon">●</div>
+      </div>
+      <div class="glance-watch" id="glance-watch">Waiting for live decision data.</div>
+      <button class="glance-cta" type="button" data-jump-tab="trade">OPEN ACTION DESK <span>→</span></button>
+    </section>
+  </div>
+
   <!-- MAIN GRID -->
   <div class="grid">
 
     <!-- BIAS + PCR -->
-    <div class="card bias-card">
+    <div class="card bias-card pro-only">
       <div>
-        <div class="card-label">THE VIBES</div>
+        <div class="card-label">TECHNICAL MARKET BIAS</div>
         <div id="bias-badge">--</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;">
           <span style="font-family:var(--mono);font-size:9px;color:var(--muted)">SIGNAL QUALITY</span>
@@ -652,29 +754,29 @@
 
     <!-- SR LEVELS -->
     <div class="card full">
-      <div class="card-label">FLOOR · FAIR · CEILING</div>
+      <div class="card-label">KEY MARKET LEVELS</div>
       <div class="sr-grid">
         <div class="sr-col">
-          <div class="sr-tag">SUPPORT</div>
+          <div class="sr-tag">SUPPORT ZONE</div>
           <div class="sr-val support" id="sr-support">--</div>
-          <div class="sr-sub">PE OI<br><span id="sr-support-oi">--</span></div>
+          <div class="sr-sub pro-only">PUT POSITIONING<br><span id="sr-support-oi">--</span></div>
         </div>
         <div class="sr-col mid">
-          <div class="sr-tag">ATM</div>
+          <div class="sr-tag">NEAR CURRENT PRICE</div>
           <div class="sr-val atm" id="sr-atm">--</div>
-          <div class="sr-sub">CE IV <span id="atm-ce-iv">--</span><br>PE IV <span id="atm-pe-iv">--</span></div>
+          <div class="sr-sub pro-only">CALL IV <span id="atm-ce-iv">--</span><br>PUT IV <span id="atm-pe-iv">--</span></div>
         </div>
         <div class="sr-col">
-          <div class="sr-tag">RESISTANCE</div>
+          <div class="sr-tag">RESISTANCE ZONE</div>
           <div class="sr-val resistance" id="sr-resistance">--</div>
-          <div class="sr-sub">CE OI<br><span id="sr-resistance-oi">--</span></div>
+          <div class="sr-sub pro-only">CALL POSITIONING<br><span id="sr-resistance-oi">--</span></div>
         </div>
       </div>
     </div>
 
     <!-- EXPECTED MOVE -->
     <div class="card full" id="em-card" style="display:none;">
-      <div class="card-label">WHERE CHAOS MIGHT ROAM · ±1σ</div>
+      <div class="card-label">LIKELY MOVEMENT RANGE <span class="pro-inline">· ±1σ</span></div>
       <div class="em-bar-wrap">
         <div class="em-bar">
           <div class="em-marker spot" id="em-marker-spot"></div>
@@ -691,7 +793,7 @@
     </div>
 
     <!-- MARKET STRUCTURE -->
-    <div class="card full" id="structure-card" style="display:none;">
+    <div class="card full pro-only" id="structure-card" style="display:none;">
       <div class="card-label">WHO'S HOLDING THE WALL?</div>
       <div id="structure-content"></div>
     </div>
@@ -703,20 +805,20 @@
     </div>
 
     <!-- OI TOTALS -->
-    <div class="card">
-      <div class="card-label">Total CE OI</div>
+    <div class="card pro-only">
+      <div class="card-label">TOTAL CALL POSITIONING · CE OI</div>
       <div id="ce-oi-val">--</div>
       <div class="card-sub">Call Writers</div>
     </div>
-    <div class="card">
-      <div class="card-label">Total PE OI</div>
+    <div class="card pro-only">
+      <div class="card-label">TOTAL PUT POSITIONING · PE OI</div>
       <div id="pe-oi-val">--</div>
       <div class="card-sub">Put Writers</div>
     </div>
 
     <!-- ALPHA STRIKES -->
-    <div class="card full">
-      <div class="card-label">HOT STRIKES · OI IS GOSSIPING</div>
+    <div class="card full pro-only">
+      <div class="card-label">ACTIVE STRIKES · POSITIONING & GREEKS</div>
       <div class="alpha-list" id="alpha-list"></div>
     </div>
 
@@ -730,24 +832,26 @@
 <div id="tab-trade" class="edge-panel" role="tabpanel">
 <!-- TRADE DECISION -->
   <div class="section-wrap" id="decision-block" style="display:none;">
-    <div class="section-label">SIGNAL DESK · NOT A BROKER</div>
+    <div class="section-label">EDGE DECISION · BACKEND-AUTHORITATIVE</div>
     <div class="decision-card" id="decision-card">
       <div class="decision-header">
         <div>
           <div class="decision-action execute" id="decision-action" aria-live="polite">--</div>
           <div class="decision-strategy" id="decision-strategy">--</div>
-          <div class="decision-conf" id="decision-conf"></div>
+          <div class="decision-conf pro-only" id="decision-conf"></div>
         </div>
         <div id="regime-tag" class="regime-tag">--</div>
       </div>
+      <div class="decision-human-copy" id="decision-human-copy"></div>
+      <div class="gate-list" id="decision-gates"></div>
       <div id="risk-table-wrap"></div>
       <div id="trade-thesis" class="thesis-text" style="display:none;"></div>
       <div id="invalid-block" style="display:none;">
-        <div class="mini-label">WHAT BREAKS THE STORY</div>
+        <div class="mini-label">WHAT WOULD PROVE THIS IDEA WRONG</div>
         <div id="invalid-list"></div>
       </div>
       <div id="counter-block" style="display:none;">
-        <div class="mini-label">THE DEVIL'S LAWYER</div>
+        <div class="mini-label">WHAT COULD GO AGAINST IT</div>
         <div id="counter-list"></div>
       </div>
       <div class="decision-reason-text" id="decision-reason"></div>
@@ -889,12 +993,12 @@
 <!-- OPTION INTELLIGENCE -->
   <div class="section-wrap">
     <div class="card full" id="intel-card" style="display:none;">
-      <div class="card-label">OPTION GOSSIP</div>
+      <div class="card-label">TECHNICAL OPTION DATA</div>
       <div id="intel-content"></div>
     </div>
   </div>
 
-  <footer>personal NIFTY signal toy · paper only · if I follow it, that's on me</footer>
+  <footer>EDGE · decision support, not order execution · backend truth first</footer>
 </div>
 
 <script>
@@ -1150,13 +1254,13 @@
 
     // Expiry + DTE + IV regime
     var expEl = document.getElementById("expiry-tag");
-    if (expEl) { expEl.textContent = "NSE LIVE - " + (d.expiry || "--"); expEl.className = "expiry-tag live"; }
+    if (expEl) { expEl.textContent = "EXPIRY " + (d.expiry || "--"); expEl.className = "expiry-tag live"; }
     var dteEl = document.getElementById("dte-tag");
-    if (dteEl && d.dte !== undefined) { dteEl.textContent = d.dte + "D TO EXPIRY"; dteEl.style.display = "inline-block"; }
+    if (dteEl && d.dte !== undefined) { dteEl.textContent = d.dte + (Number(d.dte)===1 ? " DAY LEFT" : " DAYS LEFT"); dteEl.style.display = "inline-block"; }
     var ivTagEl = document.getElementById("iv-tag");
     if (ivTagEl && d.ivRegime) {
-      var ivLbl = { LOW:"IV LOW", NORMAL:"IV NORMAL", HIGH:"IV HIGH" }[d.ivRegime] || d.ivRegime;
-      ivTagEl.textContent = ivLbl + " (" + (d.avgIV || "--") + "%)";
+      var ivLbl = { LOW:"LOW VOLATILITY", NORMAL:"NORMAL VOLATILITY", HIGH:"HIGH VOLATILITY" }[d.ivRegime] || d.ivRegime;
+      ivTagEl.textContent = ivLbl;
       ivTagEl.className = "iv-tag " + d.ivRegime.toLowerCase();
       ivTagEl.style.display = "inline-block";
     }
@@ -1200,6 +1304,9 @@
 
     // Warnings
     renderWarnings(d.warnings);
+
+    // Human-first presentation uses the same backend decision; it never creates a new one.
+    renderHumanSummary(d);
 
     // Decision
     renderDecision(d, d.decision, (d.signalQuality !== undefined ? d.signalQuality : d.confidence), d.bias, d.ivRegime, d.explain);
@@ -1382,6 +1489,68 @@
     return b.indexOf("BULL") >= 0 ? "BULL" : b.indexOf("BEAR") >= 0 ? "BEAR" : "NEUTRAL";
   }
 
+  function humanBiasView(bias) {
+    var b=String(bias||"").toUpperCase();
+    if(b==="BULLISH") return {title:"Buyers have the edge",copy:"Price and positioning are leaning upward. EDGE still waits for the entry gates before treating that as a trade.",direction:"Bullish",position:82,tone:"bull"};
+    if(b==="MILD_BULLISH") return {title:"Buyers have a slight edge",copy:"The market leans upward, but the advantage is modest. Chasing would be a mistake.",direction:"Slightly bullish",position:66,tone:"bull"};
+    if(b==="BEARISH") return {title:"Sellers have the edge",copy:"Price and positioning are leaning downward. EDGE still requires the entry gates to confirm before action.",direction:"Bearish",position:18,tone:"bear"};
+    if(b==="MILD_BEARISH") return {title:"Sellers have a slight edge",copy:"The market leans downward, but the advantage is modest. EDGE is not treating that alone as a trade.",direction:"Slightly bearish",position:34,tone:"bear"};
+    return {title:"No clear side has control",copy:"Buyers and sellers are not giving EDGE a clean directional advantage right now.",direction:"Balanced / unclear",position:50,tone:"neutral"};
+  }
+
+  function humanIvView(ivRegime) {
+    var v=String(ivRegime||"").toUpperCase();
+    if(v==="HIGH") return "High volatility";
+    if(v==="LOW") return "Low volatility";
+    if(v==="NORMAL") return "Normal";
+    return "Unavailable";
+  }
+
+  function humanDecisionView(plan, strategy, bias) {
+    var st=String(plan&&plan.backendStatus||"");
+    var direction=strategyDirection(strategy,bias);
+    var leaning=direction==="BULL"?"bullish":direction==="BEAR"?"bearish":direction==="RANGE"?"range-bound":"market";
+    if(st==="READY_TO_EXECUTE") return {kind:"ready",badge:"READY",headline:"The entry checks have passed.",copy:"EDGE has a "+leaning+" setup and the backend says the required trigger, price and execution conditions are ready.",icon:"✓"};
+    if(st==="WAIT_FOR_TRIGGER"||st==="WAIT_FOR_ENTRY") return {kind:"watch",badge:"WATCH",headline:"A setup is forming. Don't enter yet.",copy:"EDGE has an idea, but the market has not confirmed the required entry trigger.",icon:"●"};
+    if(st==="WAIT_FOR_PRICE") return {kind:"watch",badge:"WAIT",headline:"Good setup. Wrong price.",copy:"The setup exists, but the option price is outside the acceptable entry range. EDGE will not chase it.",icon:"₹"};
+    if(st==="WAIT_FOR_EASE OF ENTRY / EXIT") return {kind:"watch",badge:"WAIT",headline:"Setup found. Entry is messy.",copy:"The idea exists, but entering or exiting this option is not clean enough yet.",icon:"≋"};
+    if(st==="POSITION_BLOCKED") return {kind:"blocked",badge:"PAUSED",headline:"No new trade right now.",copy:(plan&&plan.reason)||"Risk controls are blocking a new position.",icon:"×"};
+    if(st==="MARKET_CLOSED") return {kind:"closed",badge:"CLOSED",headline:"The market is closed.",copy:"EDGE can show the last known market state, but no live trade is active.",icon:"○"};
+    if(st==="NO_TRADE") return {kind:"blocked",badge:"NO TRADE",headline:"Nothing worth forcing right now.",copy:(plan&&plan.reason)||"The current market does not meet EDGE's requirements for a trade.",icon:"—"};
+    return {kind:"watch",badge:"WAIT",headline:"EDGE is checking the setup.",copy:(plan&&plan.reason)||"No action is suggested until the backend supplies a complete decision.",icon:"●"};
+  }
+
+  function humanGateHtml(name,known,passed,waitingText) {
+    var cls=!known?"wait":passed?"pass":"block";
+    var txt=!known?"NOT AVAILABLE":passed?"READY":(waitingText||"WAITING");
+    return '<div class="gate-item"><span class="gate-name">'+escapeHtml(name)+'</span><span class="gate-state '+cls+'">'+escapeHtml(txt)+'</span></div>';
+  }
+
+  function renderHumanSummary(d) {
+    var bias=humanBiasView(d&&d.bias);
+    setText("human-bias-title",bias.title); setText("human-bias-copy",bias.copy); setText("human-direction",bias.direction);
+    var marker=document.getElementById("pulse-marker"); if(marker) marker.style.left=bias.position+"%";
+    var orb=document.getElementById("pulse-orb"); if(orb) orb.className="pulse-orb "+bias.tone;
+    setText("human-options",humanIvView(d&&d.ivRegime));
+    var em=d&&d.expectedMove;
+    setText("human-range",em&&finiteNum(em.points)!==null?"±"+Number(em.points).toLocaleString("en-IN")+" pts":"Not available");
+    var sup=d&&d.support&&d.support.strike,res=d&&d.resistance&&d.resistance.strike;
+    setText("human-levels",(sup&&res)?sup+" ↔ "+res:(sup?"Support "+sup:(res?"Resistance "+res:"Not available")));
+
+    var raw=validateDecision(d&&d.decision);
+    var made=makeActionablePlan(d||{},raw,(d&&d.signalQuality!==undefined?d.signalQuality:d&&d.confidence)||0,d&&d.bias,d&&d.ivRegime);
+    var plan=made.actionable||{}, view=humanDecisionView(plan,made.strategy,d&&d.bias);
+    var glance=document.getElementById("decision-glance"); if(glance) glance.className="human-card decision-glance "+view.kind;
+    setText("glance-state",view.badge); setText("glance-title",view.headline); setText("glance-copy",view.copy); setText("glance-icon",view.icon);
+    var watch="";
+    if(plan.backendStatus==="WAIT_FOR_TRIGGER"&&plan.triggerText) watch="Watching for: "+plan.triggerText;
+    else if(plan.backendStatus==="WAIT_FOR_PRICE"&&(plan.entryLow!==null||plan.entryHigh!==null)) watch="Waiting for the option price to return to EDGE's acceptable entry range.";
+    else if(plan.backendStatus==="WAIT_FOR_LIQUIDITY") watch="Waiting for cleaner bid/ask conditions.";
+    else if(plan.backendStatus==="READY_TO_EXECUTE") watch="Backend state: READY TO EXECUTE. Open Action for the exact contract, entry, stop and targets.";
+    else watch=view.copy;
+    setText("glance-watch",watch);
+  }
+
   function makeActionablePlan(d, dec, confidence, bias, ivRegime) {
     var out = dec ? JSON.parse(JSON.stringify(dec)) : {strategy:"WAIT"};
     var legs = out.tradeLegs || null;
@@ -1487,12 +1656,13 @@
     var isBearish = (bias || "").indexOf("BEAR") >= 0;
     var isBullish = (bias || "").indexOf("BULL") >= 0;
 
-    card.className = "decision-card" + (isBearish ? " bearish" : isWait ? " noedge" : "");
+    var humanView = humanDecisionView(plan,strategy,bias);
+    card.className = "decision-card " + humanView.kind;
 
     var actionEl = document.getElementById("decision-action");
     if (actionEl) {
-      actionEl.textContent = plan.action || (isWait ? "WAIT" : "SIGNAL");
-      actionEl.className = "decision-action " + (isWait ? "noedge" : "execute");
+      actionEl.textContent = humanView.badge;
+      actionEl.className = "decision-action " + (humanView.kind==="ready" ? "execute" : humanView.kind==="blocked"||humanView.kind==="closed" ? "avoid" : "noedge");
     }
 
     var strategyNames = {
@@ -1503,18 +1673,28 @@
       LONG_CALL:        "Long Call",
       LONG_PUT:         "Long Put",
       IRON_CONDOR:      "Iron Condor",
-      WAIT:             "Wait for Setup"
+      WAIT:             "No trade structure"
     };
-    setText("decision-strategy", strategyNames[strategy] || strategy);
+    setText("decision-strategy", humanView.headline);
+    setText("decision-human-copy", humanView.copy);
     var validityText = plan.triggerReady
       ? (plan.waitMinutes !== null && plan.waitMinutes !== undefined ? "Entry window: " + plan.waitMinutes + "m" : "Entry window: --")
       : "Entry window: starts on trigger";
-    setText("decision-conf", "Signal quality: " + (confidence || 0) + "/100  |  IV: " + (ivRegime || "--") + "  |  " + validityText);
+    setText("decision-conf", "Technical · "+(strategyNames[strategy]||strategy)+" · quality " + (confidence || 0) + "/100 · IV " + (ivRegime || "--") + " · " + validityText);
 
     var regimeEl = document.getElementById("regime-tag");
     if (regimeEl) {
-      regimeEl.textContent = ivRegime || "--";
+      regimeEl.textContent = humanBiasView(bias).direction;
       regimeEl.className = "regime-tag" + (isBearish ? " bearish" : !isBullish ? " neutral" : "");
+    }
+
+    var gates=document.getElementById("decision-gates");
+    if(gates){
+      var gateHtml="";
+      gateHtml+=humanGateHtml("Market confirmation",true,plan.triggerReady,"WAITING");
+      gateHtml+=humanGateHtml("Entry price",true,plan.priceReady,"NOT ACCEPTABLE");
+      gateHtml+=humanGateHtml("Easy to enter & exit",!!plan.liquidity,plan.liquidityReady,"TOO WIDE");
+      setSafeHTML(gates,gateHtml);
     }
 
     var wrap = document.getElementById("risk-table-wrap");
@@ -1557,22 +1737,22 @@
           }
           var p = plan;
           var planHtml = '<div class="single-plan">' +
-            planStat(p.triggerReady && p.priceReady ? 'BUY NOW' : 'CURRENT PREMIUM', p.executablePrice !== null ? p.executablePrice : p.entry, p.triggerReady ? (p.priceReady ? 'TRIGGER CONFIRMED' : 'WAIT FOR PRICE') : 'PRICE ≠ TRIGGER', 'entry') +
+            planStat(p.backendStatus === 'READY_TO_EXECUTE' ? 'ENTRY NOW' : 'CURRENT OPTION PRICE', p.executablePrice !== null ? p.executablePrice : p.entry, p.backendStatus === 'READY_TO_EXECUTE' ? 'ALL ENTRY GATES PASSED' : (p.triggerReady ? (p.priceReady ? 'FINAL GATE NOT READY' : 'WAITING FOR PRICE') : 'WAITING FOR MARKET CONFIRMATION'), 'entry') +
             planStat('TARGET', p.target, 'OPTION PREMIUM', 'target') +
             planStat('STOP-LOSS', p.stop, 'OPTION PREMIUM', 'stop') +
             '</div>';
           var planRows = '<div class="risk-table">';
           if (p.entryLow !== null || p.entryHigh !== null) {
             var priceRule = p.entryLow !== null && p.entryHigh !== null ? (p.entryLow + ' - ' + p.entryHigh) : (p.entryHigh !== null ? ('≤ ' + p.entryHigh) : ('≥ ' + p.entryLow));
-            planRows += '<div class="risk-row"><span class="risk-label">DO-NOT-CHASE LIMIT</span><span class="risk-val neutral">' + priceRule + '</span></div>';
+            planRows += '<div class="risk-row"><span class="risk-label">PRICE LIMIT</span><span class="risk-val neutral">' + priceRule + '</span></div>';
           }
-          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val neutral">' + escapeHtml(p.triggerText) + '</span></div>';
+          if (!p.triggerReady && p.triggerText) planRows += '<div class="risk-row"><span class="risk-label">MARKET CONFIRMATION</span><span class="risk-val neutral">' + escapeHtml(p.triggerText) + '</span></div>';
           if (p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">MARKET TRIGGER</span><span class="risk-val profit">CONFIRMED ✓</span></div>';
-          planRows += '<div class="risk-row"><span class="risk-label">PRICE CHECK</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
+          planRows += '<div class="risk-row"><span class="risk-label">ENTRY PRICE</span><span class="risk-val ' + (p.priceReady ? 'profit' : 'loss') + '">' + (p.priceReady ? 'ACCEPTABLE ✓' : 'DO NOT CHASE') + '</span></div>';
           if (p.liquidity) planRows += '<div class="risk-row"><span class="risk-label">LIQUIDITY</span><span class="risk-val ' + (p.liquidityReady ? 'profit' : 'loss') + '">' + (p.liquidityReady ? 'PASS ✓' : 'SPREAD TOO WIDE') + (p.liquidity.maxSpreadPct !== undefined ? ' · ' + p.liquidity.maxSpreadPct + '%' : '') + '</span></div>';
-          if (p.triggerReady && p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">ENTRY WINDOW</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
+          if (p.triggerReady && p.waitMinutes) planRows += '<div class="risk-row"><span class="risk-label">TIME TO ENTER</span><span class="risk-val neutral">' + p.waitMinutes + ' MIN</span></div>';
           else if (!p.triggerReady) planRows += '<div class="risk-row"><span class="risk-label">ENTRY WINDOW</span><span class="risk-val neutral">STARTS ON TRIGGER</span></div>';
-          if (p.holdMinutes) planRows += '<div class="risk-row"><span class="risk-label">MAX HOLD GUIDE</span><span class="risk-val neutral">' + p.holdMinutes + ' MIN</span></div>';
+          if (p.holdMinutes) planRows += '<div class="risk-row"><span class="risk-label">MAX HOLDING GUIDE</span><span class="risk-val neutral">' + p.holdMinutes + ' MIN</span></div>';
           planRows += '<div class="risk-row"><span class="risk-label">STATUS</span><span class="risk-val ' + ((p.status === 'SIGNAL' || p.status === 'EXECUTE') ? 'profit' : 'neutral') + '">' + (p.action || 'WAIT') + '</span></div>';
           planRows += '</div>';
           setSafeHTML(wrap, legsHtml + planHtml + planRows);
@@ -2054,6 +2234,21 @@
     tabs.forEach(function(t){ t.addEventListener('click',function(){ showTab(t.getAttribute('data-edge-tab')); }); });
     var saved=null; try { saved=sessionStorage.getItem('edge.activeTab'); } catch(e) {}
     showTab(panels[saved] ? saved : 'radar');
+    Array.prototype.slice.call(document.querySelectorAll('[data-jump-tab]')).forEach(function(b){
+      b.addEventListener('click',function(){ showTab(b.getAttribute('data-jump-tab')); window.scrollTo({top:0,behavior:'smooth'}); });
+    });
+  })();
+
+  (function initViewMode(){
+    var buttons=Array.prototype.slice.call(document.querySelectorAll('[data-view-mode]'));
+    var saved='simple'; try{saved=sessionStorage.getItem('edge.viewMode')||'simple';}catch(e){}
+    function apply(mode){
+      var pro=mode==='pro'; document.body.classList.toggle('pro-mode',pro);
+      buttons.forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view-mode')===mode);});
+      try{sessionStorage.setItem('edge.viewMode',mode);}catch(e){}
+    }
+    buttons.forEach(function(b){b.addEventListener('click',function(){apply(b.getAttribute('data-view-mode'));});});
+    apply(saved);
   })();
 </script>
 </div>
