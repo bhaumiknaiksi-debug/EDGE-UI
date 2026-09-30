@@ -268,6 +268,12 @@
   .ev-empty { font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--muted);padding:8px 0; }
   .ev-method { font-family:var(--mono);font-size:8px;line-height:1.6;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px; }
   .ev-refresh { border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--mono);font-size:8px;border-radius:6px;padding:5px 7px; }
+  .ev-oos-row { display:grid;grid-template-columns:minmax(0,1.6fr) .48fr .48fr .7fr .7fr;gap:5px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:8px; }
+  .ev-oos-row:last-child { border-bottom:none; }
+  .ev-oos-row.head { color:var(--muted);letter-spacing:.4px; }
+  .ev-oos-status { display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;padding:4px 7px;border-radius:20px;border:1px solid var(--border);color:var(--muted); }
+  .ev-oos-status.good { color:var(--accent);border-color:rgba(0,255,136,.28); }
+  .ev-oos-status.wait { color:var(--amber);border-color:rgba(255,170,0,.28); }
 
   /* TRADE DECISION */
   .section-wrap { margin:0 14px 10px; max-width:452px; margin-left:auto; margin-right:auto; }
@@ -793,6 +799,21 @@
     <div class="card full">
       <div class="card-label">SETUP COMBINATIONS · 60M</div>
       <div class="ev-dimension" id="ev-setup-combos"></div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="research-flag">◉ CHRONOLOGICAL HOLDOUT · NO SHUFFLE</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div class="card-label" style="margin-bottom:0;">OUT-OF-SAMPLE REALITY CHECK · 60M</div>
+        <div class="ev-oos-status wait" id="ev-oos-status">WAITING FOR DATA</div>
+      </div>
+      <div class="ev-grid">
+        <div class="ev-stat"><div class="ev-stat-label">TRAIN / TEST</div><div class="ev-stat-val" id="ev-oos-split">-- / --</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">FRICTION MODEL</div><div class="ev-stat-val" id="ev-oos-friction" style="font-size:16px;">--</div></div>
+      </div>
+      <div class="ev-method" id="ev-oos-cutoff">Newest observations stay untouched until the holdout check.</div>
+      <div class="ev-dimension" id="ev-oos-groups"></div>
     </div>
   </div>
 <!-- STRIKE ANALYSER -->
@@ -1630,6 +1651,29 @@
     });
     setSafeHTML(el,html);
   }
+  function renderOosRows(target, groups) {
+    var el=document.getElementById(target); if(!el) return;
+    var rows=[];
+    Object.keys(groups||{}).forEach(function(name){
+      var g=groups[name]||{}, train=g.train&&g.train.gross, testGross=g.test&&g.test.gross, testNet=g.test&&g.test.frictionAdjusted;
+      var gross60=metric60(testGross), net60=metric60(testNet);
+      rows.push({
+        name:name,
+        ready:!!g.validationReady,
+        trainN:Number(train&&train.samples)||0,
+        testN:Number(testGross&&testGross.samples)||0,
+        gross:gross60&&gross60.avgReturnPct,
+        net:net60&&net60.avgReturnPct
+      });
+    });
+    rows.sort(function(a,b){ return (b.trainN+b.testN)-(a.trainN+a.testN); });
+    if(!rows.length){ setSafeHTML(el,'<div class="ev-empty">NO HOLDOUT GROUPS YET. EDGE NEEDS MEASURED EPISODES BEFORE IT CAN ARGUE WITH ITSELF.</div>'); return; }
+    var html='<div class="ev-oos-row head"><span>SETUP</span><span class="ev-num">TR</span><span class="ev-num">TE</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
+    rows.slice(0,8).forEach(function(r){
+      html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(r.name)+(r.ready?' ✓':'')+'</span><span class="ev-num">'+r.trainN+'</span><span class="ev-num">'+r.testN+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(Number.isFinite(Number(r.gross))?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(Number.isFinite(Number(r.net))?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
+    });
+    setSafeHTML(el,html);
+  }
   function renderEvidenceIntelligence(j) {
     setText("ev-episodes",j.measuredEpisodes||0);
     setText("ev-min-samples",j.minSamples||20);
@@ -1665,6 +1709,23 @@
     });
     renderEvidenceRows("ev-setups",scanner);
     renderEvidenceRows("ev-setup-combos",j.scannerGroups||{});
+
+    var validation=j.validation||null;
+    var oos=document.getElementById("ev-oos-status");
+    if(!validation){
+      if(oos){oos.textContent="V3 NOT AVAILABLE";oos.className="ev-oos-status wait";}
+      setText("ev-oos-split","-- / --");
+      setText("ev-oos-friction","--");
+      setText("ev-oos-cutoff","Waiting for Evidence Intelligence V3.");
+      renderOosRows("ev-oos-groups",{});
+    } else {
+      if(oos){oos.textContent=validation.enoughForHoldout?"HOLDOUT GATE MET":"BUILDING HOLDOUT";oos.className="ev-oos-status "+(validation.enoughForHoldout?"good":"wait");}
+      setText("ev-oos-split",(validation.trainEpisodes||0)+" / "+(validation.testEpisodes||0));
+      var fm=validation.frictionModel||{};
+      setText("ev-oos-friction",fm.configured?((fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG"):"GROSS ONLY");
+      setText("ev-oos-cutoff",(validation.cutoffTimestamp?"Holdout starts "+new Date(validation.cutoffTimestamp).toLocaleString("en-IN")+". ":"")+(validation.methodology||"Chronological holdout; no shuffle."));
+      renderOosRows("ev-oos-groups",validation.scannerGroups||{});
+    }
   }
   function pollEvidenceIntelligence() {
     fetch(BACKEND+"/evidence/intelligence?minSamples=20")
