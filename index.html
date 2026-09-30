@@ -1690,7 +1690,7 @@
     if(!rows.length){ setSafeHTML(el,'<div class="ev-empty">NO HOLDOUT GROUPS YET. EDGE NEEDS MEASURED EPISODES BEFORE IT CAN ARGUE WITH ITSELF.</div>'); return; }
     var html='<div class="ev-oos-row head"><span>SETUP</span><span class="ev-num">TR</span><span class="ev-num">TE</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
     rows.slice(0,8).forEach(function(r){
-      html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(r.name)+(r.ready?' ✓':'')+'</span><span class="ev-num">'+r.trainN+'</span><span class="ev-num">'+r.testN+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(Number.isFinite(Number(r.gross))?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(Number.isFinite(Number(r.net))?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
+      html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(r.name)+(r.ready?' ✓':'')+'</span><span class="ev-num">'+r.trainN+'</span><span class="ev-num">'+r.testN+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(finiteResearchNumber(r.gross)?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(finiteResearchNumber(r.net)?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
     });
     setSafeHTML(el,html);
   }
@@ -1701,6 +1701,8 @@
       return (cp.broker||"BROKER")+" · ₹"+(cp.brokeragePerExecutedOrderRupees||0)+"/ORDER";
     }
     if(fm.mode==="STRESS") return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
+    // V3 friction models predate the explicit mode field; preserve their configured state.
+    if(fm.configured) return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
     return "GROSS ONLY";
   }
   function frictionDetail(fm) {
@@ -1714,6 +1716,7 @@
       "% buy · GST "+cp.gstPct+"% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+
       "/crore · slippage stress "+slip+" bps.";
   }
+  function finiteResearchNumber(v) { return v!==null && v!==undefined && v!=='' && Number.isFinite(Number(v)); }
   function renderWalkForwardRows(target,groups) {
     var el=document.getElementById(target); if(!el) return;
     var rows=[];
@@ -1730,7 +1733,7 @@
     if(!rows.length){setSafeHTML(el,'<div class="ev-empty">NO WALK-FORWARD FOLDS YET. MORE MEASURED EXECUTION EPISODES ARE REQUIRED.</div>');return;}
     var html='<div class="ev-wf-row head"><span>SETUP</span><span class="ev-num">FOLDS</span><span class="ev-num">N</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
     rows.slice(0,8).forEach(function(r){
-      html+='<div class="ev-wf-row"><span class="ev-name">'+escapeHtml(r.name)+(r.replicated?' ✓':'')+'</span><span class="ev-num">'+r.folds+'</span><span class="ev-num">'+r.n+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(Number.isFinite(Number(r.gross))?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(Number.isFinite(Number(r.net))?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
+      html+='<div class="ev-wf-row"><span class="ev-name">'+escapeHtml(r.name)+(r.replicated?' ✓':'')+'</span><span class="ev-num">'+r.folds+'</span><span class="ev-num">'+r.n+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(finiteResearchNumber(r.gross)?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(finiteResearchNumber(r.net)?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
     });
     setSafeHTML(el,html);
   }
