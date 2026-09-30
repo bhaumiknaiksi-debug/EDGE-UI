@@ -806,6 +806,23 @@
   </div>
   <div class="section-wrap">
     <div class="card full">
+      <div class="research-flag">◉ RESEARCH GOVERNANCE · DESCRIPTIVE ONLY</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div class="card-label" style="margin-bottom:0;">EVIDENCE MATURITY · 60M</div>
+        <div class="ev-oos-status wait" id="ev-gov-status">WAITING FOR GOVERNANCE</div>
+      </div>
+      <div class="ev-grid">
+        <div class="ev-stat"><div class="ev-stat-label">MEASURED / GATE</div><div class="ev-stat-val" id="ev-gov-samples">-- / --</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">VALID FOLDS</div><div class="ev-stat-val" id="ev-gov-folds">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">POSITIVE NET FOLDS</div><div class="ev-stat-val" id="ev-gov-positive">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">MEDIAN / WORST NET</div><div class="ev-stat-val" id="ev-gov-net" style="font-size:16px;">-- / --</div></div>
+      </div>
+      <div class="ev-dimension" id="ev-gov-gates"></div>
+      <div class="ev-method" id="ev-gov-method">Governance describes research maturity. It never authorizes a live signal.</div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
       <div class="research-flag">◉ CHRONOLOGICAL HOLDOUT · NO SHUFFLE</div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
         <div class="card-label" style="margin-bottom:0;">OUT-OF-SAMPLE REALITY CHECK · 60M</div>
@@ -1737,7 +1754,29 @@
     });
     setSafeHTML(el,html);
   }
+  function renderResearchGovernance(g) {
+    var st=document.getElementById("ev-gov-status");
+    if(!g){
+      if(st){st.textContent="V5 NOT AVAILABLE";st.className="ev-oos-status wait";}
+      setText("ev-gov-samples","-- / --");setText("ev-gov-folds","--");setText("ev-gov-positive","--");setText("ev-gov-net","-- / --");
+      setSafeHTML(document.getElementById("ev-gov-gates"),'<div class="ev-empty">GOVERNANCE DATA IS NOT AVAILABLE YET.</div>');
+      return;
+    }
+    var gates=g.gates||{},o=g.observed||{},th=g.thresholds||{};
+    var reviewReady=g.status==="REVIEW_READY";
+    if(st){st.textContent=String(g.status||"UNKNOWN").replace(/_/g," ");st.className="ev-oos-status "+(reviewReady?"good":"wait");}
+    setText("ev-gov-samples",(o.measuredEpisodes||0)+" / "+(th.minMeasuredEpisodes||"--"));
+    setText("ev-gov-folds",(o.validFolds||0)+" / "+(th.minValidFolds||"--"));
+    setText("ev-gov-positive",(o.positiveFolds||0)+" / "+(o.validFolds||0));
+    setText("ev-gov-net",(finiteResearchNumber(o.medianNetFoldReturnPct)?Number(o.medianNetFoldReturnPct).toFixed(2)+"%":"--")+" / "+(finiteResearchNumber(o.worstNetFoldReturnPct)?Number(o.worstNetFoldReturnPct).toFixed(2)+"%":"--"));
+    var labels=[["SAMPLE SUFFICIENT",gates.sampleSufficient],["HOLDOUT READY",gates.holdoutReady],["REPLICATED",gates.replicated],["REAL COST MODEL",gates.frictionConfigured],["COST-ADJUSTED STABLE",gates.costAdjustedStable]];
+    var html='<div class="ev-row head"><span>GATE</span><span class="ev-num">STATE</span><span></span><span></span></div>';
+    labels.forEach(function(x){html+='<div class="ev-row"><span class="ev-name">'+x[0]+'</span><span class="ev-num '+(x[1]?"ev-positive":"ev-neutral")+'">'+(x[1]?"MET":"NOT MET")+'</span><span></span><span></span></div>';});
+    setSafeHTML(document.getElementById("ev-gov-gates"),html);
+    setText("ev-gov-method",(g.interpretation||"Research maturity only.")+(finiteResearchNumber(o.netDispersionStdDevPct)?" · Net fold dispersion "+Number(o.netDispersionStdDevPct).toFixed(2)+"%.":""));
+  }
   function renderEvidenceIntelligence(j) {
+    renderResearchGovernance(j.governance||null);
     setText("ev-episodes",j.measuredEpisodes||0);
     setText("ev-min-samples",j.minSamples||20);
     var overall=j.overall||{};
