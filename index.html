@@ -748,6 +748,30 @@
   .chart-story-point::before { content:'•';position:absolute;left:0;color:var(--cyan); }
   .tier-missing { margin-top:9px;font-family:var(--mono);font-size:8px;color:var(--muted); }
   .research-disclaimer { margin-top:9px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted);opacity:.85; }
+  .candidate-plan-grid { display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px; }
+  .candidate-plan { border:1px solid var(--border);border-radius:11px;padding:10px;background:rgba(255,255,255,.018); }
+  .candidate-plan.a { border-color:rgba(0,255,136,.22); }
+  .candidate-plan.b { border-color:rgba(255,170,0,.24); }
+  .candidate-plan.c { border-color:rgba(0,229,255,.22); }
+  .candidate-plan-head { display:flex;justify-content:space-between;align-items:flex-start;gap:10px; }
+  .candidate-tier { font-family:var(--display);font-size:24px;line-height:1; }
+  .candidate-plan.a .candidate-tier { color:var(--accent); }
+  .candidate-plan.b .candidate-tier { color:var(--amber); }
+  .candidate-plan.c .candidate-tier { color:var(--cyan); }
+  .candidate-strategy { font-size:12px;font-weight:500;margin-top:2px; }
+  .candidate-state { font-family:var(--mono);font-size:7px;color:var(--muted);text-align:right;max-width:42%; }
+  .candidate-legs { margin-top:8px;display:flex;flex-direction:column;gap:5px; }
+  .candidate-leg { display:grid;grid-template-columns:52px 1fr auto;gap:6px;align-items:center;padding:6px 7px;border-radius:8px;background:rgba(255,255,255,.02);font-family:var(--mono);font-size:8px; }
+  .candidate-leg .side { color:var(--muted); }
+  .candidate-leg .contract { color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .candidate-leg .quote { color:var(--muted);text-align:right; }
+  .candidate-meta { margin-top:7px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted); }
+  .chart-detail-grid { display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px; }
+  .chart-detail { border:1px solid var(--border);border-radius:8px;padding:7px;background:rgba(255,255,255,.015); }
+  .chart-detail span { display:block;font-family:var(--mono);font-size:7px;color:var(--muted); }
+  .chart-detail strong { display:block;font-family:var(--mono);font-size:8px;font-weight:400;margin-top:3px;color:var(--text);line-height:1.45; }
+  .chart-source { margin-top:9px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted); }
+
 
   .signal-funnel-card .funnel-top { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px; }
   .funnel-stat { border:1px solid var(--border);border-radius:9px;padding:8px;text-align:center;background:rgba(255,255,255,.02); }
@@ -883,10 +907,22 @@
         <div class="tier-step" id="tier-step-b"><strong>B</strong><span>STRONG CANDIDATE</span></div>
         <div class="tier-step" id="tier-step-a"><strong>A</strong><span>EXECUTION READY</span></div>
       </div>
+      <div class="candidate-plan-grid" id="candidate-plan-grid">
+        <div class="candidate-plan"><div class="candidate-meta">Waiting for concrete A/B/C contracts…</div></div>
+      </div>
       <div class="chart-story">
         <div class="chart-story-head"><div class="human-kicker">CHART STORY</div><div class="chart-verdict" id="chart-verdict">--</div></div>
         <div class="chart-story-title" id="chart-story-title">Waiting for deterministic chart structure.</div>
         <div class="chart-story-points" id="chart-story-points"></div>
+        <div class="chart-detail-grid">
+          <div class="chart-detail"><span>MULTI-TIMEFRAME</span><strong id="chart-mtf">--</strong></div>
+          <div class="chart-detail"><span>PREVIOUS DAY</span><strong id="chart-prev-day">--</strong></div>
+          <div class="chart-detail"><span>GAP / OPEN</span><strong id="chart-gap">--</strong></div>
+          <div class="chart-detail"><span>TREND / CHANNEL</span><strong id="chart-channel">--</strong></div>
+          <div class="chart-detail"><span>KEY LEVEL REACTION</span><strong id="chart-event">--</strong></div>
+          <div class="chart-detail"><span>SUPPLY / DEMAND</span><strong id="chart-zones">--</strong></div>
+        </div>
+        <div class="chart-source">Chart source: NIFTY 50 5m + 15m + 30m OHLC, previous-day NIFTY OHLC, and nearest NIFTY futures 5m volume/VWAP proxy.</div>
       </div>
       <div class="tier-missing" id="tier-missing">Missing gates: --</div>
       <div class="research-disclaimer">B/C are not probabilities, not BUY signals, and cannot override EDGE's authoritative execution gate.</div>
@@ -1919,6 +1955,43 @@
     setText("glance-watch",watch);
   }
 
+  function renderCandidatePlans(d) {
+    var root=document.getElementById("candidate-plan-grid");
+    if(!root)return;
+    var pack=d&&d.decision&&d.decision.researchCandidatePlans;
+    var plans=pack&&pack.plans;
+    if(!plans){setSafeHTML(root,'<div class="candidate-plan"><div class="candidate-meta">Concrete A/B/C contracts are not available from the backend yet.</div></div>');return;}
+
+    function strategyName(x){
+      return ({BEAR_CALL_SPREAD:"Bear Call Spread",BULL_PUT_SPREAD:"Bull Put Spread",BULL_CALL_SPREAD:"Bull Call Spread",BEAR_PUT_SPREAD:"Bear Put Spread",LONG_CALL:"Long Call",LONG_PUT:"Long Put",IRON_CONDOR:"Iron Condor"})[x]||x||"No structure";
+    }
+    function collectLegs(p){
+      var l=p&&p.legs;if(!l)return[];
+      var out=[];
+      [["buyLeg","BUY"],["sellLeg","SELL"],["ceShort","SELL CE"],["ceLong","BUY CE"],["peShort","SELL PE"],["peLong","BUY PE"]].forEach(function(x){
+        var leg=l[x[0]];
+        if(leg&&typeof leg==="object"&&(leg.contractId||leg.strike))out.push({side:x[1],leg:leg});
+      });
+      return out;
+    }
+    function planHtml(tier,p){
+      p=p||{};var available=!!p.available,legs=collectLegs(p);
+      var state=tier==="A"?(p.executionAllowed?"ACTIONABLE · ALL STRICT GATES PASSED":(p.backendStatus||"STRICT GATE LOCKED")):"RESEARCH ONLY · NEVER BUY NOW";
+      var meta=[];
+      if(p.executableNetDebit!==undefined&&p.executableNetDebit!==null)meta.push("Executable debit ≈ ₹"+p.executableNetDebit);
+      if(p.executableDebit!==undefined&&p.executableDebit!==null)meta.push("Executable premium ≈ ₹"+p.executableDebit);
+      if(p.maxLossRupees!==undefined&&p.maxLossRupees!==null)meta.push("Max loss basis ≈ ₹"+Number(p.maxLossRupees).toLocaleString("en-IN"));
+      if(p.liquidityBasis)meta.push(String(p.liquidityBasis).replace(/_/g," "));
+      var legHtml=available&&legs.length?legs.map(function(x){
+        var leg=x.leg||{},q=finiteNum(leg.ask)!==null?"ask "+Number(leg.ask).toFixed(2):finiteNum(leg.premium)!==null?"LTP "+Number(leg.premium).toFixed(2):"--";
+        var contract=leg.contractId||("NIFTY "+(leg.strike||"--")+" "+(leg.type||""));
+        return '<div class="candidate-leg"><span class="side">'+escapeHtml(x.side)+'</span><span class="contract">'+escapeHtml(contract)+'</span><span class="quote">'+escapeHtml(q)+'</span></div>';
+      }).join(""):'<div class="candidate-meta">'+(available?"Contract legs unavailable.":"No candidate for the current market direction.")+'</div>';
+      return '<div class="candidate-plan '+tier.toLowerCase()+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div><div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
+    }
+    setSafeHTML(root,planHtml("A",plans.A)+planHtml("B",plans.B)+planHtml("C",plans.C));
+  }
+
   function renderSignalJourney(d) {
     var tier=d&&d.decision&&d.decision.signalTier;
     var chart=(d&&d.market&&d.market.chartIntelligence)||(d&&d.market&&d.market.context&&d.market.context.chartIntelligence);
@@ -1944,6 +2017,8 @@
       setText("tier-missing",failed.length?"Still missing: "+failed.join(" · ").replace(/_/g," "):"All authoritative execution gates passed.");
     }
 
+    renderCandidatePlans(d);
+
     var verdict=chart&&chart.verdict?String(chart.verdict):"UNAVAILABLE";
     var ve=document.getElementById("chart-verdict");
     if(ve){ve.textContent=verdict.replace(/_/g," ");ve.className="chart-verdict "+(verdict==="BULLISH"?"bullish":verdict==="BEARISH"?"bearish":verdict==="CONFLICTED"?"conflicted":"");}
@@ -1952,8 +2027,21 @@
     if(pts){
       var rows=chart&&chart.story&&Array.isArray(chart.story.points)?chart.story.points:[];
       if(!rows.length)setSafeHTML(pts,'<div class="chart-story-point">EDGE is waiting for enough candle structure.</div>');
-      else setSafeHTML(pts,rows.slice(0,5).map(function(x){return '<div class="chart-story-point">'+escapeHtml(x)+'</div>';}).join(""));
+      else setSafeHTML(pts,rows.slice(0,7).map(function(x){return '<div class="chart-story-point">'+escapeHtml(x)+'</div>';}).join(""));
     }
+
+    var st=chart&&chart.structure||{};
+    setText("chart-mtf",["5m "+((st.fiveMinute&&st.fiveMinute.state)||"--"),"15m "+((st.fifteenMinute&&st.fifteenMinute.state)||"--"),"30m "+((st.thirtyMinute&&st.thirtyMinute.state)||"--")].join(" · ").replace(/_/g," "));
+    var pd=chart&&chart.previousDay;
+    setText("chart-prev-day",pd?("H "+pd.high+" · L "+pd.low+" · C "+pd.close):"--");
+    var gap=chart&&chart.gap;
+    setText("chart-gap",gap?(String(gap.state||"--").replace(/_/g," ")+(gap.gapPct!==null&&gap.gapPct!==undefined?" · "+Number(gap.gapPct).toFixed(2)+"%":"")+(gap.filled===true?" · FILLED":gap.filled===false?" · OPEN":"")):"--");
+    var ch=chart&&chart.channel&&chart.channel.fiveMinute;
+    setText("chart-channel",ch?(String(ch.state||"--").replace(/_/g," ")+" · "+String(ch.position||"--").replace(/_/g," ")):"--");
+    var ev=chart&&Array.isArray(chart.levelEvents)&&chart.levelEvents.length?chart.levelEvents[0]:null;
+    setText("chart-event",ev?(String(ev.type||"--").replace(/_/g," ")+" · "+String(ev.level||"").replace(/_/g," ")+" @ "+ev.value):"No recent key-level event");
+    var zones=chart&&Array.isArray(chart.supplyDemandZones)?chart.supplyDemandZones:[];
+    setText("chart-zones",zones.length?zones.slice(-2).map(function(z){return String(z.type)+" "+z.low+"–"+z.high;}).join(" · "):"No qualified zone");
   }
 
   function makeActionablePlan(d, dec, confidence, bias, ivRegime) {
