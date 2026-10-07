@@ -766,6 +766,15 @@
   .candidate-leg .contract { color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
   .candidate-leg .quote { color:var(--muted);text-align:right; }
   .candidate-meta { margin-top:7px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted); }
+  .option-chart-read { margin-top:7px;padding:7px 8px;border-radius:8px;background:rgba(0,229,255,.025);border:1px solid rgba(0,229,255,.09);font-family:var(--mono);font-size:7px;line-height:1.55;color:var(--muted); }
+  .option-chart-read strong { color:var(--text);font-weight:400; }
+  .option-align.agrees { color:var(--accent); } .option-align.contradicts { color:var(--red); } .option-align.unresolved { color:var(--amber); }
+  .pa-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px; }
+  .pa-stat { border:1px solid var(--border);border-radius:9px;padding:9px;background:rgba(255,255,255,.018); }
+  .pa-stat span { display:block;font-family:var(--mono);font-size:7px;color:var(--muted); }
+  .pa-stat strong { display:block;font-family:var(--display);font-size:22px;font-weight:400;margin-top:3px; }
+  .pa-groups { margin-top:10px; }
+
   .chart-detail-grid { display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px; }
   .chart-detail { border:1px solid var(--border);border-radius:8px;padding:7px;background:rgba(255,255,255,.015); }
   .chart-detail span { display:block;font-family:var(--mono);font-size:7px;color:var(--muted); }
@@ -921,6 +930,9 @@
           <div class="chart-detail"><span>TREND / CHANNEL</span><strong id="chart-channel">--</strong></div>
           <div class="chart-detail"><span>KEY LEVEL REACTION</span><strong id="chart-event">--</strong></div>
           <div class="chart-detail"><span>SUPPLY / DEMAND</span><strong id="chart-zones">--</strong></div>
+          <div class="chart-detail"><span>DAILY / WEEKLY CPR</span><strong id="chart-cpr">--</strong></div>
+          <div class="chart-detail"><span>MOMENTUM / STRENGTH</span><strong id="chart-momentum">--</strong></div>
+          <div class="chart-detail"><span>GAMMA CONCENTRATION</span><strong id="chart-gamma">--</strong></div>
         </div>
         <div class="chart-source">Chart source: NIFTY 50 5m + 15m + 30m OHLC, previous-day NIFTY OHLC, and nearest NIFTY futures 5m volume/VWAP proxy.</div>
       </div>
@@ -1110,7 +1122,23 @@
       <div class="funnel-rows" id="funnel-stages"><div class="ev-empty">Waiting for gate evidence…</div></div>
       <div class="mini-label" style="margin-top:12px;">TOP REJECTION REASONS</div>
       <div class="funnel-rows" id="funnel-rejections"><div class="ev-empty">No rejection audit yet.</div></div>
+      <div class="mini-label" style="margin-top:12px;">RESEARCH DIAGNOSTICS · NOT GATES</div>
+      <div class="funnel-rows" id="funnel-diagnostics"><div class="ev-empty">No chart diagnostics yet.</div></div>
       <div class="funnel-note" id="funnel-note">Counts are market observations, not independent trades. The funnel is diagnostic; it does not loosen EDGE.</div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full">
+      <div class="ev-head"><div><div class="card-label">PRICE ACTION LAB · B/C OUTCOMES</div><div class="ev-sub">DO THESE RESEARCH CANDIDATES ACTUALLY SURVIVE?</div></div><div class="research-flag">RESEARCH ONLY</div></div>
+      <div class="pa-grid">
+        <div class="pa-stat"><span>MEASURED B/C EPISODES</span><strong id="pa-total">--</strong></div>
+        <div class="pa-stat"><span>B / C SAMPLES</span><strong id="pa-tier-counts">-- / --</strong></div>
+      </div>
+      <div class="mini-label" style="margin-top:12px;">60-MINUTE RESULTS BY TIER</div>
+      <div class="pa-groups" id="pa-by-tier"><div class="ev-empty">No measured B/C outcomes yet.</div></div>
+      <div class="mini-label" style="margin-top:12px;">CHART CONTEXT</div>
+      <div class="pa-groups" id="pa-context"><div class="ev-empty">Waiting for measured price-action episodes.</div></div>
+      <div class="ev-method" id="pa-method">B/C remain counterfactual research candidates. Measurement does not authorize execution.</div>
     </div>
   </div>
   <div class="section-wrap">
@@ -1960,19 +1988,30 @@
     if(!root)return;
     var pack=d&&d.decision&&d.decision.researchCandidatePlans;
     var plans=pack&&pack.plans;
+    var opt=d&&d.decision&&d.decision.optionExecutionIntelligence;
+    var optTiers=opt&&opt.tiers||{};
     if(!plans){setSafeHTML(root,'<div class="candidate-plan"><div class="candidate-meta">Concrete A/B/C contracts are not available from the backend yet.</div></div>');return;}
 
-    function strategyName(x){
-      return ({BEAR_CALL_SPREAD:"Bear Call Spread",BULL_PUT_SPREAD:"Bull Put Spread",BULL_CALL_SPREAD:"Bull Call Spread",BEAR_PUT_SPREAD:"Bear Put Spread",LONG_CALL:"Long Call",LONG_PUT:"Long Put",IRON_CONDOR:"Iron Condor"})[x]||x||"No structure";
-    }
+    function strategyName(x){return ({BEAR_CALL_SPREAD:"Bear Call Spread",BULL_PUT_SPREAD:"Bull Put Spread",BULL_CALL_SPREAD:"Bull Call Spread",BEAR_PUT_SPREAD:"Bear Put Spread",LONG_CALL:"Long Call",LONG_PUT:"Long Put",IRON_CONDOR:"Iron Condor"})[x]||x||"No structure";}
     function collectLegs(p){
-      var l=p&&p.legs;if(!l)return[];
-      var out=[];
+      var l=p&&p.legs;if(!l)return[];var out=[];
       [["buyLeg","BUY"],["sellLeg","SELL"],["ceShort","SELL CE"],["ceLong","BUY CE"],["peShort","SELL PE"],["peLong","BUY PE"]].forEach(function(x){
-        var leg=l[x[0]];
-        if(leg&&typeof leg==="object"&&(leg.contractId||leg.strike))out.push({side:x[1],leg:leg});
-      });
-      return out;
+        var leg=l[x[0]];if(leg&&typeof leg==="object"&&(leg.contractId||leg.strike))out.push({side:x[1],leg:leg});
+      });return out;
+    }
+    function optionRead(tier){
+      var o=optTiers[tier];if(!o||!o.available)return '<div class="option-chart-read">OPTION CHART · unavailable / still loading</div>';
+      var primary=(o.legs||[]).filter(function(x){return x.contractId===o.primaryContractId;})[0]||(o.legs||[])[0]||{};
+      var five=primary.fiveMinute||{},one=primary.oneMinute||{},v=five.vwap||{},e=five.ema||{};
+      var align=String(o.thesisAlignment||"UNRESOLVED"), cls=align==="AGREES"?"agrees":align==="CONTRADICTS"?"contradicts":"unresolved";
+      var bits=[];
+      if(five.structure&&five.structure.state)bits.push("5m "+String(five.structure.state).replace(/_/g," "));
+      if(one.structure&&one.structure.state)bits.push("1m "+String(one.structure.state).replace(/_/g," "));
+      if(v.state)bits.push(String(v.state).replace(/_/g," "));
+      if(e.state)bits.push(String(e.state).replace(/_/g," "));
+      if(five.rsi5!==null&&five.rsi5!==undefined)bits.push("RSI5 "+Number(five.rsi5).toFixed(0));
+      if(v.relativeVolume!==null&&v.relativeVolume!==undefined)bits.push("RVOL "+Number(v.relativeVolume).toFixed(2)+"x");
+      return '<div class="option-chart-read"><strong>OPTION CHART · '+escapeHtml(primary.contractId||o.primaryContractId||"--")+'</strong><br><span class="option-align '+cls+'">'+escapeHtml(align.replace(/_/g," "))+'</span>'+(bits.length?' · '+escapeHtml(bits.join(" · ")):'')+'</div>';
     }
     function planHtml(tier,p){
       p=p||{};var available=!!p.available,legs=collectLegs(p);
@@ -1987,7 +2026,7 @@
         var contract=leg.contractId||("NIFTY "+(leg.strike||"--")+" "+(leg.type||""));
         return '<div class="candidate-leg"><span class="side">'+escapeHtml(x.side)+'</span><span class="contract">'+escapeHtml(contract)+'</span><span class="quote">'+escapeHtml(q)+'</span></div>';
       }).join(""):'<div class="candidate-meta">'+(available?"Contract legs unavailable.":"No candidate for the current market direction.")+'</div>';
-      return '<div class="candidate-plan '+tier.toLowerCase()+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div><div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
+      return '<div class="candidate-plan '+tier.toLowerCase()+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
     }
     setSafeHTML(root,planHtml("A",plans.A)+planHtml("B",plans.B)+planHtml("C",plans.C));
   }
@@ -2042,6 +2081,12 @@
     setText("chart-event",ev?(String(ev.type||"--").replace(/_/g," ")+" · "+String(ev.level||"").replace(/_/g," ")+" @ "+ev.value):"No recent key-level event");
     var zones=chart&&Array.isArray(chart.supplyDemandZones)?chart.supplyDemandZones:[];
     setText("chart-zones",zones.length?zones.slice(-2).map(function(z){return String(z.type)+" "+z.low+"–"+z.high;}).join(" · "):"No qualified zone");
+    var cpr=chart&&chart.cpr||{},dcpr=cpr.daily||{},wcpr=cpr.weekly||{};
+    setText("chart-cpr",dcpr.pivot!==undefined?("D "+String(dcpr.widthClass||"--").replace(/_/g," ")+" · "+String(dcpr.alignment||"--")+" · "+String(dcpr.location||"--").replace(/_/g," ")+" | W "+String(wcpr.location||"--").replace(/_/g," ")):"--");
+    var tech=chart&&chart.technicals||{},em=tech.ema||{};
+    setText("chart-momentum",(em.state?String(em.state).replace(/_/g," "):"--")+(tech.rsi5!==null&&tech.rsi5!==undefined?" · RSI5 "+Number(tech.rsi5).toFixed(0):"")+(tech.adx14!==null&&tech.adx14!==undefined?" · ADX "+Number(tech.adx14).toFixed(1)+" "+String(tech.trendStrength||""):""));
+    var gamma=d&&d.intel&&d.intel.gammaConcentration;
+    setText("chart-gamma",gamma&&gamma.available?("Call "+(gamma.callWall?gamma.callWall.strike:"--")+" · Put "+(gamma.putWall?gamma.putWall.strike:"--")+" · unsigned proxy"):"Unavailable");
   }
 
   function makeActionablePlan(d, dec, confidence, bias, ivRegime) {
@@ -2600,6 +2645,9 @@
     var r=Array.isArray(j.topRejections)?j.topRejections:[];
     var rej=document.getElementById("funnel-rejections");
     if(rej)setSafeHTML(rej,r.length?r.slice(0,8).map(function(x){return '<div class="funnel-row"><span>'+escapeHtml(String(x.reason||"").replace(/_/g," "))+'</span><span>'+Number(x.count||0)+'</span></div>';}).join(""):'<div class="ev-empty">No rejection reasons recorded yet.</div>');
+    var dg=Array.isArray(j.researchDiagnostics)?j.researchDiagnostics:[];
+    var de=document.getElementById("funnel-diagnostics");
+    if(de)setSafeHTML(de,dg.length?dg.slice(0,8).map(function(x){return '<div class="funnel-row"><span>'+escapeHtml(String(x.reason||"").replace(/_/g," "))+'</span><span>'+Number(x.count||0)+'</span></div>';}).join(""):'<div class="ev-empty">No chart diagnostics recorded yet.</div>');
     setText("funnel-note",(j.methodology||"Descriptive gate audit.")+" Counts are observations, not independent trades.");
   }
   function pollSignalFunnel(){
@@ -2607,6 +2655,28 @@
       .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
       .then(renderSignalFunnel)
       .catch(function(){renderSignalFunnel(null);});
+  }
+
+  function renderPriceActionResearch(j){
+    if(!j){setText("pa-total","--");setText("pa-tier-counts","-- / --");setSafeHTML(document.getElementById("pa-by-tier"),'<div class="ev-empty">PRICE ACTION RESEARCH UNAVAILABLE.</div>');return;}
+    setText("pa-total",j.totalMeasured!==undefined?j.totalMeasured:"--");
+    var bt=j.byTier&&j.byTier.B||{},ct=j.byTier&&j.byTier.C||{};
+    setText("pa-tier-counts",(bt.samples||0)+" / "+(ct.samples||0));
+    function metricRows(groups,limit){
+      var rows=Object.keys(groups||{}).map(function(k){var m=groups[k]||{};return{name:k,samples:m.samples||0,win:m.winRate60mPct,ret:m.avgReturn60mPct};});
+      rows.sort(function(a,b){return b.samples-a.samples;});
+      return rows.slice(0,limit||8).map(function(r){return '<div class="funnel-row"><span>'+escapeHtml(String(r.name).replace(/_/g," "))+' · N '+r.samples+'</span><span>'+((r.ret!==null&&r.ret!==undefined)?Number(r.ret).toFixed(2)+"%":"--")+' / '+((r.win!==null&&r.win!==undefined)?Number(r.win).toFixed(0)+"% win":"--")+'</span></div>';}).join("");
+    }
+    var tierEl=document.getElementById("pa-by-tier");if(tierEl)setSafeHTML(tierEl,metricRows(j.byTier,4)||'<div class="ev-empty">No measured B/C outcomes yet.</div>');
+    var merged={};
+    [["CHART",j.byChartVerdict],["CPR",j.byCprWidth],["TREND",j.byTrendStrength],["LEVEL",j.byPrimaryLevelEvent],["OPTION",j.byOptionAlignment]].forEach(function(pair){
+      Object.keys(pair[1]||{}).forEach(function(k){merged[pair[0]+" · "+k]=pair[1][k];});
+    });
+    var ctx=document.getElementById("pa-context");if(ctx)setSafeHTML(ctx,metricRows(merged,10)||'<div class="ev-empty">Waiting for measured price-action episodes.</div>');
+    setText("pa-method",j.methodology||"Research-only descriptive outcomes.");
+  }
+  function pollPriceActionResearch(){
+    fetch(BACKEND+"/evidence/price-action").then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}).then(renderPriceActionResearch).catch(function(){renderPriceActionResearch(null);});
   }
 
   function pollEvidenceIntelligence() {
@@ -2619,8 +2689,9 @@
     pollEvidenceIntelligence();
     pollEvidenceHealth();
     pollSignalFunnel();
+    pollPriceActionResearch();
     clearInterval(evidenceTimer);
-    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();pollSignalFunnel();},60000);
+    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();pollSignalFunnel();pollPriceActionResearch();},60000);
     var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
   }
 
