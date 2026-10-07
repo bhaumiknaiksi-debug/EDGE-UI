@@ -718,7 +718,48 @@
     .health-hero{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.health-hero>div{padding:12px;border-radius:12px;background:rgba(0,229,255,.025);border:1px solid rgba(0,229,255,.08)}.health-hero span{display:block;font-family:var(--mono);font-size:7px;line-height:1.4;color:var(--muted);letter-spacing:.7px}.health-hero strong{display:block;font-family:var(--display);font-size:32px;font-weight:400;margin-top:4px}
     .health-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.health-row{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.05)}.health-row span{display:block;font-size:8px;color:var(--muted)}.health-row strong{display:block;font-family:var(--mono);font-size:8px;font-weight:400;color:#bdcbd2;margin-top:4px;overflow-wrap:anywhere}
     .health-alert{margin-top:9px;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,170,0,.16);background:rgba(255,170,0,.035);font-size:9px;line-height:1.55;color:#d8bf8e}.health-alert.good{border-color:rgba(0,229,255,.12);background:rgba(0,229,255,.025);color:#9ecbd0}.health-alert.bad{border-color:rgba(255,51,102,.2);background:rgba(255,51,102,.035);color:#dda2b1}@media(max-width:360px){.health-grid{grid-template-columns:1fr}.health-hero strong{font-size:27px}}
-  </style>
+  
+  /* SIGNAL JOURNEY + CHART STORY · RESEARCH PRESENTATION */
+  .signal-journey-card { overflow:hidden; position:relative; }
+  .signal-journey-card::after { content:''; position:absolute; inset:auto -45px -55px auto; width:150px; height:150px; border-radius:50%; background:radial-gradient(circle,rgba(0,229,255,.08),transparent 70%); pointer-events:none; }
+  .signal-tier-row { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:8px; }
+  .signal-tier-badge { font-family:var(--display);font-size:30px;letter-spacing:1px;color:var(--muted); }
+  .signal-tier-badge.tier-a { color:var(--accent);text-shadow:0 0 14px rgba(0,255,136,.25); }
+  .signal-tier-badge.tier-b { color:var(--amber); }
+  .signal-tier-badge.tier-c { color:var(--cyan); }
+  .signal-tier-title { font-family:var(--display);font-size:24px;letter-spacing:.5px;margin-top:2px; }
+  .signal-tier-copy { font-size:12px;line-height:1.55;color:var(--muted);margin-top:4px;max-width:330px; }
+  .tier-track { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px; }
+  .tier-step { border:1px solid var(--border);border-radius:9px;padding:8px;text-align:center;background:rgba(255,255,255,.02); }
+  .tier-step strong { display:block;font-family:var(--display);font-size:17px; }
+  .tier-step span { display:block;font-family:var(--mono);font-size:7px;color:var(--muted);letter-spacing:.5px;margin-top:2px; }
+  .tier-step.active-a { border-color:rgba(0,255,136,.45);background:rgba(0,255,136,.06); }
+  .tier-step.active-b { border-color:rgba(255,170,0,.45);background:rgba(255,170,0,.06); }
+  .tier-step.active-c { border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06); }
+  .chart-story { margin-top:12px;border-top:1px solid var(--border);padding-top:10px; }
+  .chart-story-head { display:flex;justify-content:space-between;gap:10px;align-items:center; }
+  .chart-verdict { font-family:var(--mono);font-size:9px;border:1px solid var(--border);padding:4px 7px;border-radius:14px;color:var(--muted); }
+  .chart-verdict.bullish { color:var(--accent);border-color:rgba(0,255,136,.3); }
+  .chart-verdict.bearish { color:var(--red);border-color:rgba(255,51,102,.3); }
+  .chart-verdict.conflicted { color:var(--amber);border-color:rgba(255,170,0,.3); }
+  .chart-story-title { font-family:var(--body);font-weight:500;font-size:13px;margin-top:8px; }
+  .chart-story-points { margin-top:7px;display:flex;flex-direction:column;gap:5px; }
+  .chart-story-point { font-family:var(--mono);font-size:8px;line-height:1.5;color:var(--muted);padding-left:12px;position:relative; }
+  .chart-story-point::before { content:'•';position:absolute;left:0;color:var(--cyan); }
+  .tier-missing { margin-top:9px;font-family:var(--mono);font-size:8px;color:var(--muted); }
+  .research-disclaimer { margin-top:9px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted);opacity:.85; }
+
+  .signal-funnel-card .funnel-top { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px; }
+  .funnel-stat { border:1px solid var(--border);border-radius:9px;padding:8px;text-align:center;background:rgba(255,255,255,.02); }
+  .funnel-stat .v { font-family:var(--display);font-size:22px; }
+  .funnel-stat .l { font-family:var(--mono);font-size:7px;color:var(--muted);letter-spacing:.5px; }
+  .funnel-rows { margin-top:10px; }
+  .funnel-row { display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px; }
+  .funnel-row:last-child { border-bottom:none; }
+  .funnel-row span:last-child { color:var(--text); }
+  .funnel-note { font-family:var(--mono);font-size:8px;line-height:1.55;color:var(--muted);margin-top:9px; }
+
+</style>
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
@@ -826,6 +867,29 @@
       </div>
       <div class="glance-watch" id="glance-watch">Waiting for live decision data.</div>
       <button class="glance-cta" type="button" data-jump-tab="trade">OPEN ACTION DESK <span>→</span></button>
+    </section>
+
+    <section class="human-card signal-journey-card" id="signal-journey-card">
+      <div class="human-kicker">SIGNAL JOURNEY · RESEARCH VIEW</div>
+      <div class="signal-tier-row">
+        <div>
+          <div class="signal-tier-badge" id="signal-tier-badge">--</div>
+          <div class="signal-tier-title" id="signal-tier-title">Waiting for the research layer…</div>
+          <div class="signal-tier-copy" id="signal-tier-copy">A is the existing strict execution gate. B and C are observational only.</div>
+        </div>
+      </div>
+      <div class="tier-track">
+        <div class="tier-step" id="tier-step-c"><strong>C</strong><span>DEVELOPING</span></div>
+        <div class="tier-step" id="tier-step-b"><strong>B</strong><span>STRONG CANDIDATE</span></div>
+        <div class="tier-step" id="tier-step-a"><strong>A</strong><span>EXECUTION READY</span></div>
+      </div>
+      <div class="chart-story">
+        <div class="chart-story-head"><div class="human-kicker">CHART STORY</div><div class="chart-verdict" id="chart-verdict">--</div></div>
+        <div class="chart-story-title" id="chart-story-title">Waiting for deterministic chart structure.</div>
+        <div class="chart-story-points" id="chart-story-points"></div>
+      </div>
+      <div class="tier-missing" id="tier-missing">Missing gates: --</div>
+      <div class="research-disclaimer">B/C are not probabilities, not BUY signals, and cannot override EDGE's authoritative execution gate.</div>
     </section>
   </div>
 
@@ -996,6 +1060,21 @@
       <div class="lab-path">
         <span>OBSERVE</span><i>→</i><span>TEST</span><i>→</i><span>REPEAT</span><i>→</i><span>REVIEW</span>
       </div>
+    </div>
+  </div>
+  <div class="section-wrap">
+    <div class="card full signal-funnel-card">
+      <div class="ev-head"><div><div class="card-label">SIGNAL FUNNEL · WHY EDGE SAYS NO</div><div class="ev-sub">OBSERVATIONS → GATES → NEAR MISSES</div></div><div class="research-flag">RESEARCH ONLY</div></div>
+      <div class="funnel-top">
+        <div class="funnel-stat"><div class="v" id="funnel-a">--</div><div class="l">A · READY</div></div>
+        <div class="funnel-stat"><div class="v" id="funnel-b">--</div><div class="l">B · STRONG</div></div>
+        <div class="funnel-stat"><div class="v" id="funnel-c">--</div><div class="l">C · DEVELOPING</div></div>
+        <div class="funnel-stat"><div class="v" id="funnel-near">--</div><div class="l">ONE GATE AWAY</div></div>
+      </div>
+      <div class="funnel-rows" id="funnel-stages"><div class="ev-empty">Waiting for gate evidence…</div></div>
+      <div class="mini-label" style="margin-top:12px;">TOP REJECTION REASONS</div>
+      <div class="funnel-rows" id="funnel-rejections"><div class="ev-empty">No rejection audit yet.</div></div>
+      <div class="funnel-note" id="funnel-note">Counts are market observations, not independent trades. The funnel is diagnostic; it does not loosen EDGE.</div>
     </div>
   </div>
   <div class="section-wrap">
@@ -1478,6 +1557,7 @@
 
     // Human-first presentation uses the same backend decision; it never creates a new one.
     renderHumanSummary(d);
+    renderSignalJourney(d);
     renderBattlefield(d);
     renderWhy(d.explain,d.bias);
 
@@ -1837,6 +1917,43 @@
     else if(plan.backendStatus==="READY_TO_EXECUTE") watch="Backend state: READY TO EXECUTE. Open Action for the exact contract, entry, stop and targets.";
     else watch=view.copy;
     setText("glance-watch",watch);
+  }
+
+  function renderSignalJourney(d) {
+    var tier=d&&d.decision&&d.decision.signalTier;
+    var chart=(d&&d.market&&d.market.chartIntelligence)||(d&&d.market&&d.market.context&&d.market.context.chartIntelligence);
+    var badge=document.getElementById("signal-tier-badge");
+    var title=document.getElementById("signal-tier-title");
+    var copy=document.getElementById("signal-tier-copy");
+    ["a","b","c"].forEach(function(x){var el=document.getElementById("tier-step-"+x);if(el)el.className="tier-step";});
+
+    if(!tier){
+      if(badge){badge.textContent="--";badge.className="signal-tier-badge";}
+      if(title)title.textContent="Research tier not available yet.";
+      if(copy)copy.textContent="EDGE's strict live decision remains authoritative.";
+      setText("tier-missing","Missing gates: --");
+    } else {
+      var t=String(tier.tier||"OBSERVING").toUpperCase();
+      if(badge){badge.textContent=t==="OBSERVING"?"WATCHING":"TIER "+t;badge.className="signal-tier-badge "+(t==="A"?"tier-a":t==="B"?"tier-b":t==="C"?"tier-c":"");}
+      var titles={A:"Execution ready.",B:"Strong candidate — still locked.",C:"A setup is developing.",OBSERVING:"Nothing has reached a research tier yet."};
+      if(title)title.textContent=titles[t]||"EDGE is observing.";
+      if(copy)copy.textContent=tier.explanation||"Research-only signal journey.";
+      var step=document.getElementById("tier-step-"+String(t).toLowerCase());
+      if(step&&(t==="A"||t==="B"||t==="C"))step.className="tier-step active-"+t.toLowerCase();
+      var failed=Array.isArray(tier.failedGates)?tier.failedGates:[];
+      setText("tier-missing",failed.length?"Still missing: "+failed.join(" · ").replace(/_/g," "):"All authoritative execution gates passed.");
+    }
+
+    var verdict=chart&&chart.verdict?String(chart.verdict):"UNAVAILABLE";
+    var ve=document.getElementById("chart-verdict");
+    if(ve){ve.textContent=verdict.replace(/_/g," ");ve.className="chart-verdict "+(verdict==="BULLISH"?"bullish":verdict==="BEARISH"?"bearish":verdict==="CONFLICTED"?"conflicted":"");}
+    setText("chart-story-title",chart&&chart.story&&chart.story.headline?chart.story.headline:"Chart structure is not available yet.");
+    var pts=document.getElementById("chart-story-points");
+    if(pts){
+      var rows=chart&&chart.story&&Array.isArray(chart.story.points)?chart.story.points:[];
+      if(!rows.length)setSafeHTML(pts,'<div class="chart-story-point">EDGE is waiting for enough candle structure.</div>');
+      else setSafeHTML(pts,rows.slice(0,5).map(function(x){return '<div class="chart-story-point">'+escapeHtml(x)+'</div>';}).join(""));
+    }
   }
 
   function makeActionablePlan(d, dec, confidence, bias, ivRegime) {
@@ -2370,6 +2487,40 @@
       renderWalkForwardRows("ev-wf-groups",wf.scannerGroups||{});
     }
   }
+  function renderSignalFunnel(j){
+    if(!j){
+      ["funnel-a","funnel-b","funnel-c","funnel-near"].forEach(function(id){setText(id,"--");});
+      setSafeHTML(document.getElementById("funnel-stages"),'<div class="ev-empty">SIGNAL FUNNEL UNAVAILABLE.</div>');
+      setSafeHTML(document.getElementById("funnel-rejections"),'<div class="ev-empty">No rejection audit available.</div>');
+      return;
+    }
+    var tc=j.tierCounts||{};
+    setText("funnel-a",tc.A!==undefined?tc.A:"--");
+    setText("funnel-b",tc.B!==undefined?tc.B:"--");
+    setText("funnel-c",tc.C!==undefined?tc.C:"--");
+    setText("funnel-near",j.nearReadyCount!==undefined?j.nearReadyCount:"--");
+
+    var s=j.stages||{};
+    var labels=[
+      ["observations","Market observations"],["market","Market open"],["regime","Directional regime"],["strategy","Strategy exists"],
+      ["setup","Setup qualified"],["trigger","Trigger confirmed"],["price","Price acceptable"],["liquidity","Liquidity usable"],
+      ["risk","Risk ready"],["position","Position ready"],["ready","Execution ready"]
+    ];
+    var stageEl=document.getElementById("funnel-stages");
+    if(stageEl)setSafeHTML(stageEl,labels.map(function(x){var v=s[x[0]];return '<div class="funnel-row"><span>'+escapeHtml(x[1])+'</span><span>'+(v!==undefined?v:"--")+'</span></div>';}).join(""));
+
+    var r=Array.isArray(j.topRejections)?j.topRejections:[];
+    var rej=document.getElementById("funnel-rejections");
+    if(rej)setSafeHTML(rej,r.length?r.slice(0,8).map(function(x){return '<div class="funnel-row"><span>'+escapeHtml(String(x.reason||"").replace(/_/g," "))+'</span><span>'+Number(x.count||0)+'</span></div>';}).join(""):'<div class="ev-empty">No rejection reasons recorded yet.</div>');
+    setText("funnel-note",(j.methodology||"Descriptive gate audit.")+" Counts are observations, not independent trades.");
+  }
+  function pollSignalFunnel(){
+    fetch(BACKEND+"/evidence/signal-funnel")
+      .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+      .then(renderSignalFunnel)
+      .catch(function(){renderSignalFunnel(null);});
+  }
+
   function pollEvidenceIntelligence() {
     fetch(BACKEND+"/evidence/intelligence?minSamples=20")
       .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
@@ -2379,8 +2530,9 @@
   function startEvidenceIntelligence() {
     pollEvidenceIntelligence();
     pollEvidenceHealth();
+    pollSignalFunnel();
     clearInterval(evidenceTimer);
-    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();},60000);
+    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();pollSignalFunnel();},60000);
     var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
   }
 
