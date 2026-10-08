@@ -86,6 +86,8 @@
   .edge-alerts-entry summary::-webkit-details-marker { display:none; }
   .edge-alerts-entry[open] summary { border-radius:10px 10px 0 0; }
   .edge-push-placeholder { font:10px/1.6 var(--mono); color:var(--muted); padding:12px; }
+  #edge-feed-health-note { max-width:452px;width:calc(100% - 28px);margin:0 auto 10px;padding:10px 12px;border:1px solid rgba(255,170,0,.4);border-radius:9px;background:rgba(255,170,0,.065);color:var(--amber);font:10px/1.5 var(--mono);position:relative;z-index:2; }
+  #edge-feed-health-note[hidden] { display:none; }
   .edge-recovery-tools { max-width:452px;width:calc(100% - 28px);margin:-3px auto 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:relative;z-index:2;color:var(--muted);font:8px var(--mono);letter-spacing:1px; }
   .edge-recovery-tools button { background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--cyan);padding:8px 10px;font:9px var(--mono);cursor:pointer; }
   html[data-edge-native="true"] .edge-recovery-tools { display:none; }
@@ -849,6 +851,8 @@
     </div>
     <span class="session-greeting" id="session-greeting"></span>
   </div>
+
+  <div id="edge-feed-health-note" role="status" aria-live="polite" hidden></div>
 
   <!-- Independent settings entry; never gated on successful market-data fetch. -->
   <details class="edge-alerts-entry" id="edge-alert-settings">
@@ -2922,13 +2926,24 @@
     var greetEl=document.getElementById("session-greeting");
     if(greetEl)greetEl.textContent=greeting;
     var panel=document.getElementById("closed-panel"),asOf=document.getElementById("data-as-of");
-    if(panel)panel.classList.toggle("visible",!isLive);
-    if(asOf)asOf.classList.toggle("visible",!isLive);
-    var next=verified && snapshot.nextOpen ? Date.parse(snapshot.nextOpen) : NaN;
-    if(!isLive){
+    // Exchange CLOSED and feed UNAVAILABLE are different states.
+    var showClosed=verified && (phase==="CLOSED" || phase==="PRE_OPEN");
+    if(panel)panel.classList.toggle("visible",showClosed);
+    if(asOf)asOf.classList.toggle("visible",showClosed);
+    var feedNote=document.getElementById("edge-feed-health-note");
+    if(feedNote){
+      feedNote.hidden=isLive || showClosed;
+      feedNote.textContent=!navigator.onLine?"OFFLINE · No verified live market feed. Do not act on cached prices.":
+        !verified?"CONNECTING · Waiting for authoritative backend market status.":
+        phase==="OPEN"?"EXCHANGE OPEN · LIVE DATA NOT CONFIRMED. Do not act until EDGE recovers.":
+        "MARKET STATUS UNVERIFIED · Waiting for a valid backend response.";
+    }
+    var next=showClosed && snapshot.nextOpen ? Date.parse(snapshot.nextOpen) : NaN;
+    if(showClosed){
       setText("next-session",Number.isFinite(next)?new Date(next).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"--");
       var mins=Number.isFinite(next)?Math.max(0,Math.ceil((next-Date.now())/60000)):null;
       setText("time-until-open",mins===null?"--":Math.floor(mins/60)+"h "+mins%60+"m");
+      setText("last-session",feedTime>0?new Date(feedTime).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short"}):"--");
     }
   }
   window.edgeApplyMarketStatus=updateMarketStatusUI;
