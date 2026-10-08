@@ -3,7 +3,8 @@
 
   var BACKEND_URL = "https://edge-backend-r1ng.onrender.com";
   var deferredInstallPrompt = null;
-  var isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  var isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
+  var isStandalone = isNative || window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 
   function addStyles() {
     var style = document.createElement("style");

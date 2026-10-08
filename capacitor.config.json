@@ -1,0 +1,28 @@
+{
+  "appId": "com.bhaumiknaik.edge",
+  "appName": "EDGE",
+  "webDir": "www",
+  "loggingBehavior": "debug",
+  "backgroundColor": "#04070b",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#04070b",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#04070b"
+  },
+  "android": {
+    "backgroundColor": "#04070b"
+  }
+}
