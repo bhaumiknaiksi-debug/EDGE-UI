@@ -72,6 +72,21 @@
   }
   .market-badge.open  { color:var(--accent); border-color:rgba(0,255,136,.3); background:rgba(0,255,136,.06); }
   .market-badge.closed { color:var(--red); border-color:rgba(255,51,102,.3); background:rgba(255,51,102,.06); }
+  /* Alerts remain accessible even when the market-data pipeline is offline. */
+  .edge-alerts-entry {
+    max-width:452px; width:calc(100% - 28px); margin:0 auto 10px;
+    position:relative; z-index:2;
+  }
+  .edge-alerts-entry summary {
+    list-style:none; display:flex; justify-content:center; align-items:center; cursor:pointer;
+    border:1px solid rgba(0,229,255,.32); background:rgba(0,229,255,.055);
+    border-radius:10px; padding:11px 12px; color:var(--cyan);
+    font-family:var(--mono); font-size:10px; letter-spacing:1.3px;
+  }
+  .edge-alerts-entry summary::-webkit-details-marker { display:none; }
+  .edge-alerts-entry[open] summary { border-radius:10px 10px 0 0; }
+  .edge-push-placeholder { font:10px/1.6 var(--mono); color:var(--muted); padding:12px; }
+  html[data-edge-native="true"] .edge-alerts-entry { display:none; }
   .market-badge .mbdot { width:6px; height:6px; border-radius:50%; background:var(--muted); }
   .market-badge.open .mbdot { background:var(--accent); animation:pulse 2s infinite; }
   .market-badge.closed .mbdot { background:var(--red); }
@@ -832,6 +847,14 @@
     <span class="session-greeting" id="session-greeting"></span>
   </div>
 
+  <!-- Independent settings entry; never gated on successful market-data fetch. -->
+  <details class="edge-alerts-entry" id="edge-alert-settings">
+    <summary>🔔 LOCK SCREEN ALERTS · SETTINGS</summary>
+    <div id="edge-push-slot" aria-label="EDGE notification settings">
+      <p class="edge-push-placeholder">Loading alert controls… If this stays here, reopen EDGE while online to update the app.</p>
+    </div>
+  </details>
+
   <!-- TOKEN EXPIRED BANNER -->
   <div class="token-banner" id="token-banner">
     <b>LIVE DATA NEEDS ATTENTION</b><br>
@@ -1446,7 +1469,9 @@
 
   var pollTimer, prevSpot = null;
   var activeFetchController = null;
+  var pollGeneration = 0;
   var pollDelay = 5000;
+  var maxPollWaitMs = 60000;
   var lastDataTime = 0;
   var staleTimer = null;
   var consecutiveFails = 0;
@@ -1515,43 +1540,72 @@
   }
 
   // -- Polling ----------------------------------------------------------------
-  function fetchData() {
-    if (activeFetchController) activeFetchController.abort();
-    activeFetchController = new AbortController();
-    fetch(BACKEND + "/data", { signal: activeFetchController.signal })
-      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  // Never abort an outstanding request merely because 5 seconds elapsed.
+  // Render cold starts and slow networks can take substantially longer than a
+  // normal poll; aborting every 5 seconds previously prevented EDGE waking up.
+  function scheduleNextDataPoll(generation) {
+    if (generation !== pollGeneration) return;
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(function() { fetchData(generation); }, pollDelay);
+  }
+  function fetchData(generation) {
+    if (generation !== pollGeneration || activeFetchController) return;
+    var controller = new AbortController();
+    activeFetchController = controller;
+    var watchdog = setTimeout(function() { controller.abort(); }, maxPollWaitMs);
+    fetch(BACKEND + "/data", { signal: controller.signal, cache: "no-store" })
+      .then(function(r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
       .then(function(data) {
+        if (generation !== pollGeneration) return;
+        if (!data || data.error) throw new Error("BACKEND_DATA_UNAVAILABLE");
         consecutiveFails = 0;
+        // Rendering might fail on malformed data: never mark a failed render as live.
+        render(data);
         setStatus("live");
-        // Token-expired banner check
         var banner = document.getElementById("token-banner");
         if (banner) {
-          if (data && data.tokenExpired) banner.classList.add("visible");
+          if (data.tokenExpired) banner.classList.add("visible");
           else banner.classList.remove("visible");
         }
-        render(data);
         setText("last-update", nowStr());
         lastDataTime = Date.now();
         lastData = data;
       })
       .catch(function(err) {
+        if (generation !== pollGeneration) return;
         consecutiveFails++;
         if (consecutiveFails > 3) setStatus("error");
+      })
+      .finally(function() {
+        clearTimeout(watchdog);
+        if (activeFetchController === controller) activeFetchController = null;
+        scheduleNextDataPoll(generation);
       });
   }
-  function forceReconnect() {
-    consecutiveFails = 0;
-    clearInterval(pollTimer);
-    setStatus("connecting");
-    fetchData();
-    pollTimer = setInterval(fetchData, 5000);
-  }
   function startPolling() {
-    clearInterval(pollTimer);
+    pollGeneration++;
+    clearTimeout(pollTimer);
+    if (activeFetchController) {
+      activeFetchController.abort();
+      activeFetchController = null;
+    }
+    consecutiveFails = 0;
     setStatus("connecting");
-    fetchData();
-    pollTimer = setInterval(fetchData, 5000);
+    fetchData(pollGeneration);
   }
+  function forceReconnect() { startPolling(); }
+
+  // Recover promptly when EDGE returns to the foreground or connectivity comes back.
+  window.addEventListener("online", function() { forceReconnect(); });
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible" &&
+        (!lastDataTime || Date.now() - lastDataTime > 15000)) {
+      forceReconnect();
+    }
+  });
 
   // -- Main render ------------------------------------------------------------
   function render(d) {
