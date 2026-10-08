@@ -32,7 +32,8 @@
     }
     if (els.disable) {
       els.disable.hidden = !subscription;
-      els.disable.disabled = !canUse || !subscription;
+      // Local opt-out is always available even when the push server fails.
+      els.disable.disabled = !subscription || working;
     }
     if (els.enable) els.enable.textContent = subscription ? "RECONNECT ALERTS" : "ENABLE ALERTS";
   }
@@ -42,6 +43,16 @@
     var base64 = (base64Url + padding).replace(/-/g, "+").replace(/_/g, "/");
     var bytes = atob(base64);
     return Uint8Array.from(bytes, function (c) { return c.charCodeAt(0); });
+  }
+
+  function usesCurrentVapidKey(existing, currentKey) {
+    var key = existing && existing.options && existing.options.applicationServerKey;
+    if (!key || !currentKey) return false;
+    var actual = new Uint8Array(key);
+    var expected = urlBase64ToUint8Array(currentKey);
+    return actual.length === expected.length && actual.every(function (byte, i) {
+      return byte === expected[i];
+    });
   }
 
   async function request(path, code, payload) {
@@ -90,12 +101,24 @@
     try {
       // Subscribe directly from the user gesture (critical for iOS Home Screen).
       // Browsers may display the notification permission prompt during subscribe().
-      var promise = subscription
-        ? Promise.resolve(subscription)
-        : registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(config.publicKey)
-          });
+      // A key rotation invalidates endpoints created with the previous VAPID key.
+      // Begin resubscription directly from the user interaction.
+      var previous = subscription;
+      var keyChanged = !!previous && !usesCurrentVapidKey(previous, config.publicKey);
+      var promise = keyChanged
+        ? previous.unsubscribe().then(function () {
+            subscription = null;
+            return registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(config.publicKey)
+            });
+          })
+        : previous
+          ? Promise.resolve(previous)
+          : registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(config.publicKey)
+            });
       var sub = await promise;
       subscription = sub;
       setStatus("Registering this device securely…", "#ffaa00");
@@ -128,16 +151,29 @@
 
   async function disable() {
     if (working || !subscription) return;
-    var code = getCode();
-    if (!code) return;
-    working = true; setButtons(); setStatus("Removing this device…", "#ffaa00");
+    // Local revocation must NEVER depend on the owner's enrollment code
+    // or backend availability. Users must always be able to opt out.
+    var code = els.secret && els.secret.value.trim();
+    var previous = subscription;
+    working = true; setButtons(); setStatus("Disabling alerts on this device…", "#ffaa00");
+    var remoteError = null;
     try {
-      await request("/unsubscribe", code, { endpoint: subscription.endpoint });
-      await subscription.unsubscribe();
-      subscription = null;
-      setStatus("Alerts disabled for this installation.", "#8aa0ad");
+      if (code && config && config.enabled) {
+        try { await request("/unsubscribe", code, { endpoint: previous.endpoint }); }
+        catch (e) { remoteError = e; }
+      } else {
+        remoteError = new Error("Server cleanup not requested");
+      }
+      var locallyDisabled = await previous.unsubscribe();
+      if (locallyDisabled) subscription = null;
+      setStatus(locallyDisabled
+        ? (remoteError
+          ? "Alerts disabled on this device; server cleanup is pending."
+          : "Alerts disabled for this installation.")
+        : "Could not revoke browser subscription. Please retry or block EDGE in notification settings.",
+        locallyDisabled ? "#8aa0ad" : "#ff668c");
     } catch (error) {
-      setStatus("Could not disable alerts: " + error.message, "#ff668c");
+      setStatus("Local opt-out failed: " + error.message + ". Check iPhone notification settings.", "#ff668c");
     } finally { working = false; setButtons(); }
   }
 
@@ -221,24 +257,32 @@
     }
 
     try {
+      // Retrieve local subscription FIRST, so DISABLE always works even if
+      // the server is down or has not been configured.
+      registration = await navigator.serviceWorker.ready;
+      subscription = await registration.pushManager.getSubscription();
+      setButtons();
+    } catch (error) {
+      setStatus("Browser push unavailable: " + (error.message || "unknown error"), "#ff668c");
+      return;
+    }
+    try {
       var response = await fetch(API + "/config", { cache: "no-store" });
       if (!response.ok) throw new Error("Push status HTTP " + response.status);
       config = await response.json();
       if (!config.enabled || !config.publicKey) {
-        els.secret.hidden = true;
-        setStatus("Alerts are awaiting secure backend setup. The existing EDGE dashboard is unaffected.", "#ffaa00");
+        setStatus("Alerts await secure backend setup. Local Disable still works.", "#ffaa00");
+        setButtons();
         return;
       }
-
-      registration = await navigator.serviceWorker.ready;
-      subscription = await registration.pushManager.getSubscription();
       setStatus(subscription
         ? "Browser permission exists. Enter the enrollment code to reconnect or send a test."
         : "Enter your enrollment code, then tap Enable Alerts. You control notification permission.",
         "#00e5ff");
       setButtons();
     } catch (error) {
-      setStatus("Push service unavailable: " + (error.message || "network error"), "#ff668c");
+      setStatus("Push server unavailable. You can still Disable alerts on this device.", "#ff668c");
+      setButtons();
     }
   }
 
