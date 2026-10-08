@@ -2807,6 +2807,20 @@
 
   var marketStatusTimer = null;
   function updateMarketStatusUI() {
+    if (!navigator.onLine) {
+      var offlineBadge=document.getElementById("market-badge");
+      var offlineBadgeTxt=document.getElementById("market-badge-text");
+      var offlineGreet=document.getElementById("session-greeting");
+      var offlinePanel=document.getElementById("closed-panel");
+      var offlineAsOf=document.getElementById("data-as-of");
+      if(offlineBadge&&offlineBadgeTxt){ offlineBadge.className="market-badge closed"; offlineBadgeTxt.textContent="OFFLINE"; }
+      if(offlineGreet) offlineGreet.textContent="Live data unavailable";
+      if(offlinePanel) offlinePanel.classList.add("visible");
+      if(offlineAsOf) offlineAsOf.classList.add("visible");
+      setText("time-until-open","--");
+      setText("next-session","--");
+      return;
+    }
     var status=getMarketStatus();
     var info=getTimeUntilNextOpen();
     var countdown=info.hours>0?info.hours+"h "+info.minutes+"m":info.minutes+"m";
