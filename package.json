@@ -6,13 +6,14 @@
   "scripts": {
     "mobile:build": "node scripts/build-mobile.mjs",
     "mobile:assets:source": "node scripts/make-mobile-assets.mjs",
-    "mobile:init": "npm run mobile:build && npm run mobile:assets:source && npx cap add ios && npx cap add android && npx capacitor-assets generate && npx cap sync",
+    "mobile:init": "npm run mobile:build && npm run mobile:assets:source && npx cap add ios && npm run mobile:ios:push-bridge && npx cap add android && npx capacitor-assets generate && npx cap sync",
     "mobile:sync": "npm run mobile:build && npx cap sync",
     "mobile:assets": "npm run mobile:assets:source && npx capacitor-assets generate",
     "mobile:open:ios": "npx cap open ios",
     "mobile:open:android": "npx cap open android",
     "mobile:run:ios": "npm run mobile:sync && npx cap run ios",
-    "mobile:run:android": "npm run mobile:sync && npx cap run android"
+    "mobile:run:android": "npm run mobile:sync && npx cap run android",
+    "mobile:ios:push-bridge": "node scripts/patch-ios-push.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",
