@@ -66,7 +66,7 @@ const sandbox = {
   setText() {},
   nowStr() { return "12:00:00"; },
   render() { rendered++; },
-  window: { addEventListener() {} },
+  window: { addEventListener() {}, edgeBackendMarketStatus: { phase: "OPEN" }, edgeBackendMarketStatusCheckedAt: Date.now() },
   navigator: { onLine: true },
   document: { addEventListener() {}, getElementById() { return null; }, visibilityState: "visible" },
   Date,
@@ -111,9 +111,23 @@ assert.ok(retry, "Polling must continue after stale response");
 retry.callback();
 assert.equal(requests.length, 3);
 
+// A previous OPEN-phase snapshot remains viewable as historical once the
+// backend says the market is CLOSED, but may never be called LIVE.
+sandbox.window.edgeBackendMarketStatus = { phase: "CLOSED" };
+requests[2].resolve({ ok: true, json: async () => ({
+  spot:12345,timestamp:new Date(Date.now()-3600000).toISOString(),market:{phase:"OPEN"}
+}) });
+for(let i=0;i<18;i++) await Promise.resolve();
+assert.equal(rendered, 2, "Last-session history should remain viewable");
+assert.equal(statuses.at(-1), "closed", "Historical data must not be labelled live");
+const lastPoll=[...timers.values()].find(t=>t.delay===5000);
+assert.ok(lastPoll);
+lastPoll.callback();
+assert.equal(requests.length, 4);
+
 // Explicit reconnect is allowed to replace a pending request.
 sandbox.forceReconnect();
-assert.equal(requests.length, 4);
+assert.equal(requests.length, 5);
 assert.equal(aborted, 1);
-assert.equal(requests[2].options.signal.aborted, true);
+assert.equal(requests[3].options.signal.aborted, true);
 console.log("EDGE frontend: syntax, accessible alerts and non-overlapping polling PASS");
