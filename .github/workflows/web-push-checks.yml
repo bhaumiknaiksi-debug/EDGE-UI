@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "web-push.js"
+      - "scripts/push-enrollment-check.mjs"
       - "sw.js"
       - "index.html"
       - ".github/workflows/web-push-checks.yml"
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - "web-push.js"
+      - "scripts/push-enrollment-check.mjs"
       - "sw.js"
       - "index.html"
       - ".github/workflows/web-push-checks.yml"
@@ -37,3 +39,5 @@ jobs:
           grep -q 'addEventListener("push"' sw.js
           grep -q 'showNotification' sw.js
           grep -q 'pushManager.subscribe' web-push.js
+      - name: Verify server-confirmed enrollment guard
+        run: node scripts/push-enrollment-check.mjs
