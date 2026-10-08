@@ -1,0 +1,76 @@
+name: EDGE Native Bootstrap
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "src/mobile-entry.js"
+      - "scripts/**"
+      - ".github/workflows/mobile-native-bootstrap.yml"
+  pull_request:
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "src/mobile-entry.js"
+      - "scripts/**"
+      - ".github/workflows/mobile-native-bootstrap.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  native-bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build mobile web bundle
+        run: npm run mobile:build
+
+      - name: Generate source assets
+        run: npm run mobile:assets:source
+
+      - name: Create iOS native project
+        run: npx cap add ios
+
+      - name: Create Android native project
+        run: npx cap add android
+
+      - name: Generate native icons and splash assets
+        run: npx capacitor-assets generate
+
+      - name: Sync Capacitor
+        run: npx cap sync
+
+      - name: Verify native project structure
+        run: |
+          test -f ios/App/App/Info.plist
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f ios/App/App.xcodeproj/project.pbxproj
+          test -f android/settings.gradle
+
+      - name: Archive generated native projects
+        if: github.event_name != 'pull_request'
+        run: tar -czf edge-native-projects.tgz ios android capacitor.config.json MOBILE_SETUP.md
+
+      - name: Upload native project artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-native-projects
+          path: edge-native-projects.tgz
+          retention-days: 14
