@@ -86,6 +86,9 @@
   .edge-alerts-entry summary::-webkit-details-marker { display:none; }
   .edge-alerts-entry[open] summary { border-radius:10px 10px 0 0; }
   .edge-push-placeholder { font:10px/1.6 var(--mono); color:var(--muted); padding:12px; }
+  .edge-recovery-tools { max-width:452px;width:calc(100% - 28px);margin:-3px auto 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:relative;z-index:2;color:var(--muted);font:8px var(--mono);letter-spacing:1px; }
+  .edge-recovery-tools button { background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--cyan);padding:8px 10px;font:9px var(--mono);cursor:pointer; }
+  html[data-edge-native="true"] .edge-recovery-tools { display:none; }
   html[data-edge-native="true"] .edge-alerts-entry { display:none; }
   .market-badge .mbdot { width:6px; height:6px; border-radius:50%; background:var(--muted); }
   .market-badge.open .mbdot { background:var(--accent); animation:pulse 2s infinite; }
@@ -854,6 +857,10 @@
       <p class="edge-push-placeholder">Loading alert controls… If this stays here, reopen EDGE while online to update the app.</p>
     </div>
   </details>
+  <div class="edge-recovery-tools" aria-label="App recovery and version">
+    <span>EDGE WEB · RECOVERY</span>
+    <button id="edge-refresh-app" type="button">UPDATE &amp; RELOAD</button>
+  </div>
 
   <!-- TOKEN EXPIRED BANNER -->
   <div class="token-banner" id="token-banner">
@@ -1520,16 +1527,20 @@
     var dot = document.getElementById("dot");
     var txt = document.getElementById("ws-status");
     if (!dot || !txt) return;
-    if (state === "live")        { dot.className="dot live";  txt.textContent="FEED LIVE";       txt.style.color="var(--accent)"; }
-    else if (state === "error")  { dot.className="dot error"; txt.textContent="PIPE BROKE";      txt.style.color="var(--red)"; }
-    else                         { dot.className="dot";       txt.textContent="WAKING UP"; txt.style.color="var(--muted)"; }
+    dot.style.background=""; dot.style.boxShadow="";
+    if (state === "live")        { dot.className="dot live";  txt.textContent="FEED LIVE"; txt.style.color="var(--accent)"; }
+    else if (state === "stale")  { dot.className="dot error"; txt.textContent="DATA STALE"; txt.style.color="var(--red)"; }
+    else if (state === "error")  { dot.className="dot error"; txt.textContent="FEED UNAVAILABLE"; txt.style.color="var(--red)"; }
+    else if (state === "closed") { dot.className="dot"; txt.textContent="LAST SESSION"; txt.style.color="var(--muted)"; }
+    else if (state === "offline"){ dot.className="dot error"; txt.textContent="OFFLINE"; txt.style.color="var(--red)"; }
+    else                         { dot.className="dot"; txt.textContent="CONNECTING"; txt.style.color="var(--muted)"; }
   }
 
   // -- Stale checker ----------------------------------------------------------
   function startStaleChecker() {
     clearInterval(staleTimer);
     staleTimer = setInterval(function() {
-      if (!lastDataTime) return;
+      if (!lastDataTime || (window.edgeBackendMarketStatus && window.edgeBackendMarketStatus.phase !== "OPEN")) return;
       var age = Date.now() - lastDataTime;
       var dot = document.getElementById("dot");
       var txt = document.getElementById("ws-status");
@@ -1561,23 +1572,47 @@
       .then(function(data) {
         if (generation !== pollGeneration) return;
         if (!data || data.error) throw new Error("BACKEND_DATA_UNAVAILABLE");
-        consecutiveFails = 0;
+        // A 200 response can still contain an old snapshot after a failed Upstox poll.
+        // Never mark that snapshot as live or reset the stale-data clock from receipt time.
+        var observedAt = Date.parse(String(data.timestamp || ""));
+        if (!Number.isFinite(observedAt) || observedAt > Date.now() + 20000) {
+          throw new Error("INVALID_SNAPSHOT_TIME");
+        }
+        var phase = String(data.market && data.market.phase || "UNKNOWN");
+        var isOpen = phase === "OPEN";
+        if (isOpen && Date.now() - observedAt > 120000) {
+          throw new Error("STALE_SNAPSHOT");
+        }
         // Rendering might fail on malformed data: never mark a failed render as live.
         render(data);
-        setStatus("live");
+        consecutiveFails = 0;
+        setStatus(isOpen && navigator.onLine ? "live" : (!navigator.onLine ? "offline" : "closed"));
         var banner = document.getElementById("token-banner");
         if (banner) {
           if (data.tokenExpired) banner.classList.add("visible");
           else banner.classList.remove("visible");
         }
-        setText("last-update", nowStr());
-        lastDataTime = Date.now();
+        setText("last-update", "DATA " + new Date(observedAt).toLocaleTimeString("en-IN", {hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false,timeZone:"Asia/Kolkata"}) + " IST");
+        lastDataTime = isOpen ? observedAt : 0;
         lastData = data;
       })
       .catch(function(err) {
         if (generation !== pollGeneration) return;
         consecutiveFails++;
-        if (consecutiveFails > 3) setStatus("error");
+        var message = err && err.message || "UNKNOWN";
+        var isStale = message === "STALE_SNAPSHOT" || message === "INVALID_SNAPSHOT_TIME";
+        if (!navigator.onLine) {
+          setStatus("offline");
+          setText("last-update", "CONNECT TO THE INTERNET");
+        } else if (isStale) {
+          setStatus("stale");
+          setText("last-update", "OLD MARKET DATA · WAIT FOR FRESH POLL");
+        } else {
+          if (consecutiveFails > 1) setStatus("error");
+          setText("last-update", message === "HTTP 503" ? "ENGINE WAKING · RETRYING" :
+            err && err.name === "AbortError" ? "ENGINE SLOW · RETRYING" :
+            "CHECKING CONNECTION · RETRYING");
+        }
       })
       .finally(function() {
         clearTimeout(watchdog);
@@ -2861,29 +2896,36 @@
   }
 
   var marketStatusTimer = null;
+  // Never infer LIVE/OPEN from a device clock. The backend owns market phase.
   function updateMarketStatusUI() {
-    var status=getMarketStatus();
-    var info=getTimeUntilNextOpen();
-    var countdown=info.hours>0?info.hours+"h "+info.minutes+"m":info.minutes+"m";
-    var label=info.openDate?DAYS[info.openDate.getDay()]+", 9:15 AM":"--";
-
+    var snapshot=window.edgeBackendMarketStatus;
+    var observed=Number(window.edgeBackendMarketStatusCheckedAt || 0);
+    var verified=!!snapshot && observed>0 && Date.now()-observed < 90000 && navigator.onLine;
+    var phase=verified ? String(snapshot.phase || "UNKNOWN").toUpperCase() : "UNKNOWN";
+    var feedTime=verified ? Number(snapshot.lastFetch || 0) : 0;
+    var feedFresh=phase==="OPEN" && feedTime>0 && feedTime<=Date.now()+20000 && Date.now()-feedTime<=120000;
+    var isLive=phase==="OPEN" && feedFresh;
+    var label=!navigator.onLine?"OFFLINE":!verified?"VERIFYING":phase==="OPEN"&&!feedFresh?"FEED WAIT":phase.replace(/_/g," ");
+    var greeting=!navigator.onLine?"Live data unavailable":!verified?"Checking backend status":
+      isLive?"Market live":phase==="OPEN"?"Exchange open · feed not ready":
+      phase==="PRE_OPEN"?"Pre-market":"Market closed";
     var badge=document.getElementById("market-badge");
     var badgeTxt=document.getElementById("market-badge-text");
-    if(badge&&badgeTxt){ badge.className="market-badge "+(status.isOpen?"open":"closed"); badgeTxt.textContent=status.isOpen?"OPEN":"CLOSED"; }
-
+    if(badge&&badgeTxt){badge.className="market-badge "+(isLive?"open":"closed");badgeTxt.textContent=label;}
     var greetEl=document.getElementById("session-greeting");
-    if(greetEl) greetEl.textContent=getSessionGreeting();
-
-    var panel=document.getElementById("closed-panel");
-    var asOf=document.getElementById("data-as-of");
-    if(panel){
-      setText("time-until-open",countdown);
-      setText("next-session",label);
-      setText("last-session",getLastSessionDate());
-      if(!status.isOpen){ panel.classList.add("visible"); if(asOf) asOf.classList.add("visible"); }
-      else              { panel.classList.remove("visible"); if(asOf) asOf.classList.remove("visible"); }
+    if(greetEl)greetEl.textContent=greeting;
+    var panel=document.getElementById("closed-panel"),asOf=document.getElementById("data-as-of");
+    if(panel)panel.classList.toggle("visible",!isLive);
+    if(asOf)asOf.classList.toggle("visible",!isLive);
+    var next=verified && snapshot.nextOpen ? Date.parse(snapshot.nextOpen) : NaN;
+    if(!isLive){
+      setText("next-session",Number.isFinite(next)?new Date(next).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"--");
+      var mins=Number.isFinite(next)?Math.max(0,Math.ceil((next-Date.now())/60000)):null;
+      setText("time-until-open",mins===null?"--":Math.floor(mins/60)+"h "+mins%60+"m");
     }
   }
+  window.edgeApplyMarketStatus=updateMarketStatusUI;
+
   function startMarketStatusTimer() {
     updateMarketStatusUI();
     clearInterval(marketStatusTimer);
