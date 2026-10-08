@@ -101,24 +101,21 @@
     try {
       // Subscribe directly from the user gesture (critical for iOS Home Screen).
       // Browsers may display the notification permission prompt during subscribe().
-      // A key rotation invalidates endpoints created with the previous VAPID key.
-      // Begin resubscription directly from the user interaction.
+      // A VAPID rotation invalidates an old subscription. Remove it first,
+      // then ask for a SECOND deliberate tap: subscribe() needs a fresh user gesture on iOS.
       var previous = subscription;
-      var keyChanged = !!previous && !usesCurrentVapidKey(previous, config.publicKey);
-      var promise = keyChanged
-        ? previous.unsubscribe().then(function () {
-            subscription = null;
-            return registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(config.publicKey)
-            });
-          })
-        : previous
-          ? Promise.resolve(previous)
-          : registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(config.publicKey)
-            });
+      if (previous && !usesCurrentVapidKey(previous, config.publicKey)) {
+        await previous.unsubscribe();
+        subscription = null;
+        setStatus("Push keys changed. Old subscription cleared. Tap Enable Alerts again to reconnect.", "#ffaa00");
+        return;
+      }
+      var promise = previous
+        ? Promise.resolve(previous)
+        : registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(config.publicKey)
+          });
       var sub = await promise;
       subscription = sub;
       setStatus("Registering this device securely…", "#ffaa00");
