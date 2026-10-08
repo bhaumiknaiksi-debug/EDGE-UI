@@ -1,7 +1,7 @@
 // EDGE PWA service worker.
 // App shell may be cached; live market/API responses are never intentionally cached.
-const CACHE = "edge-shell-v2";
-const SHELL = ["/", "/index.html", "/manifest.json", "/edge-icon.svg", "/offline.html", "/pwa.js"];
+const CACHE = "edge-shell-v3";
+const SHELL = ["/", "/index.html", "/manifest.json", "/edge-icon.svg", "/offline.html", "/pwa.js", "/web-push.js"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
@@ -48,4 +48,45 @@ self.addEventListener("fetch", event => {
       })
       .catch(() => caches.match(request))
   );
+});
+
+
+// Web Push from the trusted EDGE backend. Every received push is shown to the user.
+// No cached market state is consulted; no client-side trading decisions are made.
+self.addEventListener("push", event => {
+  var message = {};
+  try { message = event.data ? event.data.json() : {}; } catch (_) {}
+  if (!message || typeof message !== "object") message = {};
+  var title = typeof message.title === "string" ? message.title.slice(0, 90) : "EDGE update";
+  var body = typeof message.body === "string" ? message.body.slice(0, 180) :
+    "Open EDGE for the current backend state.";
+  var kind = ["TEST", "EXECUTION_READY", "READY_INVALIDATED"].includes(message.type) ?
+    message.type : "UPDATE";
+  var tag = kind === "EXECUTION_READY" ? "edge-execution-ready" : "edge-" + kind.toLowerCase();
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: body,
+      icon: "/edge-icon.svg",
+      badge: "/edge-icon.svg",
+      tag: tag,
+      data: { url: "/" }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    var windows = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (var windowClient of windows) {
+      if (new URL(windowClient.url).origin === self.location.origin) {
+        if (typeof windowClient.focus === "function") {
+          await windowClient.focus();
+          return;
+        }
+      }
+    }
+    if (clients.openWindow) await clients.openWindow("/");
+  })());
 });

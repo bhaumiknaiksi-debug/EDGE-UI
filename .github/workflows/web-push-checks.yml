@@ -1,0 +1,39 @@
+name: EDGE Web Push Static Checks
+
+on:
+  pull_request:
+    paths:
+      - "web-push.js"
+      - "sw.js"
+      - "index.html"
+      - ".github/workflows/web-push-checks.yml"
+  push:
+    branches: [main]
+    paths:
+      - "web-push.js"
+      - "sw.js"
+      - "index.html"
+      - ".github/workflows/web-push-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  web-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate service worker and client JavaScript syntax
+        run: |
+          node --check web-push.js
+          node --check sw.js
+          node --check pwa.js
+      - name: Verify web-push integration hooks
+        run: |
+          grep -q 'src="/web-push.js"' index.html
+          grep -q 'addEventListener("push"' sw.js
+          grep -q 'showNotification' sw.js
+          grep -q 'pushManager.subscribe' web-push.js
