@@ -130,4 +130,52 @@ sandbox.forceReconnect();
 assert.equal(requests.length, 5);
 assert.equal(aborted, 1);
 assert.equal(requests[3].options.signal.aborted, true);
+
+assert.match(html, /id="edge-feed-health-note"/, "A distinct feed-outage panel must exist");
+assert.match(html, /var showClosed=verified && \\(phase==="CLOSED" \\|\\| phase==="PRE_OPEN"\\)/, "Do not render closed-session panel during open-market feed failures");
+assert.match(html, /setText\\("last-session"/, "Closed-market last-session date must be updated");
+
+// Evaluate actual market-status display transitions in isolation.
+const statusStart=html.indexOf("  function updateMarketStatusUI() {");
+const statusEnd=html.indexOf("  window.edgeApplyMarketStatus=updateMarketStatusUI;",statusStart);
+assert.ok(statusStart>0&&statusEnd>statusStart);
+const elements=new Map();
+function getEl(id){
+  if(!elements.has(id)){
+    const classes=new Set();
+    elements.set(id,{className:"",textContent:"",hidden:true,classList:{
+      toggle(cls,present){if(present)classes.add(cls);else classes.delete(cls);},
+      contains(cls){return classes.has(cls);}
+    }});
+  }
+  return elements.get(id);
+}
+const healthContext={
+  window:{edgeBackendMarketStatus:{
+    phase:"OPEN",lastFetch:Date.now()-180000,nextOpen:null
+  },edgeBackendMarketStatusCheckedAt:Date.now()},
+  document:{getElementById:getEl},
+  navigator:{onLine:true},
+  Date,
+  setText(id,value){getEl(id).textContent=String(value);}
+};
+vm.createContext(healthContext);
+vm.runInContext(html.slice(statusStart,statusEnd),healthContext);
+healthContext.updateMarketStatusUI();
+assert.equal(getEl("market-badge-text").textContent,"FEED WAIT");
+assert.equal(getEl("closed-panel").classList.contains("visible"),false,"Open market with stale feed must not show market-closed panel");
+assert.equal(getEl("edge-feed-health-note").hidden,false,"Missing live feed requires visible warning");
+assert.match(getEl("edge-feed-health-note").textContent,/LIVE DATA NOT CONFIRMED/);
+
+healthContext.window.edgeBackendMarketStatus={
+  phase:"CLOSED",
+  lastFetch:Date.now()-3600000,
+  nextOpen:new Date(Date.now()+86400000).toISOString()
+};
+healthContext.window.edgeBackendMarketStatusCheckedAt=Date.now();
+healthContext.updateMarketStatusUI();
+assert.equal(getEl("closed-panel").classList.contains("visible"),true,"Closed session may show last-session panel");
+assert.equal(getEl("edge-feed-health-note").hidden,true);
+assert.notEqual(getEl("last-session").textContent,"--","Historical session date must be populated");
+
 console.log("EDGE frontend: syntax, accessible alerts and non-overlapping polling PASS");
