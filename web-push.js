@@ -230,9 +230,15 @@
     note.textContent = "Your code is used only for this session, never saved to device storage.";
 
     box.append(title, desc, secret, buttons, status, note);
-    var anchor = document.querySelector(".market-status-bar");
-    if (anchor && anchor.parentNode) anchor.insertAdjacentElement("afterend", box);
-    else document.body.prepend(box);
+    // Put controls inside the permanent, user-operated ALERTS section.
+    // Unlike a market-data card, this section is available during an outage.
+    var slot = document.getElementById("edge-push-slot");
+    if (slot) slot.replaceChildren(box);
+    else {
+      var anchor = document.querySelector(".market-status-bar");
+      if (anchor && anchor.parentNode) anchor.insertAdjacentElement("afterend", box);
+      else document.body.prepend(box);
+    }
     els = { secret, enable: enableBtn, test: testBtn, disable: disableBtn, status };
     enableBtn.disabled = true;
     testBtn.hidden = true; disableBtn.hidden = true;
@@ -253,15 +259,26 @@
       return;
     }
 
+    var readyTimeout;
     try {
-      // Retrieve local subscription FIRST, so DISABLE always works even if
-      // the server is down or has not been configured.
-      registration = await navigator.serviceWorker.ready;
+      // Retrieve local subscription FIRST, so DISABLE works if the server fails.
+      // serviceWorker.ready can wait indefinitely if installation failed. Do not
+      // strand the settings panel on "Checking notification support…".
+      registration = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function(_, reject) {
+          readyTimeout = setTimeout(function() {
+            reject(new Error("Service worker not ready. Open EDGE online, then relaunch the Home Screen app."));
+          }, 15000);
+        })
+      ]);
       subscription = await registration.pushManager.getSubscription();
       setButtons();
     } catch (error) {
       setStatus("Browser push unavailable: " + (error.message || "unknown error"), "#ff668c");
       return;
+    } finally {
+      clearTimeout(readyTimeout);
     }
     try {
       var response = await fetch(API + "/config", { cache: "no-store" });
