@@ -29,7 +29,7 @@ assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
-assert.match(worker, /edge-shell-v5/, "Users must get a refreshed PWA shell");
+assert.match(worker, /edge-shell-v6/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
 assert.match(html, /id="edge-refresh-app"/, "Update/reload control must be accessible outside tabs");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
