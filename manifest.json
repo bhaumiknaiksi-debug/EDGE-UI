@@ -1,14 +1,29 @@
 {
-  "name": "EDGE Trading Intelligence",
+  "id": "/",
+  "name": "EDGE — Human Signal Terminal",
   "short_name": "EDGE",
-  "description": "NIFTY 50 F&O Options Intelligence Dashboard",
+  "description": "Evidence-driven NIFTY 50 derivatives decision-support.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#050508",
-  "theme_color": "#050508",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#04070b",
+  "theme_color": "#04070b",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/edge-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open EDGE",
+      "short_name": "EDGE",
+      "url": "/"
+    }
   ]
 }
