@@ -58,3 +58,33 @@ Add the Firebase `google-services.json` to the generated Android app and configu
 ## Safety invariant
 
 Native notifications are a presentation channel only. They must reflect backend-authoritative EDGE state transitions and must never calculate BUY/SELL readiness locally.
+
+## iPhone milestone: physical-device signing vs simulator build
+
+GitHub Actions **EDGE iOS Simulator Build** compiles an unsigned `App.app`
+for **iOS Simulator only**. This cannot run on a physical iPhone.
+
+For a physical iPhone, use Xcode on a Mac (or a managed macOS build/signing
+service with authorized Apple Developer credentials):
+
+1. Generate the native project with `npm run mobile:init`.
+2. Open `ios/App/App.xcodeproj` in Xcode.
+3. Choose your Apple Development team under **Signing & Capabilities**.
+4. Verify the bundle ID `com.bhaumiknaik.edge` is available to that team.
+5. For real pushes, enable **Push Notifications** for this App ID and
+   entitlement `aps-environment`; do not commit signing certificates or
+   APNs keys to GitHub.
+6. Connect the iPhone, select it as target and Run.
+
+The free Apple Personal Team can run unsigned-capability-limited apps on
+your device temporarily, but APNs/TestFlight require paid program membership.
+
+### Push transport plan
+
+- iOS: native Capacitor receives **APNs** token (not automatically an FCM token).
+- Android: Capacitor receives **FCM** token after Firebase configuration.
+- Tokens currently stay on device. Do **not** create an unauthenticated
+  public endpoint accepting tokens.
+- Push delivery will be a future backend service using authenticated
+  device enrollment, secrets kept server-side, duplicate suppression,
+  and backend-authoritative state transitions.

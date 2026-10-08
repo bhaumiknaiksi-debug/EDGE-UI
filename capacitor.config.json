@@ -2,7 +2,7 @@
   "appId": "com.bhaumiknaik.edge",
   "appName": "EDGE",
   "webDir": "www",
-  "loggingBehavior": "debug",
+  "loggingBehavior": "none",
   "backgroundColor": "#04070b",
   "plugins": {
     "SplashScreen": {
@@ -15,7 +15,12 @@
       "splashImmersive": true
     },
     "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "banner",
+        "list"
+      ]
     }
   },
   "ios": {

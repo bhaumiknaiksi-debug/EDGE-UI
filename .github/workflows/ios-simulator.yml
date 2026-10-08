@@ -1,0 +1,82 @@
+name: EDGE iOS Simulator Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "index.html"
+      - "src/mobile-entry.js"
+      - "scripts/**"
+      - ".github/workflows/ios-simulator.yml"
+  pull_request:
+    paths:
+      - "package.json"
+      - "capacitor.config.json"
+      - "index.html"
+      - "src/mobile-entry.js"
+      - "scripts/**"
+      - ".github/workflows/ios-simulator.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator:
+    runs-on: macos-26
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build EDGE web bundle
+        run: npm run mobile:build
+
+      - name: Create native iOS project
+        run: npx cap add ios
+
+      - name: Wire native APNs callbacks
+        run: npm run mobile:ios:push-bridge
+
+      - name: Sync iOS plugins and assets
+        run: npx cap sync ios
+
+      - name: Inspect Xcode project
+        run: xcodebuild -list -project ios/App/App.xcodeproj
+
+      - name: Build unsigned iOS Simulator app
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/edge-ios" \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: Verify compiled app
+        run: test -d "$RUNNER_TEMP/edge-ios/Build/Products/Debug-iphonesimulator/App.app"
+
+      - name: Package simulator-only app
+        if: github.event_name != 'pull_request'
+        run: |
+          tar -czf edge-ios-simulator-only.tar.gz \
+            -C "$RUNNER_TEMP/edge-ios/Build/Products/Debug-iphonesimulator" App.app
+
+      - name: Upload simulator-only app artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-ios-simulator-only
+          path: edge-ios-simulator-only.tar.gz
+          retention-days: 7
