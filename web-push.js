@@ -14,6 +14,8 @@
   var config = null;
   var registration = null;
   var subscription = null;
+  // A local PushManager record is not proof of server enrollment.
+  var serverRegistered = false;
   var working = false;
   var els = {};
 
@@ -27,15 +29,16 @@
     var canUse = !!(config && config.enabled && registration && !working);
     if (els.enable) els.enable.disabled = !canUse;
     if (els.test) {
-      els.test.hidden = !subscription;
-      els.test.disabled = !canUse || !subscription;
+      els.test.hidden = !subscription || !serverRegistered;
+      els.test.disabled = !canUse || !subscription || !serverRegistered;
     }
     if (els.disable) {
       els.disable.hidden = !subscription;
       // Local opt-out is always available even when the push server fails.
       els.disable.disabled = !subscription || working;
     }
-    if (els.enable) els.enable.textContent = subscription ? "RECONNECT ALERTS" : "ENABLE ALERTS";
+    if (els.enable) els.enable.textContent = subscription
+      ? (serverRegistered ? "RECONNECT ALERTS" : "REGISTER THIS DEVICE") : "ENABLE ALERTS";
   }
 
   function urlBase64ToUint8Array(base64Url) {
@@ -107,6 +110,7 @@
       if (previous && !usesCurrentVapidKey(previous, config.publicKey)) {
         await previous.unsubscribe();
         subscription = null;
+        serverRegistered = false;
         setStatus("Push keys changed. Old subscription cleared. Tap Enable Alerts again to reconnect.", "#ffaa00");
         return;
       }
@@ -119,10 +123,15 @@
       var sub = await promise;
       subscription = sub;
       setStatus("Registering this device securely…", "#ffaa00");
-      await request("/subscribe", code, { subscription: sub.toJSON() });
-      setStatus("This device is registered. Send a test to confirm delivery." +
+      var confirmation = await request("/subscribe", code, { subscription: sub.toJSON() });
+      if (!confirmation || confirmation.ok !== true || confirmation.registered !== true) {
+        throw new Error("SERVER_REGISTRATION_NOT_CONFIRMED");
+      }
+      serverRegistered = true;
+      setStatus("EDGE confirmed this device is registered. Send a test to confirm delivery." +
         (config.autoAlerts ? " Automatic alerts are enabled." : " Automatic alerts are not yet enabled on the server."), "#00ff88");
     } catch (error) {
+      serverRegistered = false;
       setStatus("Could not enable alerts: " + (error && error.name === "NotAllowedError"
         ? "permission denied. Check iPhone Settings."
         : (error && error.message ? error.message : "unknown error")) + ".",
@@ -135,6 +144,10 @@
 
   async function test() {
     if (working || !subscription) return;
+    if (!serverRegistered) {
+      setStatus("Register this device on EDGE before testing.", "#ffaa00");
+      return;
+    }
     var code = getCode();
     if (!code) return;
     working = true; setButtons(); setStatus("Sending a harmless test notification…", "#ffaa00");
@@ -142,7 +155,12 @@
       await request("/test", code, { endpoint: subscription.endpoint });
       setStatus("Test sent. Lock your iPhone and look for the EDGE notification.", "#00ff88");
     } catch (error) {
-      setStatus("Test failed: " + error.message, "#ff668c");
+      if (error.status === 404 && error.message === "DEVICE_NOT_REGISTERED") {
+        serverRegistered = false;
+        setStatus("EDGE lost this device registration. Tap REGISTER THIS DEVICE, then test again.", "#ffaa00");
+      } else {
+        setStatus("Test failed: " + error.message, "#ff668c");
+      }
     } finally { working = false; setButtons(); }
   }
 
@@ -162,7 +180,10 @@
         remoteError = new Error("Server cleanup not requested");
       }
       var locallyDisabled = await previous.unsubscribe();
-      if (locallyDisabled) subscription = null;
+      if (locallyDisabled) {
+        subscription = null;
+        serverRegistered = false;
+      }
       setStatus(locallyDisabled
         ? (remoteError
           ? "Alerts disabled on this device; server cleanup is pending."
@@ -273,6 +294,7 @@
         })
       ]);
       subscription = await registration.pushManager.getSubscription();
+      serverRegistered = false; // Local subscription may survive a server reset or prior 401.
       setButtons();
     } catch (error) {
       setStatus("Browser push unavailable: " + (error.message || "unknown error"), "#ff668c");
@@ -290,7 +312,7 @@
         return;
       }
       setStatus(subscription
-        ? "Browser permission exists. Enter the enrollment code to reconnect or send a test."
+        ? "Browser permission exists but server enrollment is unverified. Enter your code and tap REGISTER THIS DEVICE."
         : "Enter your enrollment code, then tap Enable Alerts. You control notification permission.",
         "#00e5ff");
       setButtons();
