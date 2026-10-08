@@ -26,7 +26,7 @@ async function enablePushNotifications() {
   if (!state.native) return { ok: false, reason: "NOT_NATIVE" };
 
   let permission = await getPushPermission();
-  if (permission === "prompt") {
+  if (permission === "prompt" || permission === "prompt-with-rationale") {
     const requested = await PushNotifications.requestPermissions();
     permission = requested.receive;
     state.pushPermission = permission;
