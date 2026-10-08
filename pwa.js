@@ -75,41 +75,36 @@
   }
 
   async function refreshAuthoritativeMarketStatus() {
+    // The backend, never the iPhone clock, owns exchange status.
     try {
       var response = await fetch(BACKEND_URL + "/api/v1/market/status", { cache: "no-store" });
       if (!response.ok) throw new Error("HTTP " + response.status);
       var status = await response.json();
+      if (!status || !status.serverTime || !status.phase) throw new Error("INVALID_MARKET_STATUS");
       window.edgeBackendMarketStatus = status;
-
-      var phase = String(status.phase || "CLOSED").toUpperCase();
-      var isOpen = phase === "OPEN";
-      var badge = document.getElementById("market-badge");
-      var badgeText = document.getElementById("market-badge-text");
-      var greeting = document.getElementById("session-greeting");
-      var closedPanel = document.getElementById("closed-panel");
-      var asOf = document.getElementById("data-as-of");
-
-      if (badge && badgeText) {
-        badge.className = "market-badge " + (isOpen ? "open" : "closed");
-        badgeText.textContent = phase.replace(/_/g, " ");
-      }
-      if (greeting) greeting.textContent = phase === "PRE_OPEN" ? "Pre-market" : isOpen ? "Market Live" : "Market Closed";
-
-      if (closedPanel) closedPanel.classList.toggle("visible", !isOpen);
-      if (asOf) asOf.classList.toggle("visible", !isOpen);
-
-      if (!isOpen) {
-        var next = document.getElementById("next-session");
-        var countdown = document.getElementById("time-until-open");
-        if (next) next.textContent = formatNextOpen(status.nextOpen);
-        if (countdown) countdown.textContent = status.nextOpen ? "BACKEND CALENDAR" : "--";
-      } else if (Number.isFinite(Number(status.minutesRemaining))) {
-        var until = document.getElementById("time-until-open");
-        if (until) until.textContent = Number(status.minutesRemaining) + "m";
-      }
+      window.edgeBackendMarketStatusCheckedAt = Date.now();
     } catch (e) {
-      // Keep the existing local display, but never manufacture an authoritative state.
+      // An old successful market phase is not evidence of a working feed.
+      window.edgeBackendMarketStatus = null;
+      window.edgeBackendMarketStatusCheckedAt = 0;
     }
+    if (typeof window.edgeApplyMarketStatus === "function") window.edgeApplyMarketStatus();
+  }
+
+  async function reloadLatestEdge() {
+    var button = document.getElementById("edge-refresh-app");
+    if (button) { button.disabled = true; button.textContent = "UPDATING…"; }
+    try {
+      if ("serviceWorker" in navigator) {
+        var registration = await navigator.serviceWorker.getRegistration();
+        if (registration) await registration.update();
+      }
+    } catch (_) {
+      // Still navigate with a cache-busting URL if the service-worker update fails.
+    }
+    var url = new URL(location.href);
+    url.searchParams.set("edge_refresh", String(Date.now()));
+    location.replace(url.toString());
   }
 
   window.addEventListener("beforeinstallprompt", function (event) {
@@ -122,11 +117,18 @@
     if (btn) btn.hidden = true;
   });
   window.addEventListener("online", function () { updateNetworkBanner(); refreshAuthoritativeMarketStatus(); });
-  window.addEventListener("offline", updateNetworkBanner);
+  window.addEventListener("offline", function() {
+    updateNetworkBanner();
+    window.edgeBackendMarketStatus = null;
+    window.edgeBackendMarketStatusCheckedAt = 0;
+    if (typeof window.edgeApplyMarketStatus === "function") window.edgeApplyMarketStatus();
+  });
 
   document.addEventListener("DOMContentLoaded", function () {
     addStyles();
     updateNetworkBanner();
+    var updateButton = document.getElementById("edge-refresh-app");
+    if (updateButton) updateButton.addEventListener("click", reloadLatestEdge);
     refreshAuthoritativeMarketStatus();
     setInterval(refreshAuthoritativeMarketStatus, 60000);
 
