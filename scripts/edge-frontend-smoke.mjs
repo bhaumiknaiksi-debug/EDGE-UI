@@ -132,8 +132,8 @@ assert.equal(aborted, 1);
 assert.equal(requests[3].options.signal.aborted, true);
 
 assert.match(html, /id="edge-feed-health-note"/, "A distinct feed-outage panel must exist");
-assert.match(html, /var showClosed=verified && \\(phase==="CLOSED" \\|\\| phase==="PRE_OPEN"\\)/, "Do not render closed-session panel during open-market feed failures");
-assert.match(html, /setText\\("last-session"/, "Closed-market last-session date must be updated");
+assert.ok(html.includes('var showClosed=verified && (phase==="CLOSED" || phase==="PRE_OPEN")'), "Do not render closed panel during live-feed failures");
+assert.ok(html.includes('setText("last-session"'), "Closed-market last-session date must be updated");
 
 // Evaluate actual market-status display transitions in isolation.
 const statusStart=html.indexOf("  function updateMarketStatusUI() {");
