@@ -1579,14 +1579,21 @@
           throw new Error("INVALID_SNAPSHOT_TIME");
         }
         var phase = String(data.market && data.market.phase || "UNKNOWN");
-        var isOpen = phase === "OPEN";
-        if (isOpen && Date.now() - observedAt > 120000) {
+        var authoritative = window.edgeBackendMarketStatus;
+        var checkedAt = Number(window.edgeBackendMarketStatusCheckedAt || 0);
+        var currentPhase = authoritative && checkedAt > 0 && Date.now() - checkedAt < 90000
+          ? String(authoritative.phase || "UNKNOWN") : "UNKNOWN";
+        var isOpen = phase === "OPEN" && currentPhase === "OPEN";
+        // An OPEN-phase snapshot from yesterday is historical if the exchange
+        // is now closed. Never present it as live, but permit last-session review.
+        if (phase === "OPEN" && currentPhase !== "CLOSED" && Date.now() - observedAt > 120000) {
           throw new Error("STALE_SNAPSHOT");
         }
         // Rendering might fail on malformed data: never mark a failed render as live.
         render(data);
         consecutiveFails = 0;
-        setStatus(isOpen && navigator.onLine ? "live" : (!navigator.onLine ? "offline" : "closed"));
+        setStatus(!navigator.onLine ? "offline" : isOpen ? "live" :
+          currentPhase === "CLOSED" ? "closed" : "connecting");
         var banner = document.getElementById("token-banner");
         if (banner) {
           if (data.tokenExpired) banner.classList.add("visible");
