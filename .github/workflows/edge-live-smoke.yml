@@ -1,0 +1,22 @@
+name: EDGE Live PWA & Push Probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/edge-live-smoke.mjs"
+      - ".github/workflows/edge-live-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  live-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/edge-live-smoke.mjs
