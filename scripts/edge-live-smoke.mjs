@@ -54,7 +54,7 @@ async function main() {
   // treating a single initial 503 as a dead server.
   let data, lastCode;
   for(let attempt=0;attempt<4;attempt++){
-    const r=await retrieve(BACKEND+'/api/v1/dashboard');
+    const r=await retrieve(BACKEND+'/data');
     lastCode=r.response.status;
     if(r.response.ok){
       try{data=JSON.parse(r.text)}catch(_){}
