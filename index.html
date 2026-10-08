@@ -11,6 +11,9 @@
 <meta name="theme-color" content="#050508">
 <title>EDGE ⚡ NIFTY Chaos Decoder</title>
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/edge-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/edge-icon.svg">
+<script src="/pwa.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -750,12 +753,14 @@
   .research-disclaimer { margin-top:9px;font-family:var(--mono);font-size:7px;line-height:1.5;color:var(--muted);opacity:.85; }
   .candidate-plan-grid { display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px; }
   .candidate-plan { border:1px solid var(--border);border-radius:11px;padding:10px;background:rgba(255,255,255,.018); }
-  .candidate-plan.a { border-color:rgba(0,255,136,.22); }
+  .candidate-plan.a { border-color:var(--border); }
+  .candidate-plan.a.ready { border-color:rgba(0,255,136,.38); box-shadow:0 0 14px rgba(0,255,136,.06); }
   .candidate-plan.b { border-color:rgba(255,170,0,.24); }
   .candidate-plan.c { border-color:rgba(0,229,255,.22); }
   .candidate-plan-head { display:flex;justify-content:space-between;align-items:flex-start;gap:10px; }
   .candidate-tier { font-family:var(--display);font-size:24px;line-height:1; }
-  .candidate-plan.a .candidate-tier { color:var(--accent); }
+  .candidate-plan.a .candidate-tier { color:var(--text); }
+  .candidate-plan.a.ready .candidate-tier { color:var(--accent); }
   .candidate-plan.b .candidate-tier { color:var(--amber); }
   .candidate-plan.c .candidate-tier { color:var(--cyan); }
   .candidate-strategy { font-size:12px;font-weight:500;margin-top:2px; }
@@ -2026,7 +2031,8 @@
         var contract=leg.contractId||("NIFTY "+(leg.strike||"--")+" "+(leg.type||""));
         return '<div class="candidate-leg"><span class="side">'+escapeHtml(x.side)+'</span><span class="contract">'+escapeHtml(contract)+'</span><span class="quote">'+escapeHtml(q)+'</span></div>';
       }).join(""):'<div class="candidate-meta">'+(available?"Contract legs unavailable.":"No candidate for the current market direction.")+'</div>';
-      return '<div class="candidate-plan '+tier.toLowerCase()+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
+      var readyClass=tier==="A"&&p.executionAllowed?" ready":"";
+      return '<div class="candidate-plan '+tier.toLowerCase()+readyClass+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
     }
     setSafeHTML(root,planHtml("A",plans.A)+planHtml("B",plans.B)+planHtml("C",plans.C));
   }
