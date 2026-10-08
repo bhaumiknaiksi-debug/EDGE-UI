@@ -1,6 +1,6 @@
 // EDGE PWA service worker.
 // App shell may be cached; live market/API responses are never intentionally cached.
-const CACHE = "edge-shell-v3";
+const CACHE = "edge-shell-v4";
 const SHELL = ["/", "/index.html", "/manifest.json", "/edge-icon.svg", "/offline.html", "/pwa.js", "/web-push.js"];
 
 self.addEventListener("install", event => {
@@ -27,8 +27,11 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put("/index.html", copy));
+          // A transient HTML error page must never replace the cached app shell.
+          if (response.ok && (response.headers.get("content-type") || "").includes("text/html")) {
+            const copy = response.clone();
+            event.waitUntil(caches.open(CACHE).then(cache => cache.put("/index.html", copy)));
+          }
           return response;
         })
         .catch(async () => (await caches.match("/index.html")) || caches.match("/offline.html"))
