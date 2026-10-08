@@ -8,6 +8,7 @@ const staticFiles = [
   "manifest.json",
   "offline.html",
   "pwa.js",
+  "web-push.js",
   "sw.js",
   "edge-icon.svg"
 ];
