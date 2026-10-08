@@ -74,7 +74,61 @@ if (state.native) {
     document.documentElement.dataset.edgeNative = "true";
     document.documentElement.dataset.edgePlatform = state.platform;
     try { await SplashScreen.hide(); } catch (_) {}
-    try { await getPushPermission(); } catch (_) {}
+
+    var permission = "unknown";
+    try { permission = await getPushPermission(); } catch (_) {}
+
+    var button = document.createElement("button");
+    button.id = "edge-native-alerts";
+    button.type = "button";
+    button.setAttribute("aria-label", "Enable EDGE native alerts");
+    Object.assign(button.style, {
+      position: "fixed",
+      right: "14px",
+      bottom: "calc(14px + env(safe-area-inset-bottom))",
+      zIndex: "60",
+      border: "1px solid rgba(0,229,255,.35)",
+      borderRadius: "999px",
+      background: "rgba(4,7,11,.95)",
+      color: "#00e5ff",
+      padding: "10px 12px",
+      font: "700 9px/1 'Space Mono', monospace",
+      letterSpacing: "1px"
+    });
+
+    function renderButton() {
+      if (state.pushPermission === "granted") {
+        button.textContent = state.pushRegistered ? "ALERTS READY" : "ALERTS ENABLED";
+        button.disabled = state.pushRegistered;
+      } else if (state.pushPermission === "denied") {
+        button.textContent = "ALERTS BLOCKED";
+      } else {
+        button.textContent = "ENABLE ALERTS";
+      }
+    }
+
+    button.addEventListener("click", async function () {
+      if (state.pushPermission === "denied") {
+        emit("push-permission", { permission: "denied" });
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "ENABLING…";
+      try { await enablePushNotifications(); } finally {
+        button.disabled = false;
+        renderButton();
+      }
+    });
+
+    if (permission !== "granted" || !state.pushRegistered) {
+      document.body.appendChild(button);
+      renderButton();
+    }
+
+    window.addEventListener("edge:push-registered", function () {
+      renderButton();
+    });
+
     emit("native-ready", { platform: state.platform });
   });
 }
