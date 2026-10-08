@@ -27,7 +27,8 @@ assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
 assert.match(worker, /edge-shell-v4/, "Users must get a refreshed PWA shell");
-assert.doesNotMatch(worker, /cache\.put\("\/index\.html", copy\)[\s\S]{0,200}\/\//, "unexpected cache code");
+assert.match(worker, /response\.ok && \(response\.headers\.get\("content-type"\)/,
+  "Only valid HTML responses may update the cached app shell");
 
 // Execute the real polling implementation with a controllable fake network.
 const begin = html.indexOf("  // -- Polling ----------------------------------------------------------------");
