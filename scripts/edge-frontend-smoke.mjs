@@ -44,7 +44,7 @@ assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
-assert.match(worker, /edge-shell-v6/, "Users must get a refreshed PWA shell");
+assert.match(worker, /edge-shell-v8/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
 assert.match(html, /id="edge-refresh-app"/, "Update/reload control must remain accessible in Lab");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
@@ -265,3 +265,92 @@ assert.match(html,/LAST AVAILABLE SESSION · NOT LIVE/,
   "Closed-market spot must not be presented as live");
 
 console.log("EDGE frontend: syntax, Pro-only alerts, three-call execution safety, and polling PASS");
+
+// Stitch decision and matrix must share the existing execution gate.
+simpleSandbox.navigator.onLine=true;
+simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now();
+simpleSandbox.window.edgeBackendMarketStatusCheckedAt=Date.now();
+for(const state of ['NO_TRADE','WAIT_FOR_TRIGGER','POSITION_BLOCKED','READY_INVALIDATED']){
+  simpleSandbox.renderSimpleSignals(d('A',state,true));
+  assert.notEqual(simpleEl('stitch-decision-state').textContent,'BUY NOW',state+' veto must survive redesign');
+}
+simpleSandbox.renderSimpleSignals(d('A','WAIT_FOR_TRIGGER',false));
+assert.equal(simpleEl('stitch-decision-state').textContent,'WAIT FOR TRIGGER');
+simpleSandbox.renderSimpleSignals(d('A','READY_TO_EXECUTE',true));
+assert.equal(simpleEl('stitch-decision-state').textContent,'BUY NOW');
+for(const phase of ['CLOSED','PRE_OPEN']){
+  simpleSandbox.window.edgeBackendMarketStatus.phase=phase;
+  const candidate=d('A','READY_TO_EXECUTE',true);
+  candidate.spot=25482.6;
+  candidate.decision.researchCandidatePlans={plans:{A:{available:true,legs:{buyLeg:{contractId:'<img onerror=alert(1)>',premium:112}}}}};
+  simpleSandbox.renderSimpleSignals(candidate);
+  assert.equal(simpleEl('stitch-decision-state').textContent,'MARKET CLOSED');
+  assert.match(simpleEl('stitch-matrix').innerHTML,/BLOCKED/);
+  assert.doesNotMatch(simpleEl('stitch-matrix').innerHTML,/<img/);
+  assert.match(simpleEl('stitch-matrix').innerHTML,/historical \/ unverified/);
+  assert.equal(simpleEl('simple-spot-price').textContent,'25,482.60','Top-level API spot must be supported');
+}
+assert.match(html,/data-section="lab"\] #tab-lab\{display:block!important\}/,'Simple Control must remain accessible');
+console.log('Stitch redesign: decision vetoes, blocked matrix, escaped contracts, and API spot fallback PASS');
+
+// Exercise real navigation so Simple mode can reach settings independently of data.
+const navigationElements=new Map();
+function navElement(id){
+  if(!navigationElements.has(id)){
+    const classes=new Set();
+    navigationElements.set(id,{attrs:{},listeners:{},classList:{toggle(c,on){on?classes.add(c):classes.delete(c);},contains(c){return classes.has(c);}},setAttribute(k,v){this.attrs[k]=v;},getAttribute(k){return this.attrs[k];},addEventListener(k,f){this.listeners[k]=f;}});
+  }
+  return navigationElements.get(id);
+}
+const navButtons=['radar','trade','flow','lab'].map(id=>{const b=navElement('button-'+id);b.attrs['data-edge-tab']=id;return b;});
+const navContext={document:{body:navElement('body'),getElementById:navElement,querySelectorAll(selector){return selector==='[data-edge-tab]'?navButtons:[];}},sessionStorage:{getItem(){return null;},setItem(){}},window:{scrollTo(){}}};
+vm.createContext(navContext);
+const navStart=html.indexOf('  (function initEdgeTabs(){');
+const navEnd=html.indexOf('  (function initStateDock(){',navStart);
+vm.runInContext(html.slice(navStart,navEnd),navContext);
+for(const name of ['trade','flow','lab','radar']){
+  navElement('button-'+name).listeners.click();
+  assert.equal(navElement('body').attrs['data-section'],name);
+  assert.equal(navElement('tab-'+name).classList.contains('active'),true);
+  for(const other of ['radar','trade','flow','lab'].filter(x=>x!==name))assert.equal(navElement('tab-'+other).classList.contains('active'),false);
+}
+console.log('Stitch navigation: Home, Signals, Insights and Control routing PASS');
+
+// Complete adaptation: quote sides, candidate status, history boundaries, and empty fields.
+const full=d('A','READY_TO_EXECUTE',true);
+full.spot=25482.6;
+full.decision.entry={priceReady:true,liquidityReady:true,reason:'All entry checks passed',trigger:'Reclaim resistance',invalidation:['Lose reclaimed structure']};
+full.decision.researchCandidatePlans={plans:{
+ A:{available:true,executionAllowed:true,backendStatus:'READY_TO_EXECUTE',strategy:'BULL_CALL_SPREAD',description:'Authoritative spread',legs:{buyLeg:{strike:25450,type:'CE',ask:112,bid:110,premium:111},sellLeg:{strike:25550,type:'CE',ask:62,bid:60,premium:61}}},
+ B:{available:true,strategy:'BULL_CALL_SPREAD',description:'Research spread selected near delta targets',legs:{buyLeg:{strike:25450,type:'CE',ask:112}}},
+ C:{available:false}
+}};
+simpleSandbox.window.edgeBackendMarketStatus.phase='OPEN';
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-count-ready').textContent,'2');
+assert.equal(simpleEl('stitch-count-waiting').textContent,'1');
+assert.match(simpleEl('stitch-matrix').innerHTML,/Bid ₹60.00/,'Sell legs must use bid, never ask');
+assert.match(simpleEl('stitch-matrix').innerHTML,/Research spread selected/);
+assert.equal(simpleEl('stitch-change').textContent,'Movement unavailable','Missing movement must not become zero');
+simpleSandbox.stitchFilter='INVALIDATED';simpleSandbox.renderStitchMatrix();
+assert.match(simpleEl('stitch-matrix').innerHTML,/No invalidated candidates/);
+full.decision.orchestration={status:'READY_INVALIDATED',executionAllowed:false};
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-count-ready').textContent,'0');
+assert.equal(simpleEl('stitch-count-invalidated').textContent,'2');
+assert.match(simpleEl('stitch-matrix').innerHTML,/backend invalidated/);
+simpleSandbox.stitchFilter='ALL';
+full.decision.orchestration={status:'WAIT_FOR_PRICE',executionAllowed:false};
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-decision-state').textContent,'WAIT FOR PRICE');
+const chartStamp=Date.parse('2026-10-09T09:00:00Z');
+const series=simpleSandbox.stitchChartSamples([
+ {ts:'2026-10-08T09:00:00Z',spot:24000},
+ {ts:'2026-10-09T04:00:00Z',spot:25000},
+ {ts:'2026-10-09T04:05:00Z',spot:25005},
+ {ts:'2026-10-09T10:00:00Z',spot:26000},
+ {ts:'bad',spot:4},{ts:'2026-10-09T05:00:00Z',spot:null}
+],[],chartStamp);
+assert.equal(series.length,2,'Chart must exclude other sessions, future times and missing prices');
+assert.match(html,/<polyline id="stitch-chart-line"/,'Chart is a trusted static SVG, not sanitizer-stripped HTML');
+console.log('Complete adaptation: matrix, quote sides, filters, missing data and session history PASS');
