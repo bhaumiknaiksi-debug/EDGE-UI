@@ -2208,10 +2208,11 @@
     var fetched=Number(status.lastFetch||0);
     var observed=Date.parse(String(snapshot&&snapshot.timestamp||""));
     var freshness=!!(navigator.onLine && status.phase==="OPEN" &&
+      snapshot&&snapshot.market&&snapshot.market.phase==="OPEN" &&
       checked>0 && now-checked>=0 && now-checked<=90000 &&
       fetched>0 && fetched<=now+20000 && now-fetched<=120000 &&
       Number.isFinite(observed) && observed<=now+20000 && now-observed<=90000 &&
-      status.liveDataFresh!==false);
+      status.liveDataFresh===true);
     var backendReady=orchestration.status==="READY_TO_EXECUTE" &&
       orchestration.executionAllowed===true && tier.tier==="A" && tier.executionAllowed===true;
     var aReady=freshness&&backendReady;
