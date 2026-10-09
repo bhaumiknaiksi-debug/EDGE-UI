@@ -818,6 +818,39 @@
   .funnel-row span:last-child { color:var(--text); }
   .funnel-note { font-family:var(--mono);font-size:8px;line-height:1.55;color:var(--muted);margin-top:9px; }
 
+
+  /* SIMPLE V2: only three tier calls + essential feed warnings.
+     PRO retains the complete unmodified decision/research panes. */
+  body:not(.pro-mode) .edge-tabs,
+  body:not(.pro-mode) .edge-panel,
+  body:not(.pro-mode) .market-status-bar,
+  body:not(.pro-mode) .closed-panel,
+  body:not(.pro-mode) .data-as-of,
+  body:not(.pro-mode) .edge-state-dock {display:none!important}
+  body.pro-mode #simple-signal-terminal {display:none!important}
+  .simple-terminal{width:calc(100% - 28px);max-width:580px;margin:16px auto 38px;display:grid;gap:12px}
+  .simple-tier-card{padding:20px 20px 22px;border-radius:19px;border:1px solid rgba(255,255,255,.095);
+    background:radial-gradient(circle at 100% 0,rgba(0,229,255,.045),transparent 55%),linear-gradient(160deg,#101923,#070c12);
+    box-shadow:0 11px 32px rgba(0,0,0,.22);min-height:140px}
+  .simple-tier-top{display:flex;align-items:center;gap:12px}
+  .simple-tier-letter{font-family:var(--display);font-size:24px;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;
+    border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:var(--muted)}
+  .simple-tier-letter.b{color:var(--amber);border-color:rgba(255,170,0,.22)}
+  .simple-tier-letter.c{color:var(--cyan);border-color:rgba(0,229,255,.2)}
+  .simple-tier-kind{font:11px var(--mono);letter-spacing:1.4px;color:#aac0c9}
+  .simple-tier-state{font:30px/1.1 var(--display);letter-spacing:1px;color:#bacbd4;margin:14px 0 5px}
+  .simple-tier-description{font-size:13px;line-height:1.55;color:#92aab6}
+  .simple-tier-card.state-ready{border-color:rgba(0,255,136,.6);background:linear-gradient(160deg,rgba(0,255,136,.12),#070d11)}
+  .simple-tier-card.state-ready .simple-tier-state{color:var(--accent);text-shadow:0 0 14px rgba(0,255,136,.16)}
+  .simple-tier-card.state-active-b{border-color:rgba(255,170,0,.48)}
+  .simple-tier-card.state-active-b .simple-tier-state{color:var(--amber)}
+  .simple-tier-card.state-active-c{border-color:rgba(0,229,255,.42)}
+  .simple-tier-card.state-active-c .simple-tier-state{color:var(--cyan)}
+  .simple-tier-disclaimer{padding:0 5px;font:10px/1.7 var(--mono);color:#90a6b3}
+  #tab-lab .edge-alerts-entry{margin:20px auto 12px}
+  #tab-lab .edge-recovery-tools{margin:10px auto 30px}
+  @media(max-width:430px){.simple-tier-card{padding:17px;min-height:130px}.simple-tier-state{font-size:27px}}
+
 </style>
 </head>
 <body>
@@ -854,17 +887,26 @@
 
   <div id="edge-feed-health-note" role="status" aria-live="polite" hidden></div>
 
-  <!-- Independent settings entry; never gated on successful market-data fetch. -->
-  <details class="edge-alerts-entry" id="edge-alert-settings">
-    <summary>🔔 LOCK SCREEN ALERTS · SETTINGS</summary>
-    <div id="edge-push-slot" aria-label="EDGE notification settings">
-      <p class="edge-push-placeholder">Loading alert controls… If this stays here, reopen EDGE while online to update the app.</p>
-    </div>
-  </details>
-  <div class="edge-recovery-tools" aria-label="App recovery and version">
-    <span>EDGE WEB · RECOVERY</span>
-    <button id="edge-refresh-app" type="button">UPDATE &amp; RELOAD</button>
-  </div>
+<!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
+<main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE three signal tiers">
+  <section class="simple-tier-card" id="simple-tier-a" aria-labelledby="simple-tier-a-label">
+    <div class="simple-tier-top"><span class="simple-tier-letter a">A</span><span class="simple-tier-kind" id="simple-tier-a-label">EXECUTION READY</span></div>
+    <div class="simple-tier-state" id="simple-tier-a-status" role="status">WAITING</div>
+    <p class="simple-tier-description" id="simple-tier-a-copy">Waiting for a confirmed live backend decision.</p>
+  </section>
+  <section class="simple-tier-card" id="simple-tier-b" aria-labelledby="simple-tier-b-label">
+    <div class="simple-tier-top"><span class="simple-tier-letter b">B</span><span class="simple-tier-kind" id="simple-tier-b-label">STRONG CANDIDATE</span></div>
+    <div class="simple-tier-state" id="simple-tier-b-status">WATCHING</div>
+    <p class="simple-tier-description" id="simple-tier-b-copy">Research only. Not an entry signal.</p>
+  </section>
+  <section class="simple-tier-card" id="simple-tier-c" aria-labelledby="simple-tier-c-label">
+    <div class="simple-tier-top"><span class="simple-tier-letter c">C</span><span class="simple-tier-kind" id="simple-tier-c-label">DEVELOPING</span></div>
+    <div class="simple-tier-state" id="simple-tier-c-status">WATCHING</div>
+    <p class="simple-tier-description" id="simple-tier-c-copy">Research only. Not an entry signal.</p>
+  </section>
+  <p class="simple-tier-disclaimer">Only A can authorize a trade. B and C are separate research states, not steps toward automatic approval. Recheck live prices, risk and the backend before acting.</p>
+</main>
+
 
   <!-- TOKEN EXPIRED BANNER -->
   <div class="token-banner" id="token-banner">
@@ -1280,7 +1322,7 @@
       </div>
       <div class="ev-grid">
         <div class="ev-stat"><div class="ev-stat-label">TRAIN / TEST</div><div class="ev-stat-val" id="ev-oos-split">-- / --</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">FRICTION MODEL</div><div class="ev-stat-val" id="ev-oos-friction" style="font-size:16px;">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">RESEARCH COST ASSUMPTION</div><div class="ev-stat-val" id="ev-oos-friction" style="font-size:16px;">--</div></div>
       </div>
       <div class="ev-method" id="ev-oos-cutoff">Newest observations stay untouched until the holdout check.</div>
       <div class="ev-dimension" id="ev-oos-groups"></div>
@@ -1296,7 +1338,7 @@
       <div class="ev-grid">
         <div class="ev-stat"><div class="ev-stat-label">FOLDS</div><div class="ev-stat-val" id="ev-wf-folds">--</div></div>
         <div class="ev-stat"><div class="ev-stat-label">FORWARD TEST N</div><div class="ev-stat-val" id="ev-wf-test">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">COST PROFILE</div><div class="ev-stat-val" id="ev-wf-profile" style="font-size:14px;">--</div></div>
+        <div class="ev-stat"><div class="ev-stat-label">RESEARCH COST ASSUMPTION</div><div class="ev-stat-val" id="ev-wf-profile" style="font-size:14px;">--</div></div>
         <div class="ev-stat"><div class="ev-stat-label">NET 60M COVERAGE</div><div class="ev-stat-val" id="ev-wf-net">--</div></div>
       </div>
       <div class="ev-method" id="ev-wf-method">Forward blocks must repeat before EDGE treats a pattern as replicated evidence.</div>
@@ -1317,6 +1359,19 @@
         <div class="strike-reasons" id="strike-reasons"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Settings live at the bottom of the last (LAB) tab, not above every tab. -->
+  <!-- Independent settings entry; never gated on successful market-data fetch. -->
+  <details class="edge-alerts-entry" id="edge-alert-settings">
+    <summary>🔔 LOCK SCREEN ALERTS · SETTINGS</summary>
+    <div id="edge-push-slot" aria-label="EDGE notification settings">
+      <p class="edge-push-placeholder">Loading alert controls… If this stays here, reopen EDGE while online to update the app.</p>
+    </div>
+  </details>
+  <div class="edge-recovery-tools" aria-label="App recovery and version">
+    <span>EDGE WEB · RECOVERY</span>
+    <button id="edge-refresh-app" type="button">UPDATE &amp; RELOAD</button>
   </div>
 
   </div>
@@ -1728,6 +1783,7 @@
     // Human-first presentation uses the same backend decision; it never creates a new one.
     renderHumanSummary(d);
     renderSignalJourney(d);
+    renderSimpleSignals(d);
     renderBattlefield(d);
     renderWhy(d.explain,d.bias);
 
@@ -2136,6 +2192,49 @@
       return '<div class="candidate-plan '+tier.toLowerCase()+readyClass+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
     }
     setSafeHTML(root,planHtml("A",plans.A)+planHtml("B",plans.B)+planHtml("C",plans.C));
+  }
+
+
+  // Presentation only. Never synthesize a green call from score, bias or research candidates.
+  // Backend orchestration and fresh market-status evidence must agree.
+  function renderSimpleSignals(d) {
+    var snapshot=d||lastData;
+    var decision=snapshot&&snapshot.decision||{};
+    var orchestration=decision.orchestration||{};
+    var tier=decision.signalTier||{};
+    var status=window.edgeBackendMarketStatus||{};
+    var now=Date.now();
+    var checked=Number(window.edgeBackendMarketStatusCheckedAt||0);
+    var fetched=Number(status.lastFetch||0);
+    var observed=Date.parse(String(snapshot&&snapshot.timestamp||""));
+    var freshness=!!(navigator.onLine && status.phase==="OPEN" &&
+      checked>0 && now-checked>=0 && now-checked<=90000 &&
+      fetched>0 && fetched<=now+20000 && now-fetched<=120000 &&
+      Number.isFinite(observed) && observed<=now+20000 && now-observed<=90000 &&
+      status.liveDataFresh!==false);
+    var backendReady=orchestration.status==="READY_TO_EXECUTE" &&
+      orchestration.executionAllowed===true && tier.tier==="A" && tier.executionAllowed===true;
+    var aReady=freshness&&backendReady;
+    var bActive=freshness&&!backendReady&&tier.tier==="B" && orchestration.executionAllowed!==true;
+    var cActive=freshness&&!backendReady&&tier.tier==="C" && orchestration.executionAllowed!==true;
+    function card(code,state,copy,kind) {
+      setText("simple-tier-"+code+"-status",state);
+      setText("simple-tier-"+code+"-copy",copy);
+      var el=document.getElementById("simple-tier-"+code);
+      if(el)el.className="simple-tier-card"+(kind?" state-"+kind:"");
+    }
+    var marketOpen=status.phase==="OPEN";
+    var aState=aReady?"GREEN · READY":!freshness?(marketOpen?"FEED NOT VERIFIED":"NO LIVE CALL"):"WAIT · LOCKED";
+    var aCopy=aReady?
+      "Backend confirmed execution readiness. Recheck the live Action desk in Pro before manual entry.":
+      !freshness?"A needs fresh backend market data. No trading permission.":"Required entry, risk, position or market gates have not all passed.";
+    card("a",aState,aCopy,aReady?"ready":"");
+    card("b",bActive?"STRONG CANDIDATE":"NOT ACTIVE",bActive?
+      "Backend research tier B is active. Still not cleared for entry.":
+      "Research only · no current B call.",bActive?"active-b":"");
+    card("c",cActive?"DEVELOPING":"NOT ACTIVE",cActive?
+      "Backend research tier C is active. Observe only; do not enter.":
+      "Research only · no current C call.",cActive?"active-c":"");
   }
 
   function renderSignalJourney(d) {
@@ -2563,8 +2662,7 @@
   function frictionLabel(fm) {
     fm=fm||{};
     if(fm.mode==="CALIBRATED_PROFILE" && fm.calibratedProfile){
-      var cp=fm.calibratedProfile;
-      return (cp.broker||"BROKER")+" · ₹"+(cp.brokeragePerExecutedOrderRupees||0)+"/ORDER";
+      return "ILLUSTRATIVE COSTS · BROKER NOT SET";
     }
     if(fm.mode==="STRESS") return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
     // V3 friction models predate the explicit mode field; preserve their configured state.
@@ -2576,7 +2674,7 @@
     var cp=fm.calibratedProfile;
     if(!cp) return fm.basis||"No calibrated cost profile.";
     var slip=Number(fm.slippageBps)||0;
-    return "Recorded lot sizing when available (1-lot fallback) · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
+    return "ILLUSTRATIVE RESEARCH MODEL — not your actual broker charges. NET figures are scenario results, not personal expected profits. Recorded lot sizing when available (1-lot fallback) · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
       "/executed order · STT "+cp.sttSellPct+"% sell · exchange "+cp.exchangeTransactionPct+
       "% premium · IPFT ₹"+cp.ipftPerCroreRupees+"/crore · stamp "+cp.stampDutyBuyPct+
       "% buy · GST "+cp.gstPct+"% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+
@@ -2946,12 +3044,13 @@
       setText("last-session",feedTime>0?new Date(feedTime).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short"}):"--");
     }
   }
-  window.edgeApplyMarketStatus=updateMarketStatusUI;
+  window.edgeApplyMarketStatus=function(){updateMarketStatusUI();renderSimpleSignals();};
 
   function startMarketStatusTimer() {
     updateMarketStatusUI();
+    renderSimpleSignals();
     clearInterval(marketStatusTimer);
-    marketStatusTimer=setInterval(updateMarketStatusUI,60000);
+    marketStatusTimer=setInterval(function(){updateMarketStatusUI();renderSimpleSignals();},15000);
   }
 
   // -- Boot -------------------------------------------------------------------
