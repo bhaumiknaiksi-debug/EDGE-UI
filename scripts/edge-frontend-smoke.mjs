@@ -23,17 +23,32 @@ new vm.Script(worker, { filename: "sw.js" });
 new vm.Script(pwa, { filename: "pwa.js" });
 
 const alerts = html.indexOf('id="edge-alert-settings"');
+const lab = html.indexOf('<div id="tab-lab" class="edge-panel" role="tabpanel">');
+const flow = html.indexOf('<div id="tab-flow" class="edge-panel" role="tabpanel">');
 const radar = html.indexOf('id="tab-radar"');
-assert.ok(alerts > 0 && alerts < radar, "Alert controls must remain outside market-data tabs");
+assert.ok(lab > radar && alerts > lab && alerts < flow,
+  "Alert controls must live at the bottom of Lab, not globally above all tabs");
+assert.ok(html.indexOf('id="edge-refresh-app"') > lab,
+  "Recovery controls must also move out of the global header");
+assert.ok(html.indexOf('id="simple-signal-terminal"') > 0 &&
+  html.indexOf('id="simple-signal-terminal"') < radar,
+  "Simple three-call terminal must appear before Pro panels");
+for (const t of ["a","b","c"]) {
+  assert.match(html, new RegExp('id="simple-tier-'+t+'-status"'));
+}
+assert.match(html, /body:not\(\.pro-mode\) \.edge-panel/,
+  "Simple mode must hide the full Pro dashboard");
+assert.match(html, /ILLUSTRATIVE COSTS · BROKER NOT SET/,
+  "A research fee assumption must never be presented as the user's broker");
 assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
 assert.match(worker, /edge-shell-v6/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
-assert.match(html, /id="edge-refresh-app"/, "Update/reload control must be accessible outside tabs");
+assert.match(html, /id="edge-refresh-app"/, "Update/reload control must remain accessible in Lab");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
-assert.match(html, /window\.edgeApplyMarketStatus=updateMarketStatusUI/, "UI must expose authoritative market status");
+assert.match(html, /window\.edgeApplyMarketStatus=function\(\)\{updateMarketStatusUI\(\);renderSimpleSignals\(\);\}/, "UI must refresh both market and simple-tier presentation from backend status");
 assert.doesNotMatch(html.slice(html.indexOf("  function updateMarketStatusUI()"),html.indexOf("  function startMarketStatusTimer()")), /status=getMarketStatus\(\)/, "Device clock must not set OPEN state");
 const headers = JSON.parse(vercel).headers;
 assert.ok(headers.some(x=>x.source==="/"&&x.headers.some(h=>/no-store/.test(h.value))), "Root HTML must revalidate");
@@ -137,7 +152,7 @@ assert.ok(html.includes('setText("last-session"'), "Closed-market last-session d
 
 // Evaluate actual market-status display transitions in isolation.
 const statusStart=html.indexOf("  function updateMarketStatusUI() {");
-const statusEnd=html.indexOf("  window.edgeApplyMarketStatus=updateMarketStatusUI;",statusStart);
+const statusEnd=html.indexOf("  window.edgeApplyMarketStatus=function(){updateMarketStatusUI();renderSimpleSignals();};",statusStart);
 assert.ok(statusStart>0&&statusEnd>statusStart);
 const elements=new Map();
 function getEl(id){
@@ -178,4 +193,58 @@ assert.equal(getEl("closed-panel").classList.contains("visible"),true,"Closed se
 assert.equal(getEl("edge-feed-health-note").hidden,true);
 assert.notEqual(getEl("last-session").textContent,"--","Historical session date must be populated");
 
-console.log("EDGE frontend: syntax, accessible alerts and non-overlapping polling PASS");
+
+// Run the real three-call presenter against stale, unauthorised, and confirmed data.
+const simpleStart=html.indexOf("  function renderSimpleSignals(d) {");
+const simpleEnd=html.indexOf("  function renderSignalJourney(d) {",simpleStart);
+assert.ok(simpleStart>0&&simpleEnd>simpleStart,"Simple tier presenter must exist");
+const simpleElements=new Map();
+function simpleEl(id) {
+  if(!simpleElements.has(id)) simpleElements.set(id,{textContent:"",className:""});
+  return simpleElements.get(id);
+}
+const checkedNow=Date.now();
+const simpleSandbox={
+  lastData:null,
+  document:{getElementById:simpleEl},
+  navigator:{onLine:true},
+  window:{edgeBackendMarketStatus:{phase:"OPEN",lastFetch:checkedNow,liveDataFresh:true},
+    edgeBackendMarketStatusCheckedAt:checkedNow},
+  Date,
+  setText(id,v){simpleEl(id).textContent=String(v);}
+};
+vm.createContext(simpleSandbox);
+vm.runInContext(html.slice(simpleStart,simpleEnd),simpleSandbox);
+function d(tier,status,allowed,age=0) {
+  return {timestamp:new Date(Date.now()-age).toISOString(),market:{phase:"OPEN"},decision:{
+    signalTier:{tier,executionAllowed:tier==="A"&&allowed},
+    orchestration:{status,executionAllowed:allowed}}};
+}
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
+assert.match(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Authoritative fresh A may show green");
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",false));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Execution veto must override tier display");
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true,180000));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Stale A must fail closed");
+simpleSandbox.renderSimpleSignals(d("B","WAIT_FOR_TRIGGER",false));
+assert.match(simpleEl("simple-tier-b-status").textContent,/STRONG CANDIDATE/);
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Research B must never authorize execution");
+simpleSandbox.renderSimpleSignals(d("C","NO_TRADE",false));
+assert.match(simpleEl("simple-tier-c-status").textContent,/DEVELOPING/);
+simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now()-240000;
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Stale market feed must veto green");
+simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now();
+const mismatched=d("A","READY_TO_EXECUTE",true);
+mismatched.market.phase="CLOSED";
+simpleSandbox.renderSimpleSignals(mismatched);
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Snapshot market phase must match OPEN");
+simpleSandbox.window.edgeBackendMarketStatus.liveDataFresh=undefined;
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Missing backend live-data confirmation must fail closed");
+simpleSandbox.window.edgeBackendMarketStatus.liveDataFresh=true;
+simpleSandbox.navigator.onLine=false;
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Offline mode must veto green");
+
+console.log("EDGE frontend: syntax, Pro-only alerts, three-call execution safety, and polling PASS");
