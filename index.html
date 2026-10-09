@@ -908,6 +908,10 @@
   .stitch-row-head strong{overflow-wrap:anywhere;min-width:0}.stitch-row.invalidated .stitch-state{color:var(--red)}.stitch-row.blocked .stitch-state{color:var(--muted)}.stitch-recap{padding-left:18px;color:var(--muted);font-size:13px;line-height:1.65;margin:14px 0}.stitch-recap li+li{margin-top:7px}.stitch-scenario{padding:14px 0;border-top:1px solid var(--border)}.stitch-scenario h3{font-size:13px;font-weight:600;color:var(--cyan)}.stitch-control-title{max-width:680px;margin:24px auto 12px;width:calc(100% - 28px)}.stitch-control-title h2{font-size:24px;margin:10px 0}.stitch-control-title p{font-size:13px;color:var(--muted);line-height:1.6}
   .simple-tier-disclaimer{font:11px/1.6 var(--body)}.simple-tier-description{margin-top:8px}.stitch-panel,.simple-terminal{padding-bottom:12px}.stitch-row small{overflow-wrap:anywhere}
   @media(max-width:360px){.pulse-price-row{align-items:flex-start;flex-direction:column;gap:0}.pulse-price-row>div:last-child{text-align:left}.stitch-intelligence summary{flex-wrap:wrap}.stitch-row-head{flex-wrap:wrap}.simple-session-closed>div{flex-wrap:wrap}.simple-session-closed strong{text-align:left}}
+
+  .pro-mode .human-card,.pro-mode .pulse-hero,.pro-mode .human-action,.pro-mode .signal-journey-card,.pro-mode .spot-hero,.pro-mode .level-map-card,.pro-mode .why-card{background:var(--surface);border-color:var(--border);box-shadow:none}
+  .pro-mode .human-title,.pro-mode #spot-price,.pro-mode .sr-val,.pro-mode .bias-card,.pro-mode .alpha-strike{text-shadow:none}
+  .edge-tab{transition:none}.edge-tab:hover{transform:none}
 </style>
 </head>
 <body>
@@ -2488,7 +2492,7 @@
     if(stitchObservedPrices.length&&stitchSession(stitchObservedPrices[0].time)!==stitchSession(observed))stitchObservedPrices=[];
     if(freshness&&spot!==null&&spot>0&&(!stitchObservedPrices.length||observed>stitchObservedPrices[stitchObservedPrices.length-1].time)){stitchObservedPrices.push({time:observed,price:spot});stitchObservedPrices=stitchObservedPrices.slice(-300);}
     var values=stitchChartSamples(stitchHistory,stitchObservedPrices,observed),svg=document.getElementById("stitch-chart-svg"),line=document.getElementById("stitch-chart-line");
-    if(svg)svg.hidden=values.length<2;
+    if(svg&&svg.toggleAttribute)svg.toggleAttribute("hidden",values.length<2);
     if(values.length<2){setText("stitch-chart-range","--");setText("stitch-chart-note","Price history unavailable · waiting for two timestamped observations from this session.");return;}
     var low=Math.min.apply(null,values.map(function(x){return x.price;})),high=Math.max.apply(null,values.map(function(x){return x.price;}));
     var first=values[0].time,last=values[values.length-1].time;

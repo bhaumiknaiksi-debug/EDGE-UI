@@ -21,7 +21,7 @@ function fixture(state){
  const browser=await chromium.launch();
  try {
   for(const width of [320,390,768,1280]){
-   const context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block'});
+   const context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block',reducedMotion:'reduce'});
    let current=fixture('CLOSED');const errors=[];
    await context.addInitScript(m=>{window.edgeBackendMarketStatus=m;window.edgeBackendMarketStatusCheckedAt=Date.now();},current.market);
    await context.route('**/pwa.js',r=>r.fulfill({body:''}));await context.route('**/web-push.js',r=>r.fulfill({body:''}));
@@ -30,6 +30,7 @@ function fixture(state){
    await page.goto('http://127.0.0.1:8765');await page.waitForFunction(()=>document.getElementById('stitch-decision-state').textContent==='MARKET CLOSED');
    // Invoke the existing history refresh rather than wait for its periodic timer.
    await page.evaluate(()=>pollTimeline());await page.waitForFunction(()=>document.getElementById('stitch-chart-line').getAttribute('points').length>0);
+   assert.equal(await page.locator('#stitch-chart-svg').isVisible(),true,'The populated chart must be visibly rendered');
    for(const mode of ['simple','pro']){
     await page.locator('[data-view-mode="'+mode+'"]').click();
     for(const tab of ['radar','trade','flow','lab']){
@@ -43,6 +44,7 @@ function fixture(state){
     }
    }
    if(width===390){
+    await page.screenshot({path:'visual-results/control-viewport.png'});
     await page.locator('[data-view-mode="simple"]').click();await page.locator('[data-edge-tab="radar"]').click();
     for(const state of ['READY_TO_EXECUTE','WAIT_FOR_TRIGGER','WAIT_FOR_PRICE','WAIT_FOR_LIQUIDITY','POSITION_BLOCKED','READY_INVALIDATED','NO_TRADE','STALE','PRE_OPEN']){
      current=fixture(state);await page.evaluate(f=>{window.edgeBackendMarketStatus=f.market;window.edgeBackendMarketStatusCheckedAt=Date.now();lastData=f.data;updateMarketStatusUI();renderSimpleSignals(f.data);},current);
