@@ -249,4 +249,19 @@ simpleSandbox.navigator.onLine=false;
 simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
 assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Offline mode must veto green");
 
+
+// Simple session panel mirrors the backend market status, never the device clock.
+for(const id of ["simple-session-card","simple-session-badge","simple-session-greeting",
+  "simple-session-closed","simple-time-until-open","simple-next-session","simple-last-session"]){
+  assert.ok(html.includes('id="'+id+'"'),"Missing Simple session UI "+id);
+}
+assert.match(html,/if\(simpleClosed\)simpleClosed.hidden=!showClosed/,
+  "Closed session details must depend on verified backend phase");
+assert.match(html,/setText\("simple-time-until-open",mins===null/,
+  "Countdown must reuse authoritative nextOpen calculation");
+assert.match(html,/Market status unverified · do not trade/,
+  "Unknown market status must fail closed");
+assert.match(html,/LAST AVAILABLE SESSION · NOT LIVE/,
+  "Closed-market spot must not be presented as live");
+
 console.log("EDGE frontend: syntax, Pro-only alerts, three-call execution safety, and polling PASS");
