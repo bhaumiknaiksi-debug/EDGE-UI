@@ -1,6 +1,6 @@
 // EDGE PWA service worker.
 // App shell may be cached; live market/API responses are never intentionally cached.
-const CACHE = "edge-shell-v6";
+const CACHE = "edge-shell-v7";
 const SHELL = ["/", "/index.html", "/manifest.json", "/edge-icon.svg", "/offline.html", "/pwa.js", "/web-push.js"];
 
 self.addEventListener("install", event => {

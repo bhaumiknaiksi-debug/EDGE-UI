@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="EDGE">
-<meta name="theme-color" content="#050508">
-<title>EDGE ⚡ NIFTY Chaos Decoder</title>
+<meta name="theme-color" content="#111317">
+<title>EDGE 2.0 · Trading Intelligence</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/edge-icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/edge-icon.svg">
 <script src="/pwa.js" defer></script>
 <script src="/web-push.js" defer></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
   :root {
     --bg:#04070b; --surface:#0a1119; --surface2:#0d1722; --border:#152735;
@@ -821,8 +821,7 @@
 
   /* SIMPLE V2: only three tier calls + essential feed warnings.
      PRO retains the complete unmodified decision/research panes. */
-  body:not(.pro-mode) .edge-tabs,
-  body:not(.pro-mode) .edge-panel,
+    body:not(.pro-mode) .edge-panel,
   body:not(.pro-mode) .market-status-bar,
   body:not(.pro-mode) .closed-panel,
   body:not(.pro-mode) .data-as-of,
@@ -873,19 +872,46 @@
   #tab-lab .edge-recovery-tools{margin:10px auto 30px}
   @media(max-width:430px){.simple-tier-card{padding:17px;min-height:130px}.simple-tier-state{font-size:27px}}
 
+
+  /* Stitch visual system; existing backend semantics remain authoritative. */
+  :root{--bg:#111317;--surface:#1a1c1f;--surface2:#282a2d;--border:#333a37;--accent:#6dffba;--cyan:#4cd7f6;--red:#ffb4ab;--amber:#ffbc68;--muted:#a4b3aa;--text:#e2e2e6;--body:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--sans:var(--body);--display:var(--body);--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+  body{padding-bottom:calc(100px + env(safe-area-inset-bottom));background:var(--bg)}body::before{display:none}
+  header{background:rgba(17,19,23,.96);padding:16px;gap:12px;flex-wrap:wrap}.logo{font-size:22px;font-weight:700;letter-spacing:-.7px;color:var(--text);text-shadow:none}.logo span{font:9px var(--body);letter-spacing:1px;margin-top:5px}.version-tag{font:10px var(--mono);color:var(--accent);background:var(--surface2);padding:3px 5px;border-radius:4px;vertical-align:middle}
+  .status-bar{flex-wrap:wrap;gap:8px;font-size:10px}.view-toggle{border-radius:24px;background:#0c0e11}.view-btn{min-height:34px;font:10px var(--body);font-weight:650}.view-btn.active{color:var(--accent);background:var(--surface2);border-radius:24px}.reconnect-btn{min-height:34px}
+  .edge-tabs{position:fixed!important;top:auto!important;bottom:0;left:0;right:0;z-index:60;display:grid;padding:10px 8px calc(10px + env(safe-area-inset-bottom));margin:0;border-radius:0;border:0;border-top:1px solid var(--border);background:rgba(12,14,17,.97)}
+  .edge-tab{min-height:46px;font:11px var(--body);font-weight:650;border-radius:10px;letter-spacing:.6px}.edge-tab small{font:9px var(--body);letter-spacing:0;margin-top:5px}.edge-tab.active{color:var(--accent);background:rgba(109,255,186,.08);border-color:transparent;box-shadow:none}
+  .edge-state-dock{bottom:calc(88px + env(safe-area-inset-bottom))!important}
+  .simple-terminal,.stitch-panel{max-width:680px;width:calc(100% - 28px);margin:16px auto 30px;gap:14px}
+  .simple-session-card,.simple-market-card,.simple-tier-card,.stitch-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:none;padding:18px;min-height:0}
+  .simple-session-header{font:10px var(--mono);letter-spacing:.4px}#simple-session-badge{padding:5px 8px;color:var(--cyan);border-color:var(--border)}
+  .simple-session-closed>div{font-size:10px}.simple-market-label,.stitch-kicker{font:10px var(--mono);letter-spacing:1px;color:var(--muted);text-transform:uppercase}.simple-market-price{font:650 36px/1.25 var(--body);letter-spacing:-1px;margin:10px 0}.simple-market-tags span{border-color:var(--border);color:var(--muted);font-size:10px}.simple-market-note{font-size:10px;line-height:1.5}
+  .simple-tier-state{font:650 20px/1.3 var(--body);letter-spacing:0;text-shadow:none!important}.simple-tier-letter{font:650 15px var(--body);width:30px;height:30px;border-radius:8px}.simple-tier-kind{font:10px var(--mono);letter-spacing:.5px}.simple-tier-description{color:var(--muted);font-size:13px}.simple-tier-contracts{font-size:11px;padding:10px}.simple-tier-card.state-ready{background:rgba(109,255,186,.06);border-color:var(--accent)}
+  .stitch-decision{border-left:3px solid var(--amber)}.stitch-decision.ready{border-color:var(--accent)}.stitch-decision h1{font-size:27px;letter-spacing:-.8px;margin:9px 0}.stitch-card p{font-size:13px;line-height:1.6;color:var(--muted);margin-top:8px}.stitch-card h2{font-size:17px;margin:8px 0 14px}.stitch-levels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.stitch-levels div{border-radius:8px;background:#0c0e11;padding:11px}.stitch-levels strong{display:block;font:15px var(--mono);margin-top:6px}.stitch-chart{margin-top:14px;background:#0c0e11;border-radius:8px;padding:12px}.stitch-chart svg{width:100%;height:70px;display:block}.stitch-chart small{font:9px var(--mono);color:var(--muted)}
+  .stitch-row{border-top:1px solid var(--border);padding:12px 0}.stitch-row-head{display:flex;justify-content:space-between;gap:12px;font-size:13px}.stitch-row small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:7px}.stitch-state{font:9px var(--mono);color:var(--amber);white-space:nowrap}.stitch-row.ready .stitch-state{color:var(--accent)}
+  .stitch-panel{display:none}.pro-mode .stitch-panel{display:none!important}
+  body:not(.pro-mode)[data-section="radar"] #simple-signal-terminal{display:grid}
+  body:not(.pro-mode):not([data-section="radar"]) #simple-signal-terminal{display:none}
+  body:not(.pro-mode)[data-section="trade"] #stitch-signals,body:not(.pro-mode)[data-section="flow"] #stitch-insights{display:grid}
+  body:not(.pro-mode)[data-section="lab"] #tab-lab{display:block!important}
+  body:not(.pro-mode) #tab-lab>.section-wrap{display:none}
+  .card,.bias-card,.decision-card,.lab-manifesto{background:var(--surface);border-color:var(--border);box-shadow:none;border-radius:14px}.card-label{font-size:10px}.card{padding:18px}.edge-recovery-tools{flex-wrap:wrap}
+  button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  @media(max-width:430px){header{padding:12px 14px}.status-bar{width:100%}.view-toggle{margin-left:auto}.simple-session-header{flex-wrap:wrap}.simple-contract-leg{flex-wrap:wrap}.simple-market-price{font-size:32px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
-  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">MARKET<small>what's happening?</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">ACTION<small>what should I do?</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">DETAILS<small>show me the data</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">LAB<small>does it actually work?</small></button>
+  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">HOME<small>market pulse</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">SIGNALS<small>strike monitor</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">INSIGHTS<small>market context</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">CONTROL<small>settings &amp; evidence</small></button>
 </nav>
 
   <!-- HEADER -->
   <header>
-    <div><div class="logo">EDGE <span>HUMAN SIGNAL TERMINAL</span></div></div>
+    <div><div class="logo">EDGE <b class="version-tag">2.0</b><span>CLARITY BEFORE CONVICTION</span></div></div>
     <div class="status-bar">
       <div class="dot" id="dot"></div>
       <span id="ws-status">CONNECTING</span>
@@ -925,7 +951,14 @@
     <div class="simple-market-price" id="simple-spot-price">--</div>
     <div class="simple-market-tags"><span id="simple-expiry">Expiry unavailable</span><span id="simple-dte">--</span><span id="simple-volatility">Volatility unavailable</span></div>
     <div class="simple-market-note" id="simple-market-note">Waiting for live market data</div>
+    <div class="stitch-chart" id="stitch-chart"><small>Observed prices will appear after two verified updates.</small></div>
+    <div class="stitch-levels"><div><span class="stitch-kicker">Support area</span><strong id="stitch-support">--</strong></div><div><span class="stitch-kicker">Resistance area</span><strong id="stitch-resistance">--</strong></div></div>
   </section>
+  <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
+    <div class="stitch-kicker">YOUR NEXT MOVE</div><h1 id="stitch-decision-state" role="status">VERIFYING</h1>
+    <p id="stitch-decision-copy">Waiting for confirmed backend data.</p>
+  </section>
+  <div class="stitch-kicker">THREE SIGNAL TIERS · SEPARATE RESEARCH STATES</div>
   <section class="simple-tier-card" id="simple-tier-a" aria-labelledby="simple-tier-a-label">
     <div class="simple-tier-top"><span class="simple-tier-letter a">A</span><span class="simple-tier-kind" id="simple-tier-a-label">EXECUTION READY</span></div>
     <div class="simple-tier-state" id="simple-tier-a-status" role="status">WAITING</div>
@@ -946,6 +979,12 @@
   </section>
   <p class="simple-tier-disclaimer">Only A can authorize a trade. B and C are separate research states, not steps toward automatic approval. Recheck live prices, risk and the backend before acting.</p>
 </main>
+<section class="stitch-panel" id="stitch-signals" aria-label="Signals Matrix">
+  <div class="stitch-card"><div class="stitch-kicker">SIGNALS MATRIX</div><h2>Strikes under radar</h2><p id="stitch-matrix-note">Waiting for backend candidates.</p><div id="stitch-matrix"></div></div>
+</section>
+<section class="stitch-panel" id="stitch-insights" aria-label="Market insights">
+  <div class="stitch-card"><div class="stitch-kicker" id="stitch-briefing-label">MARKET CONTEXT</div><h2>Clarity before conviction</h2><p id="stitch-briefing-time">No verified snapshot yet.</p><p id="stitch-briefing-story">Waiting for market context.</p><div class="stitch-levels"><div><span class="stitch-kicker">Previous day high</span><strong id="stitch-prev-high">--</strong></div><div><span class="stitch-kicker">Previous day low</span><strong id="stitch-prev-low">--</strong></div></div><p>These are reference areas, not entry instructions. Next-session scenarios require fresh backend confirmation.</p></div>
+</section>
 
 
   <!-- TOKEN EXPIRED BANNER -->
@@ -2291,6 +2330,8 @@
       setSafeHTML(document.getElementById("simple-tier-"+code+"-contracts"),html);
     });
 
+    if(typeof renderStitchPresentation==="function")renderStitchPresentation(snapshot,freshness,aReady);
+
     var bActive=freshness&&!backendReady&&tier.tier==="B" && orchestration.executionAllowed!==true;
     var cActive=freshness&&!backendReady&&tier.tier==="C" && orchestration.executionAllowed!==true;
     function card(code,state,copy,kind) {
@@ -2311,6 +2352,70 @@
     card("c",cActive?"DEVELOPING":"NOT ACTIVE",cActive?
       "Backend research tier C is active. Observe only; do not enter.":
       "Research only · no current C call.",cActive?"active-c":"");
+  }
+
+  // Presentation receives the existing strict gate result; it cannot authorize entry.
+  var stitchObservedPrices=[];
+  function renderStitchPresentation(snapshot,freshness,aReady){
+    var d=snapshot||{},dec=d.decision||{},o=dec.orchestration||{};
+    var market=d.market||{},phase=(window.edgeBackendMarketStatus||{}).phase;
+    var closed=phase==="CLOSED"||phase==="PRE_OPEN";
+    var state=aReady?"BUY NOW":closed?"MARKET CLOSED":!freshness?"DATA NOT VERIFIED":
+      o.status==="WAIT_FOR_TRIGGER"?"WAIT FOR TRIGGER":o.status==="POSITION_BLOCKED"?"POSITION BLOCKED":
+      o.status==="READY_INVALIDATED"?"INVALIDATED":"NO TRADE";
+    setText("stitch-decision-state",state);
+    var reason=o.summary||o.reason||dec.reason;
+    setText("stitch-decision-copy",aReady?"All existing backend execution gates passed. Verify live prices and risk before manual entry.":
+      closed?"Entries are locked. Review the last available snapshot in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":
+      typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
+    var card=document.getElementById("stitch-decision");if(card)card.className="stitch-card stitch-decision"+(aReady?" ready":"");
+    function number(v){return v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))?Number(v):null;}
+    function price(v){var n=number(v);return n!==null&&n>0?n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"--";}
+    // Both current API layouts are supported, with no estimated prices.
+    var spot=number(market.spotPrice??market.spot??market.niftySpot??d.spot);
+    setText("simple-spot-price",price(spot));
+    var expiry=market.expiryDate||market.expiry||d.expiryDate||d.expiry;
+    setText("simple-expiry",expiry?"EXPIRY "+String(expiry):"Expiry unavailable");
+    var dte=number(market.daysToExpiry??market.dte??d.dte);
+    setText("simple-dte",dte!==null?dte+" DAYS LEFT":"--");
+    setText("stitch-support",price(d.support&&d.support.strike));
+    setText("stitch-resistance",price(d.resistance&&d.resistance.strike));
+    var chart=market.chartIntelligence||market.context&&market.context.chartIntelligence||{};
+    setText("stitch-briefing-label",closed?"MARKET CLOSED · LAST AVAILABLE BRIEFING":"MARKET CONTEXT");
+    var observed=Date.parse(String(d.timestamp||""));
+    setText("stitch-briefing-time",Number.isFinite(observed)?"Snapshot: "+new Date(observed).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST · "+(freshness?"live verified":"historical / unverified; not an entry signal"):"Snapshot timestamp unavailable.");
+    setText("stitch-briefing-story",chart.story&&chart.story.headline||"A verified market recap is unavailable. Open Pro for existing research detail.");
+    setText("stitch-prev-high",price(chart.previousDay&&chart.previousDay.high));
+    setText("stitch-prev-low",price(chart.previousDay&&chart.previousDay.low));
+    var plans=dec.researchCandidatePlans&&dec.researchCandidatePlans.plans||{};
+    var rows=[];
+    ["A","B","C"].forEach(function(t){
+      var p=plans[t]||{},legs=p.legs||{};
+      if(!p.available)return;
+      ["buyLeg","sellLeg","ceShort","ceLong","peShort","peLong"].forEach(function(key){
+        var leg=legs[key];if(!leg||!(leg.contractId||leg.strike))return;
+        var contract=leg.contractId||"NIFTY "+leg.strike+" "+(leg.type||"");
+        var ready=t==="A"&&aReady;
+        var label=ready?"READY":closed||!freshness?"BLOCKED":t==="A"?state:"WATCHING";
+        var ask=number(leg.ask),ltp=number(leg.premium);
+        var quote=ask!==null&&ask>0?"Ask ₹"+ask.toFixed(2):ltp!==null&&ltp>0?"LTP ₹"+ltp.toFixed(2):"Quote unavailable";
+        var note=t==="A"?document.getElementById("stitch-decision-copy").textContent:"Research candidate only. No execution permission.";
+        rows.push('<div class="stitch-row'+(ready?' ready':'')+'"><div class="stitch-row-head"><strong>'+escapeHtml(contract)+'</strong><span class="stitch-state">'+escapeHtml(label)+'</span></div><small>'+escapeHtml("Tier "+t+" · "+key.replace(/([A-Z])/g," $1")+" · "+quote+" · "+(freshness?"current snapshot":"historical / unverified"))+'</small><small>'+escapeHtml(note)+'</small></div>');
+      });
+    });
+    setText("stitch-matrix-note","Actual backend candidate contracts. Quotes are references; recheck before entry.");
+    setSafeHTML(document.getElementById("stitch-matrix"),rows.join("")||'<p>No backend-confirmed candidate contracts available.</p>');
+    // A local, honestly labeled trace, never a fictional full-session chart.
+    var session=Number.isFinite(observed)?new Date(observed).toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}):null;
+    if(stitchObservedPrices.length&&stitchObservedPrices[0].session!==session)stitchObservedPrices=[];
+    if(freshness&&spot!==null&&spot>0&&(!stitchObservedPrices.length||observed>stitchObservedPrices[stitchObservedPrices.length-1].time)){
+      stitchObservedPrices.push({time:observed,price:spot,session:session});stitchObservedPrices=stitchObservedPrices.slice(-60);
+    }
+    var values=stitchObservedPrices;
+    if(values.length<2){setSafeHTML(document.getElementById("stitch-chart"),'<small>Chart unavailable · needs two verified updates while this screen is open.</small>');return;}
+    var low=Math.min.apply(null,values.map(function(x){return x.price;})),high=Math.max.apply(null,values.map(function(x){return x.price;}));
+    var points=values.map(function(x,i){return (i*320/(values.length-1)).toFixed(1)+","+(60-(x.price-low)/(high-low||1)*50).toFixed(1);}).join(" ");
+    setSafeHTML(document.getElementById("stitch-chart"),'<svg viewBox="0 0 320 70" role="img" aria-label="Verified NIFTY prices observed in this browser session"><polyline points="'+points+'" fill="none" stroke="'+(freshness?'#6dffba':'#a4b3aa')+'" stroke-width="2"/></svg><small>OBSERVED IN THIS SCREEN · '+values.length+' verified updates'+(freshness?'':' · HISTORICAL / NOT LIVE')+'</small>');
   }
 
   function renderSignalJourney(d) {
@@ -3168,6 +3273,7 @@
       lab: document.getElementById('tab-lab')
     };
     function showTab(name){
+      document.body.setAttribute('data-section',name);
       tabs.forEach(function(t){ var on=t.getAttribute('data-edge-tab')===name; t.classList.toggle('active',on); t.setAttribute('aria-selected',on?'true':'false'); });
       Object.keys(panels).forEach(function(k){ if(panels[k]) panels[k].classList.toggle('active',k===name); });
       var dock=document.getElementById('edge-state-dock'); if(dock) dock.classList.toggle('hidden',name==='lab');
