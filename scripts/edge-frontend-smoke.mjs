@@ -211,7 +211,9 @@ const simpleSandbox={
   window:{edgeBackendMarketStatus:{phase:"OPEN",lastFetch:checkedNow,liveDataFresh:true},
     edgeBackendMarketStatusCheckedAt:checkedNow},
   Date,
-  setText(id,v){simpleEl(id).textContent=String(v);}
+  setText(id,v){simpleEl(id).textContent=String(v);},
+  escapeHtml(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\x27/g,"&#039;");},
+  setSafeHTML(el,v){if(el)el.innerHTML=String(v); }
 };
 vm.createContext(simpleSandbox);
 vm.runInContext(html.slice(simpleStart,simpleEnd),simpleSandbox);
