@@ -206,7 +206,7 @@ function simpleEl(id) {
 const checkedNow=Date.now();
 const simpleSandbox={
   lastData:null,
-  document:{getElementById:simpleEl},
+  document:{getElementById:simpleEl,querySelector(sel){return sel===".simple-market-label"?simpleEl("simple-market-label"):null;}},
   navigator:{onLine:true},
   window:{edgeBackendMarketStatus:{phase:"OPEN",lastFetch:checkedNow,liveDataFresh:true},
     edgeBackendMarketStatusCheckedAt:checkedNow},
