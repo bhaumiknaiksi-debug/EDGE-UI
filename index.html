@@ -828,6 +828,18 @@
   body:not(.pro-mode) .data-as-of,
   body:not(.pro-mode) .edge-state-dock {display:none!important}
   body.pro-mode #simple-signal-terminal {display:none!important}
+  .simple-session-card{border:1px solid rgba(110,145,164,.28);border-radius:19px;padding:18px 20px;background:linear-gradient(155deg,#0e1b26,#080f16)}
+  .simple-session-header{display:flex;justify-content:space-between;align-items:center;gap:12px;font:12px var(--mono);letter-spacing:1px}
+  #simple-session-badge{color:#ff647c;border:1px solid rgba(255,75,114,.38);padding:8px 12px;border-radius:24px}
+  .simple-session-card.session-open #simple-session-badge{color:var(--accent);border-color:rgba(0,255,136,.4)}
+  #simple-session-greeting{color:#92a9b7;text-align:right}
+  .simple-session-closed{margin-top:16px}
+  .simple-session-closed:not([hidden]){display:block}
+  .simple-session-closed>div{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-top:1px solid rgba(255,255,255,.09);font:12px var(--mono)}
+  .simple-session-closed span{color:#8da6b6;letter-spacing:1px}
+  .simple-session-closed strong{text-align:right;color:#dceaf0}
+  #simple-time-until-open{color:var(--amber)}
+  #simple-session-note{margin-top:12px;font:11px/1.5 var(--mono);color:#9baeb9}
   .simple-market-card{padding:22px 20px;border:1px solid rgba(0,229,255,.3);border-radius:19px;background:linear-gradient(140deg,#0d1a23,#071018)}
   .simple-market-label{font:12px var(--mono);letter-spacing:2px;color:var(--accent)}
   .simple-market-price{font:clamp(34px,8vw,52px)/1.2 var(--display);color:#e7f6ef;margin:8px 0}
@@ -899,6 +911,15 @@
 
 <!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
 <main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE market and three signal tiers">
+  <section class="simple-session-card" id="simple-session-card" aria-label="Exchange session status">
+    <div class="simple-session-header"><span id="simple-session-badge">VERIFYING</span><span id="simple-session-greeting">Checking market status</span></div>
+    <div class="simple-session-closed" id="simple-session-closed" hidden>
+      <div><span>MARKET OPENS IN</span><strong id="simple-time-until-open">--</strong></div>
+      <div><span>NEXT MARKET OPEN</span><strong id="simple-next-session">--</strong></div>
+      <div><span>LAST SESSION</span><strong id="simple-last-session">--</strong></div>
+    </div>
+    <p id="simple-session-note">Waiting for backend market status</p>
+  </section>
   <section class="simple-market-card" aria-label="Current NIFTY market">
     <div class="simple-market-label">NIFTY 50 · RIGHT NOW</div>
     <div class="simple-market-price" id="simple-spot-price">--</div>
@@ -2241,7 +2262,11 @@
     setText("simple-dte",Number.isFinite(Number(dte))&&dte!==undefined&&dte!==null?String(dte)+" DAYS LEFT":"--");
     var volatility=market.volatilityRegime||market.volatilityLabel||snapshot&&snapshot.decision&&snapshot.decision.volatilityRegime;
     setText("simple-volatility",volatility?String(volatility).replace(/_/g," "):"Volatility unavailable");
-    setText("simple-market-note",freshness?"LIVE BACKEND DATA":"DATA NOT VERIFIED · DO NOT TRADE");
+    setText("simple-market-note",freshness?"LIVE BACKEND DATA":
+      status.phase==="CLOSED"||status.phase==="PRE_OPEN"?"LAST AVAILABLE SESSION · NOT LIVE":"DATA NOT VERIFIED · DO NOT TRADE");
+    var priceLabel=document.querySelector(".simple-market-label");
+    if(priceLabel)priceLabel.textContent=freshness?"NIFTY 50 · RIGHT NOW":"NIFTY 50 · LAST AVAILABLE";
+
     var backendReady=orchestration.status==="READY_TO_EXECUTE" &&
       orchestration.executionAllowed===true && tier.tier==="A" && tier.executionAllowed===true;
     var aReady=freshness&&backendReady;
@@ -3088,11 +3113,28 @@
         "MARKET STATUS UNVERIFIED · Waiting for a valid backend response.";
     }
     var next=showClosed && snapshot.nextOpen ? Date.parse(snapshot.nextOpen) : NaN;
+    // Mirror the authoritative session calendar in Simple mode.
+    var simpleCard=document.getElementById("simple-session-card");
+    var simpleClosed=document.getElementById("simple-session-closed");
+    if(simpleCard)simpleCard.classList.toggle("session-open",isLive);
+    setText("simple-session-badge",label);
+    setText("simple-session-greeting",greeting);
+    if(simpleClosed)simpleClosed.hidden=!showClosed;
+    setText("simple-session-note",!verified?"Market status unverified · do not trade":
+      isLive?"Backend reports market open and fresh feed":
+      showClosed?"Last-session prices are not live · trading locked":
+      "Live market feed not confirmed · do not trade");
+    setText("simple-next-session","--");
+    setText("simple-time-until-open","--");
+    setText("simple-last-session","--");
     if(showClosed){
       setText("next-session",Number.isFinite(next)?new Date(next).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"--");
       var mins=Number.isFinite(next)?Math.max(0,Math.ceil((next-Date.now())/60000)):null;
       setText("time-until-open",mins===null?"--":Math.floor(mins/60)+"h "+mins%60+"m");
       setText("last-session",feedTime>0?new Date(feedTime).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short"}):"--");
+      setText("simple-next-session",Number.isFinite(next)?new Date(next).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"--");
+      setText("simple-time-until-open",mins===null?"--":Math.floor(mins/60)+"h "+mins%60+"m");
+      setText("simple-last-session",feedTime>0?new Date(feedTime).toLocaleDateString("en-IN",{timeZone:"Asia/Kolkata",weekday:"short",day:"numeric",month:"short"}):"--");
     }
   }
   window.edgeApplyMarketStatus=function(){updateMarketStatusUI();renderSimpleSignals();};
