@@ -828,6 +828,16 @@
   body:not(.pro-mode) .data-as-of,
   body:not(.pro-mode) .edge-state-dock {display:none!important}
   body.pro-mode #simple-signal-terminal {display:none!important}
+  .simple-market-card{padding:22px 20px;border:1px solid rgba(0,229,255,.3);border-radius:19px;background:linear-gradient(140deg,#0d1a23,#071018)}
+  .simple-market-label{font:12px var(--mono);letter-spacing:2px;color:var(--accent)}
+  .simple-market-price{font:clamp(34px,8vw,52px)/1.2 var(--display);color:#e7f6ef;margin:8px 0}
+  .simple-market-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .simple-market-tags span{border:1px solid rgba(0,229,255,.22);border-radius:24px;padding:6px 10px;font:11px var(--mono);color:#a9d5d6}
+  .simple-market-note{font:11px var(--mono);color:#8da7af;margin-top:12px}
+  .simple-tier-contracts{margin:12px 0 8px;padding:10px 12px;border:1px solid rgba(255,255,255,.09);border-radius:10px;color:#d5e4eb;font:12px/1.7 var(--mono);overflow-wrap:anywhere}
+  .simple-contract-leg{display:flex;justify-content:space-between;gap:10px}
+  .simple-contract-side{color:#9ab2bd}
+  .simple-contract-note{font:10px/1.5 var(--mono);color:#93a9b4;margin-top:5px}
   .simple-terminal{width:calc(100% - 28px);max-width:580px;margin:16px auto 38px;display:grid;gap:12px}
   .simple-tier-card{padding:20px 20px 22px;border-radius:19px;border:1px solid rgba(255,255,255,.095);
     background:radial-gradient(circle at 100% 0,rgba(0,229,255,.045),transparent 55%),linear-gradient(160deg,#101923,#070c12);
@@ -888,21 +898,21 @@
   <div id="edge-feed-health-note" role="status" aria-live="polite" hidden></div>
 
 <!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
-<main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE three signal tiers">
+<main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE market and three signal tiers">\n  <section class="simple-market-card" aria-label="Current NIFTY market">\n    <div class="simple-market-label">NIFTY 50 · RIGHT NOW</div>\n    <div class="simple-market-price" id="simple-spot-price">--</div>\n    <div class="simple-market-tags"><span id="simple-expiry">Expiry unavailable</span><span id="simple-dte">--</span><span id="simple-volatility">Volatility unavailable</span></div>\n    <div class="simple-market-note" id="simple-market-note">Waiting for live market data</div>\n  </section>
   <section class="simple-tier-card" id="simple-tier-a" aria-labelledby="simple-tier-a-label">
     <div class="simple-tier-top"><span class="simple-tier-letter a">A</span><span class="simple-tier-kind" id="simple-tier-a-label">EXECUTION READY</span></div>
     <div class="simple-tier-state" id="simple-tier-a-status" role="status">WAITING</div>
-    <p class="simple-tier-description" id="simple-tier-a-copy">Waiting for a confirmed live backend decision.</p>
+    <div class="simple-tier-contracts" id="simple-tier-a-contracts">Contracts loading…</div>\n    <p class="simple-tier-description" id="simple-tier-a-copy">Waiting for a confirmed live backend decision.</p>
   </section>
   <section class="simple-tier-card" id="simple-tier-b" aria-labelledby="simple-tier-b-label">
     <div class="simple-tier-top"><span class="simple-tier-letter b">B</span><span class="simple-tier-kind" id="simple-tier-b-label">STRONG CANDIDATE</span></div>
     <div class="simple-tier-state" id="simple-tier-b-status">WATCHING</div>
-    <p class="simple-tier-description" id="simple-tier-b-copy">Research only. Not an entry signal.</p>
+    <div class="simple-tier-contracts" id="simple-tier-b-contracts">Contracts loading…</div>\n    <p class="simple-tier-description" id="simple-tier-b-copy">Research only. Not an entry signal.</p>
   </section>
   <section class="simple-tier-card" id="simple-tier-c" aria-labelledby="simple-tier-c-label">
     <div class="simple-tier-top"><span class="simple-tier-letter c">C</span><span class="simple-tier-kind" id="simple-tier-c-label">DEVELOPING</span></div>
     <div class="simple-tier-state" id="simple-tier-c-status">WATCHING</div>
-    <p class="simple-tier-description" id="simple-tier-c-copy">Research only. Not an entry signal.</p>
+    <div class="simple-tier-contracts" id="simple-tier-c-contracts">Contracts loading…</div>\n    <p class="simple-tier-description" id="simple-tier-c-copy">Research only. Not an entry signal.</p>
   </section>
   <p class="simple-tier-disclaimer">Only A can authorize a trade. B and C are separate research states, not steps toward automatic approval. Recheck live prices, risk and the backend before acting.</p>
 </main>
@@ -2213,9 +2223,39 @@
       fetched>0 && fetched<=now+20000 && now-fetched<=120000 &&
       Number.isFinite(observed) && observed<=now+20000 && now-observed<=90000 &&
       status.liveDataFresh===true);
+    var market=snapshot&&snapshot.market||{};
+    var spot=Number(market.spotPrice??market.spot??market.niftySpot);
+    setText("simple-spot-price",Number.isFinite(spot)&&spot>0?spot.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"--");
+    var expiry=market.expiryDate||market.expiry||snapshot&&snapshot.expiryDate;
+    setText("simple-expiry",expiry?"EXPIRY "+String(expiry):"Expiry unavailable");
+    var dte=market.daysToExpiry??market.dte;
+    setText("simple-dte",Number.isFinite(Number(dte))&&dte!==undefined&&dte!==null?String(dte)+" DAYS LEFT":"--");
+    var volatility=market.volatilityRegime||market.volatilityLabel||snapshot&&snapshot.decision&&snapshot.decision.volatilityRegime;
+    setText("simple-volatility",volatility?String(volatility).replace(/_/g," "):"Volatility unavailable");
+    setText("simple-market-note",freshness?"LIVE BACKEND DATA":"DATA NOT VERIFIED · DO NOT TRADE");
     var backendReady=orchestration.status==="READY_TO_EXECUTE" &&
       orchestration.executionAllowed===true && tier.tier==="A" && tier.executionAllowed===true;
-    var aReady=freshness&&backendReady;
+    var aReady=freshness&&backendReady;\n    var plans=decision.researchCandidatePlans&&decision.researchCandidatePlans.plans||{};
+    ["a","b","c"].forEach(function(code){
+      var p=plans[code.toUpperCase()]||{};
+      var names={LONG_CALL:"Long Call",LONG_PUT:"Long Put",BULL_CALL_SPREAD:"Bull Call Spread",BEAR_PUT_SPREAD:"Bear Put Spread",BULL_PUT_SPREAD:"Bull Put Spread",BEAR_CALL_SPREAD:"Bear Call Spread",IRON_CONDOR:"Iron Condor"};
+      var legs=[];
+      [["buyLeg","BUY"],["sellLeg","SELL"],["ceShort","SELL"],["ceLong","BUY"],["peShort","SELL"],["peLong","BUY"]].forEach(function(entry){
+        var leg=p.legs&&p.legs[entry[0]];
+        if(leg&&(leg.contractId||leg.strike)){
+          var contract=String(leg.contractId||("NIFTY "+leg.strike+" "+(leg.type||"")));
+          var quote=Number(leg.ask??leg.premium);
+          legs.push('<div class="simple-contract-leg"><span class="simple-contract-side">'+escapeHtml(entry[1])+'</span><span>'+escapeHtml(contract)+(Number.isFinite(quote)&&quote>0?' · ₹'+quote.toFixed(2):'')+'</span></div>');
+        }
+      });
+      var title=escapeHtml(names[p.strategy]||String(p.strategy||"No structure"));
+      var note=code==="a"&&!aReady?"ENTRY LOCKED · INDICATIVE ONLY":"RESEARCH ONLY · NOT AN ENTRY";
+      if(code==="a"&&aReady)note="BACKEND READY · VERIFY LIVE EXECUTION";
+      var html=p.available&&legs.length?'<strong>'+title+'</strong>'+legs.join("")+'<div class="simple-contract-note">'+note+'</div>':
+        '<span class="simple-contract-note">No backend-confirmed contract available</span>';
+      setSafeHTML(document.getElementById("simple-tier-"+code+"-contracts"),html);
+    });
+
     var bActive=freshness&&!backendReady&&tier.tier==="B" && orchestration.executionAllowed!==true;
     var cActive=freshness&&!backendReady&&tier.tier==="C" && orchestration.executionAllowed!==true;
     function card(code,state,copy,kind) {
