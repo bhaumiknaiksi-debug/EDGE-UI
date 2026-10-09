@@ -888,10 +888,10 @@
   .simple-tier-state{font:650 20px/1.3 var(--body);letter-spacing:0;text-shadow:none!important}.simple-tier-letter{font:650 15px var(--body);width:30px;height:30px;border-radius:8px}.simple-tier-kind{font:10px var(--mono);letter-spacing:.5px}.simple-tier-description{color:var(--muted);font-size:13px}.simple-tier-contracts{font-size:11px;padding:10px}.simple-tier-card.state-ready{background:rgba(109,255,186,.06);border-color:var(--accent)}
   .stitch-decision{border-left:3px solid var(--amber)}.stitch-decision.ready{border-color:var(--accent)}.stitch-decision h1{font-size:27px;letter-spacing:-.8px;margin:9px 0}.stitch-card p{font-size:13px;line-height:1.6;color:var(--muted);margin-top:8px}.stitch-card h2{font-size:17px;margin:8px 0 14px}.stitch-levels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.stitch-levels div{border-radius:8px;background:#0c0e11;padding:11px}.stitch-levels strong{display:block;font:15px var(--mono);margin-top:6px}.stitch-chart{margin-top:14px;background:#0c0e11;border-radius:8px;padding:12px}.stitch-chart svg{width:100%;height:70px;display:block}.stitch-chart small{font:9px var(--mono);color:var(--muted)}
   .stitch-row{border-top:1px solid var(--border);padding:12px 0}.stitch-row-head{display:flex;justify-content:space-between;gap:12px;font-size:13px}.stitch-row small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:7px}.stitch-state{font:9px var(--mono);color:var(--amber);white-space:nowrap}.stitch-row.ready .stitch-state{color:var(--accent)}
-  .stitch-panel{display:none}.pro-mode .stitch-panel{display:none!important}
+  .stitch-panel{display:none}
   body:not(.pro-mode)[data-section="radar"] #simple-signal-terminal{display:grid}
   body:not(.pro-mode):not([data-section="radar"]) #simple-signal-terminal{display:none}
-  body:not(.pro-mode)[data-section="trade"] #stitch-signals,body:not(.pro-mode)[data-section="flow"] #stitch-insights{display:grid}
+  body[data-section="trade"] #stitch-signals,body[data-section="flow"] #stitch-insights{display:grid}
   body:not(.pro-mode)[data-section="lab"] #tab-lab{display:block!important}
   body:not(.pro-mode) #tab-lab>.section-wrap{display:none}
   .card,.bias-card,.decision-card,.lab-manifesto{background:var(--surface);border-color:var(--border);box-shadow:none;border-radius:14px}.card-label{font-size:10px}.card{padding:18px}.edge-recovery-tools{flex-wrap:wrap}
@@ -899,6 +899,15 @@
   @media(max-width:430px){header{padding:12px 14px}.status-bar{width:100%}.view-toggle{margin-left:auto}.simple-session-header{flex-wrap:wrap}.simple-contract-leg{flex-wrap:wrap}.simple-market-price{font-size:32px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
+
+  .pulse-price-row{display:flex;justify-content:space-between;align-items:center;gap:12px}.pulse-price-row>div:last-child{text-align:right;font:12px var(--mono)}.pulse-price-row small{display:block;font:11px var(--body);color:var(--muted);margin-top:6px}.up{color:var(--accent)}.down{color:var(--red)}
+  .stitch-chart-head{display:flex;justify-content:space-between;gap:10px;font:9px var(--mono);color:var(--muted);margin-bottom:8px}.stitch-chart svg{height:85px}.stitch-chart svg[hidden]{display:none}.stitch-chart small{display:block;line-height:1.6}
+  .stitch-intelligence details{border-top:1px solid var(--border);margin-top:12px;padding-top:12px}.stitch-intelligence summary{display:flex;justify-content:space-between;gap:12px;cursor:pointer;font-size:12px;min-height:28px}.stitch-intelligence summary strong{font:11px var(--mono);color:var(--cyan);text-align:right}.stitch-intelligence summary::after{content:'+';color:var(--muted)}.stitch-intelligence details[open] summary::after{content:'−'}
+  .stitch-tier-detail{margin-top:10px;font:11px var(--body);color:var(--muted)}.stitch-tier-detail summary{cursor:pointer;min-height:28px;line-height:28px}.stitch-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.stitch-link{background:transparent;color:var(--accent);border:0;font-size:12px;min-height:44px;white-space:nowrap;cursor:pointer}
+  .stitch-filters{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}.stitch-filters button{padding:8px 10px;min-height:36px;font:10px var(--body);border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer}.stitch-filters button[aria-pressed="true"]{color:var(--accent);border-color:var(--accent);background:rgba(109,255,186,.06)}.stitch-filters span{font:10px var(--mono);margin-left:4px}
+  .stitch-row-head strong{overflow-wrap:anywhere;min-width:0}.stitch-row.invalidated .stitch-state{color:var(--red)}.stitch-row.blocked .stitch-state{color:var(--muted)}.stitch-recap{padding-left:18px;color:var(--muted);font-size:13px;line-height:1.65;margin:14px 0}.stitch-recap li+li{margin-top:7px}.stitch-scenario{padding:14px 0;border-top:1px solid var(--border)}.stitch-scenario h3{font-size:13px;font-weight:600;color:var(--cyan)}.stitch-control-title{max-width:680px;margin:24px auto 12px;width:calc(100% - 28px)}.stitch-control-title h2{font-size:24px;margin:10px 0}.stitch-control-title p{font-size:13px;color:var(--muted);line-height:1.6}
+  .simple-tier-disclaimer{font:11px/1.6 var(--body)}.simple-tier-description{margin-top:8px}.stitch-panel,.simple-terminal{padding-bottom:12px}.stitch-row small{overflow-wrap:anywhere}
+  @media(max-width:360px){.pulse-price-row{align-items:flex-start;flex-direction:column;gap:0}.pulse-price-row>div:last-child{text-align:left}.stitch-intelligence summary{flex-wrap:wrap}.stitch-row-head{flex-wrap:wrap}.simple-session-closed>div{flex-wrap:wrap}.simple-session-closed strong{text-align:left}}
 </style>
 </head>
 <body>
@@ -948,10 +957,10 @@
   </section>
   <section class="simple-market-card" aria-label="Current NIFTY market">
     <div class="simple-market-label">NIFTY 50 · RIGHT NOW</div>
-    <div class="simple-market-price" id="simple-spot-price">--</div>
+    <div class="pulse-price-row"><div class="simple-market-price" id="simple-spot-price">--</div><div><strong id="stitch-change">Movement unavailable</strong><small id="stitch-direction">Direction unavailable</small></div></div>
     <div class="simple-market-tags"><span id="simple-expiry">Expiry unavailable</span><span id="simple-dte">--</span><span id="simple-volatility">Volatility unavailable</span></div>
     <div class="simple-market-note" id="simple-market-note">Waiting for live market data</div>
-    <div class="stitch-chart" id="stitch-chart"><small>Observed prices will appear after two verified updates.</small></div>
+    <div class="stitch-chart" id="stitch-chart"><div class="stitch-chart-head"><span>NIFTY · SESSION TRACE</span><span id="stitch-chart-range">--</span></div><svg id="stitch-chart-svg" viewBox="0 0 320 80" role="img" aria-label="Timestamped NIFTY price observations" hidden><path d="M0 20H320 M0 40H320 M0 60H320" stroke="#333a37" fill="none" stroke-dasharray="3 4"/><polyline id="stitch-chart-line" points="" fill="none" stroke="#6dffba" stroke-width="2"/></svg><small id="stitch-chart-note">Waiting for verified price history.</small></div>
     <div class="stitch-levels"><div><span class="stitch-kicker">Support area</span><strong id="stitch-support">--</strong></div><div><span class="stitch-kicker">Resistance area</span><strong id="stitch-resistance">--</strong></div></div>
   </section>
   <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
@@ -962,28 +971,35 @@
   <section class="simple-tier-card" id="simple-tier-a" aria-labelledby="simple-tier-a-label">
     <div class="simple-tier-top"><span class="simple-tier-letter a">A</span><span class="simple-tier-kind" id="simple-tier-a-label">EXECUTION READY</span></div>
     <div class="simple-tier-state" id="simple-tier-a-status" role="status">WAITING</div>
-    <div class="simple-tier-contracts" id="simple-tier-a-contracts">Contracts loading…</div>
+    <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-a-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-a-copy">Waiting for a confirmed live backend decision.</p>
   </section>
   <section class="simple-tier-card" id="simple-tier-b" aria-labelledby="simple-tier-b-label">
     <div class="simple-tier-top"><span class="simple-tier-letter b">B</span><span class="simple-tier-kind" id="simple-tier-b-label">STRONG CANDIDATE</span></div>
     <div class="simple-tier-state" id="simple-tier-b-status">WATCHING</div>
-    <div class="simple-tier-contracts" id="simple-tier-b-contracts">Contracts loading…</div>
+    <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-b-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-b-copy">Research only. Not an entry signal.</p>
   </section>
   <section class="simple-tier-card" id="simple-tier-c" aria-labelledby="simple-tier-c-label">
     <div class="simple-tier-top"><span class="simple-tier-letter c">C</span><span class="simple-tier-kind" id="simple-tier-c-label">DEVELOPING</span></div>
     <div class="simple-tier-state" id="simple-tier-c-status">WATCHING</div>
-    <div class="simple-tier-contracts" id="simple-tier-c-contracts">Contracts loading…</div>
+    <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-c-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-c-copy">Research only. Not an entry signal.</p>
   </section>
+  <section class="stitch-card stitch-intelligence"><div class="stitch-kicker">WHY EDGE SEES IT THIS WAY</div><p class="stitch-context-note" id="stitch-intelligence-note">Waiting for context.</p>
+    <details><summary><span>01 · Market direction</span><strong id="stitch-intel-direction">Unavailable</strong></summary><p id="stitch-intel-direction-copy">Waiting for chart evidence.</p></details>
+    <details><summary><span>02 · Option conditions</span><strong id="stitch-intel-options">Unavailable</strong></summary><p id="stitch-intel-options-copy">Waiting for option evidence.</p></details>
+    <details><summary><span>03 · Participation</span><strong id="stitch-intel-participation">Unavailable</strong></summary><p id="stitch-intel-participation-copy">Waiting for participation evidence.</p></details>
+  </section>
+  <section class="stitch-card"><div class="stitch-section-head"><div><div class="stitch-kicker">STRIKE WATCHLIST</div><h2>What EDGE is watching</h2></div><button type="button" data-jump-tab="trade" class="stitch-link">See all →</button></div><div id="stitch-watchlist"><p>Waiting for candidates.</p></div></section>
   <p class="simple-tier-disclaimer">Only A can authorize a trade. B and C are separate research states, not steps toward automatic approval. Recheck live prices, risk and the backend before acting.</p>
 </main>
 <section class="stitch-panel" id="stitch-signals" aria-label="Signals Matrix">
-  <div class="stitch-card"><div class="stitch-kicker">SIGNALS MATRIX</div><h2>Strikes under radar</h2><p id="stitch-matrix-note">Waiting for backend candidates.</p><div id="stitch-matrix"></div></div>
+  <div class="stitch-card"><div class="stitch-kicker">SIGNALS MATRIX</div><h2>Strikes under radar</h2><p id="stitch-matrix-note">Waiting for backend candidates.</p><div class="stitch-filters" role="group" aria-label="Filter candidate status"><button type="button" data-stitch-filter="ALL" aria-pressed="true">All <span id="stitch-count-all">0</span></button><button type="button" data-stitch-filter="READY" aria-pressed="false">Ready <span id="stitch-count-ready">0</span></button><button type="button" data-stitch-filter="WAITING" aria-pressed="false">Waiting <span id="stitch-count-waiting">0</span></button><button type="button" data-stitch-filter="BLOCKED" aria-pressed="false">Blocked <span id="stitch-count-blocked">0</span></button><button type="button" data-stitch-filter="INVALIDATED" aria-pressed="false">Invalidated <span id="stitch-count-invalidated">0</span></button></div><div id="stitch-matrix" aria-live="polite"></div></div>
 </section>
 <section class="stitch-panel" id="stitch-insights" aria-label="Market insights">
-  <div class="stitch-card"><div class="stitch-kicker" id="stitch-briefing-label">MARKET CONTEXT</div><h2>Clarity before conviction</h2><p id="stitch-briefing-time">No verified snapshot yet.</p><p id="stitch-briefing-story">Waiting for market context.</p><div class="stitch-levels"><div><span class="stitch-kicker">Previous day high</span><strong id="stitch-prev-high">--</strong></div><div><span class="stitch-kicker">Previous day low</span><strong id="stitch-prev-low">--</strong></div></div><p>These are reference areas, not entry instructions. Next-session scenarios require fresh backend confirmation.</p></div>
+  <div class="stitch-card"><div class="stitch-kicker" id="stitch-briefing-label">MARKET CONTEXT</div><h2>Clarity before conviction</h2><p id="stitch-briefing-time">No verified snapshot yet.</p><p id="stitch-briefing-story">Waiting for market context.</p><div class="stitch-levels"><div><span class="stitch-kicker">Previous day high</span><strong id="stitch-prev-high">--</strong></div><div><span class="stitch-kicker">Previous day low</span><strong id="stitch-prev-low">--</strong></div></div><div class="stitch-levels"><div><span class="stitch-kicker">Snapshot session high</span><strong id="stitch-session-high">--</strong></div><div><span class="stitch-kicker">Snapshot session low</span><strong id="stitch-session-low">--</strong></div></div><ul class="stitch-recap" id="stitch-recap"></ul><p>Reference levels describe the snapshot session; they are not trade instructions.</p></div>
+  <div class="stitch-card"><div class="stitch-kicker">CONDITIONAL PLAYBOOK</div><h2 id="stitch-scenario-title">What needs to happen next</h2><p id="stitch-scenario-note">Fresh confirmation is required.</p><div id="stitch-scenarios"></div></div>
 </section>
 
 
@@ -1261,6 +1277,7 @@
 
   </div>
 <div id="tab-lab" class="edge-panel" role="tabpanel">
+  <div class="stitch-control-title"><div class="stitch-kicker">CONTROL ROOM</div><h2>Your EDGE, your settings.</h2><p>Manage alerts and app updates below. Switch to Pro for evidence and diagnostics.</p></div>
   <div class="section-wrap">
     <div class="lab-manifesto">
       <div class="research-flag">◉ EDGE LAB · RESEARCH ONLY</div>
@@ -1606,7 +1623,7 @@
   function pollTimeline() {
     fetch(BACKEND + "/history?limit=300")
       .then(function(r) { return r.json(); })
-      .then(function(j) { renderTimeline(j.entries || []); })
+      .then(function(j) { stitchHistory=Array.isArray(j.entries)?j.entries:[]; renderTimeline(stitchHistory); if(lastData)renderSimpleSignals(lastData); })
       .catch(function(err) { if (err && err.name === "AbortError") return; /* timeline is best-effort */ });
   }
   setInterval(pollTimeline, 60000);
@@ -2354,68 +2371,133 @@
       "Research only · no current C call.",cActive?"active-c":"");
   }
 
-  // Presentation receives the existing strict gate result; it cannot authorize entry.
-  var stitchObservedPrices=[];
+  // Display-only model. The caller supplies the unchanged strict execution gate.
+  var stitchObservedPrices=[],stitchHistory=[],stitchRows=[],stitchFilter="ALL";
+  function stitchNumber(v){return v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))?Number(v):null;}
+  function stitchPrice(v){var n=stitchNumber(v);return n!==null&&n>0?n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"--";}
+  function stitchWords(v){return typeof v==="string"?v.replace(/_/g," ").toLowerCase():"unavailable";}
+  function stitchReason(code){
+    return ({NO_REGIME_EDGE:"Market direction is not clear enough",NO_STRATEGY:"No suitable strategy",SETUP_NOT_QUALIFIED:"Setup is not qualified",ENTRY_UNAVAILABLE:"Entry plan is unavailable",ENTRY_LIQUIDITY_NOT_ACCEPTABLE:"Bid/ask liquidity is not acceptable",ENTRY_PRICE_NOT_ACCEPTABLE:"Premium is outside the acceptable range",ENTRY_TRIGGER_NOT_CONFIRMED:"Entry trigger has not confirmed",RISK_NOT_READY:"Risk checks have not passed",POSITION_SIZE_BLOCKED:"Position sizing blocks this entry",POSITION_SIZE_UNAVAILABLE:"Position sizing is unavailable",MARKET_NOT_OPEN:"Market is not open",REGIME:"Market direction",STRATEGY:"Strategy selection",SETUP:"Setup confirmation",TRIGGER:"Entry trigger",PRICE:"Acceptable price",LIQUIDITY:"Tradable bid/ask quotes",RISK:"Risk limits",POSITION:"Position sizing",MARKET:"Open market"})[code]||stitchWords(code);
+  }
+  function stitchBuildRows(d,fresh,ready,phase){
+    var dec=d.decision||{},o=dec.orchestration||{},pack=dec.researchCandidatePlans||{},plans=pack.plans||{},entry=dec.entry||{};
+    var opt=dec.optionExecutionIntelligence&&dec.optionExecutionIntelligence.tiers||{};
+    var blockers=Array.isArray(o.blockers)?o.blockers:[];
+    var globalBlock=!fresh||phase!=="OPEN"||["POSITION_BLOCKED","NO_TRADE","MARKET_CLOSED"].includes(o.status);
+    var invalid=["READY_INVALIDATED","INVALIDATED"].includes(o.status);
+    var out=[];
+    ["A","B","C"].forEach(function(t){
+      var p=plans[t]||{},legs=p.legs||{},available=p.available===true;
+      var executable=t==="A"&&ready&&available&&p.executionAllowed===true&&p.backendStatus==="READY_TO_EXECUTE";
+      var state=t==="A"&&invalid?"INVALIDATED":globalBlock||!available?"BLOCKED":executable?"READY":"WAITING";
+      var reasons=[];
+      if(!fresh)reasons.push(phase==="CLOSED"||phase==="PRE_OPEN"?"Market closed; snapshot is historical":"Fresh data is not verified");
+      if(t==="A"){
+        if(invalid)reasons.push("The backend invalidated the entry");
+        reasons=reasons.concat(blockers.map(stitchReason));
+        if(typeof entry.reason==="string"&&entry.reason)reasons.push(entry.reason);
+        if(!executable&&!reasons.length)reasons.push("Strict execution permission is not confirmed");
+      }else reasons.push("Research only; this tier cannot authorize an entry");
+      if(!available)reasons.push("The backend has not supplied a contract for this tier");
+      if(p.liquidityBasis)reasons.push(stitchWords(p.liquidityBasis));
+      if(opt[t]&&opt[t].thesisAlignment)reasons.push("Option chart: "+stitchWords(opt[t].thesisAlignment));
+      var selection=typeof p.description==="string"?p.description:"Selection explanation unavailable";
+      var found=false;
+      [["buyLeg","Buy"],["sellLeg","Sell"],["ceShort","Sell"],["ceLong","Buy"],["peShort","Sell"],["peLong","Buy"]].forEach(function(pair){
+        var leg=legs[pair[0]];if(!available||!leg||!(leg.contractId||leg.strike))return;
+        found=true;
+        var bid=stitchNumber(leg.bid),ask=stitchNumber(leg.ask),ltp=stitchNumber(leg.premium);
+        var q=pair[1]==="Sell"?bid:ask,label=pair[1]==="Sell"?"Bid":"Ask";
+        if(q===null||q<=0){q=ltp;label="LTP";}
+        out.push({tier:t,state:state,contract:String(leg.contractId||"NIFTY "+leg.strike+" "+(leg.type||"")),side:pair[1],quote:q!==null&&q>0?label+" ₹"+q.toFixed(2):"Quote unavailable",selection:selection,reason:reasons.join(" · ")||"Backend entry checks passed",historical:!fresh,strategy:stitchWords(p.strategy)});
+      });
+      if(!found)out.push({tier:t,state:"BLOCKED",contract:"Tier "+t+" · No contract",side:"",quote:"Quote unavailable",selection:selection,reason:reasons.join(" · ")||"Contract details unavailable",historical:!fresh,strategy:stitchWords(p.strategy)});
+    });return out;
+  }
+  function stitchRowHTML(row,compact){
+    return '<article class="stitch-row '+row.state.toLowerCase()+'"><div class="stitch-row-head"><strong>'+escapeHtml(row.contract)+'</strong><span class="stitch-state">'+row.state+'</span></div><small>'+escapeHtml("Tier "+row.tier+" · "+row.side+" · "+row.quote+" · "+(row.historical?"historical / unverified":"current snapshot"))+'</small>'+(compact?'':'<small>'+escapeHtml(row.strategy+" · "+row.selection)+'</small>')+'<small>'+escapeHtml(row.reason)+'</small></article>';
+  }
+  function renderStitchMatrix(){
+    var rows=stitchRows.filter(function(r){return stitchFilter==="ALL"||r.state===stitchFilter;});
+    setSafeHTML(document.getElementById("stitch-matrix"),rows.map(function(r){return stitchRowHTML(r,false);}).join("")||'<p>No '+stitchFilter.toLowerCase()+' candidates in this snapshot.</p>');
+    ["ALL","READY","WAITING","BLOCKED","INVALIDATED"].forEach(function(state){setText("stitch-count-"+state.toLowerCase(),state==="ALL"?stitchRows.length:stitchRows.filter(function(r){return r.state===state;}).length);});
+    setSafeHTML(document.getElementById("stitch-watchlist"),stitchRows.slice(0,3).map(function(r){return stitchRowHTML(r,true);}).join(""));
+  }
+  function stitchSession(ts){return Number.isFinite(ts)?new Date(ts).toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}):null;}
+  function stitchChartSamples(history,observed,stamp){
+    var day=stitchSession(stamp),map=new Map();
+    (Array.isArray(history)?history:[]).concat(observed||[]).forEach(function(row){
+      var time=typeof row.time==="number"?row.time:Date.parse(String(row.ts||"")),price=stitchNumber(row.price??row.spot);
+      if(day&&stitchSession(time)===day&&time<=stamp&&price!==null&&price>0)map.set(time,{time:time,price:price});
+    });return Array.from(map.values()).sort(function(a,b){return a.time-b.time;}).slice(-300);
+  }
   function renderStitchPresentation(snapshot,freshness,aReady){
-    var d=snapshot||{},dec=d.decision||{},o=dec.orchestration||{};
-    var market=d.market||{},phase=(window.edgeBackendMarketStatus||{}).phase;
-    var closed=phase==="CLOSED"||phase==="PRE_OPEN";
+    var d=snapshot||{},dec=d.decision||{},o=dec.orchestration||{},market=d.market||{},ctx=market.context||{};
+    var phase=(window.edgeBackendMarketStatus||{}).phase,closed=phase==="CLOSED"||phase==="PRE_OPEN";
     var state=aReady?"BUY NOW":closed?"MARKET CLOSED":!freshness?"DATA NOT VERIFIED":
-      o.status==="WAIT_FOR_TRIGGER"?"WAIT FOR TRIGGER":o.status==="POSITION_BLOCKED"?"POSITION BLOCKED":
-      o.status==="READY_INVALIDATED"?"INVALIDATED":"NO TRADE";
+      ({WAIT_FOR_TRIGGER:"WAIT FOR TRIGGER",WAIT_FOR_PRICE:"WAIT FOR PRICE",WAIT_FOR_LIQUIDITY:"WAIT FOR LIQUIDITY",POSITION_BLOCKED:"POSITION BLOCKED",READY_INVALIDATED:"INVALIDATED",INVALIDATED:"INVALIDATED",MARKET_CLOSED:"MARKET CLOSED"})[o.status]||"NO TRADE";
     setText("stitch-decision-state",state);
-    var reason=o.summary||o.reason||dec.reason;
-    setText("stitch-decision-copy",aReady?"All existing backend execution gates passed. Verify live prices and risk before manual entry.":
-      closed?"Entries are locked. Review the last available snapshot in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":
-      typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
+    var blockers=Array.isArray(o.blockers)?o.blockers.map(stitchReason):[];
+    var reason=blockers.length?blockers.join(" · "):dec.entry&&dec.entry.reason||o.summary||o.reason||dec.reason;
+    setText("stitch-decision-copy",aReady?"Entry is cleared. Check the current price and risk plan in Pro before manual entry.":closed?"Entries are locked. Review the last available session in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
     var card=document.getElementById("stitch-decision");if(card)card.className="stitch-card stitch-decision"+(aReady?" ready":"");
-    function number(v){return v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))?Number(v):null;}
-    function price(v){var n=number(v);return n!==null&&n>0?n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"--";}
-    // Both current API layouts are supported, with no estimated prices.
-    var spot=number(market.spotPrice??market.spot??market.niftySpot??d.spot);
-    setText("simple-spot-price",price(spot));
+    var spot=stitchNumber(market.spotPrice??market.spot??market.niftySpot??d.spot);
+    setText("simple-spot-price",stitchPrice(spot));
     var expiry=market.expiryDate||market.expiry||d.expiryDate||d.expiry;
     setText("simple-expiry",expiry?"EXPIRY "+String(expiry):"Expiry unavailable");
-    var dte=number(market.daysToExpiry??market.dte??d.dte);
-    setText("simple-dte",dte!==null?dte+" DAYS LEFT":"--");
-    setText("stitch-support",price(d.support&&d.support.strike));
-    setText("stitch-resistance",price(d.resistance&&d.resistance.strike));
-    var chart=market.chartIntelligence||market.context&&market.context.chartIntelligence||{};
-    setText("stitch-briefing-label",closed?"MARKET CLOSED · LAST AVAILABLE BRIEFING":"MARKET CONTEXT");
+    var dte=stitchNumber(market.daysToExpiry??market.dte??d.dte);setText("simple-dte",dte!==null?dte+" DAYS LEFT":"--");
+    setText("simple-volatility",d.ivRegime?stitchWords(d.ivRegime)+" volatility":"Volatility unavailable");
+    setText("stitch-support",stitchPrice(d.support&&d.support.strike));setText("stitch-resistance",stitchPrice(d.resistance&&d.resistance.strike));
+    var chart=market.chartIntelligence||ctx.chartIntelligence||{},previous=stitchNumber(chart.previousDay&&chart.previousDay.close);
+    var delta=spot!==null&&spot>0&&previous!==null&&previous>0?spot-previous:null;
+    var pct=delta!==null?delta/previous*100:stitchNumber(ctx.sessionChangePct);
+    setText("stitch-change",pct===null?"Movement unavailable":(delta!==null?(delta>=0?"+":"")+delta.toFixed(2)+" · ":"")+(pct>=0?"+":"")+pct.toFixed(2)+"%"+(delta===null?" session":" vs prev. close"));
+    var change=document.getElementById("stitch-change");if(change)change.className=pct===null?"":pct>=0?"up":"down";
+    var direction={BULLISH:"Buyers leading",BEARISH:"Sellers leading",CONFLICTED:"Mixed signals",NEUTRAL:"Balanced",UNAVAILABLE:"Direction unavailable"}[chart.verdict]||"Direction unavailable";
+    setText("stitch-direction",direction+(freshness?"":" · snapshot"));
     var observed=Date.parse(String(d.timestamp||""));
-    setText("stitch-briefing-time",Number.isFinite(observed)?"Snapshot: "+new Date(observed).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST · "+(freshness?"live verified":"historical / unverified; not an entry signal"):"Snapshot timestamp unavailable.");
-    setText("stitch-briefing-story",chart.story&&chart.story.headline||"A verified market recap is unavailable. Open Pro for existing research detail.");
-    setText("stitch-prev-high",price(chart.previousDay&&chart.previousDay.high));
-    setText("stitch-prev-low",price(chart.previousDay&&chart.previousDay.low));
-    var plans=dec.researchCandidatePlans&&dec.researchCandidatePlans.plans||{};
-    var rows=[];
-    ["A","B","C"].forEach(function(t){
-      var p=plans[t]||{},legs=p.legs||{};
-      if(!p.available)return;
-      ["buyLeg","sellLeg","ceShort","ceLong","peShort","peLong"].forEach(function(key){
-        var leg=legs[key];if(!leg||!(leg.contractId||leg.strike))return;
-        var contract=leg.contractId||"NIFTY "+leg.strike+" "+(leg.type||"");
-        var ready=t==="A"&&aReady;
-        var label=ready?"READY":closed||!freshness?"BLOCKED":t==="A"?state:"WATCHING";
-        var ask=number(leg.ask),ltp=number(leg.premium);
-        var quote=ask!==null&&ask>0?"Ask ₹"+ask.toFixed(2):ltp!==null&&ltp>0?"LTP ₹"+ltp.toFixed(2):"Quote unavailable";
-        var note=t==="A"?document.getElementById("stitch-decision-copy").textContent:"Research candidate only. No execution permission.";
-        rows.push('<div class="stitch-row'+(ready?' ready':'')+'"><div class="stitch-row-head"><strong>'+escapeHtml(contract)+'</strong><span class="stitch-state">'+escapeHtml(label)+'</span></div><small>'+escapeHtml("Tier "+t+" · "+key.replace(/([A-Z])/g," $1")+" · "+quote+" · "+(freshness?"current snapshot":"historical / unverified"))+'</small><small>'+escapeHtml(note)+'</small></div>');
-      });
-    });
-    setText("stitch-matrix-note","Actual backend candidate contracts. Quotes are references; recheck before entry.");
-    setSafeHTML(document.getElementById("stitch-matrix"),rows.join("")||'<p>No backend-confirmed candidate contracts available.</p>');
-    // A local, honestly labeled trace, never a fictional full-session chart.
-    var session=Number.isFinite(observed)?new Date(observed).toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}):null;
-    if(stitchObservedPrices.length&&stitchObservedPrices[0].session!==session)stitchObservedPrices=[];
-    if(freshness&&spot!==null&&spot>0&&(!stitchObservedPrices.length||observed>stitchObservedPrices[stitchObservedPrices.length-1].time)){
-      stitchObservedPrices.push({time:observed,price:spot,session:session});stitchObservedPrices=stitchObservedPrices.slice(-60);
-    }
-    var values=stitchObservedPrices;
-    if(values.length<2){setSafeHTML(document.getElementById("stitch-chart"),'<small>Chart unavailable · needs two verified updates while this screen is open.</small>');return;}
+    var timeText=Number.isFinite(observed)?new Date(observed).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})+" IST":"unavailable";
+    setText("simple-market-note",(freshness?"LIVE VERIFIED":"LAST AVAILABLE · NOT LIVE")+" · "+timeText);
+    setText("stitch-intelligence-note",freshness?"Current observations. Expand to see the evidence.":"Snapshot observations; not live confirmations.");
+    setText("stitch-intel-direction",direction);
+    var story=chart.story||{},points=Array.isArray(story.points)?story.points.filter(function(p){return typeof p==="string";}):[];
+    setText("stitch-intel-direction-copy",[story.headline||"Chart interpretation is unavailable."].concat(points.slice(0,2)).join(" "));
+    var entry=dec.entry||{},priceReady=entry.priceReady,liquid=entry.liquidityReady;
+    setText("stitch-intel-options",priceReady===true&&liquid===true?"Price & quotes pass":priceReady===false||liquid===false?"Checks incomplete":"Unavailable");
+    setText("stitch-intel-options-copy",["Volatility: "+stitchWords(d.ivRegime)+".","Price: "+(priceReady===true?"within limits":priceReady===false?"not confirmed":"unavailable")+".","Liquidity: "+(liquid===true?"acceptable":liquid===false?"not confirmed":"unavailable")+".",entry.reason||""].join(" "));
+    var part=chart.participation||{},rv=stitchNumber(part.relativeVolume);
+    setText("stitch-intel-participation",part.state==="ABOVE_RECENT_AVERAGE"?"Above average":part.state==="BELOW_RECENT_AVERAGE"?"Below average":"Unavailable");
+    setText("stitch-intel-participation-copy",(rv!==null?"Futures volume is "+rv.toFixed(2)+"× its recent average. ":"Relative volume is unavailable. ")+(ctx.futures&&ctx.futures.buildup?"Futures positioning: "+stitchWords(ctx.futures.buildup)+". ":"")+"Participation describes activity, not a win probability.");
+    setText("stitch-briefing-label",closed?"MARKET CLOSED · LAST AVAILABLE BRIEFING":"MARKET CONTEXT");
+    setText("stitch-briefing-time","Snapshot: "+timeText+" · "+(freshness?"live verified":"historical / unverified; not an entry signal"));
+    setText("stitch-briefing-story",story.headline||"A verified market recap is unavailable.");
+    setText("stitch-prev-high",stitchPrice(chart.previousDay&&chart.previousDay.high));setText("stitch-prev-low",stitchPrice(chart.previousDay&&chart.previousDay.low));
+    setText("stitch-session-high",stitchPrice(ctx.sessionHigh));setText("stitch-session-low",stitchPrice(ctx.sessionLow));
+    setSafeHTML(document.getElementById("stitch-recap"),points.map(function(p){return '<li>'+escapeHtml(p)+'</li>';}).join("")||'<li>No additional verified session observations available.</li>');
+    setText("stitch-scenario-title",closed?"For the next session":"What needs to happen next");
+    setText("stitch-scenario-note","Conditional reference only. These snapshot levels must be rechecked against fresh market data; they do not create a signal.");
+    var scenarios=[];
+    if(typeof entry.trigger==="string"&&entry.trigger)scenarios.push({title:"Entry condition to recheck",copy:entry.trigger});
+    var invalidation=Array.isArray(entry.invalidation)?entry.invalidation:[];
+    if(invalidation.length)scenarios.push({title:"When the thesis fails",copy:invalidation.filter(function(x){return typeof x==="string";}).join(" · ")});
+    if(!scenarios.length)scenarios.push({title:"Wait for a fresh setup",copy:"The backend has not supplied a conditional entry plan for this snapshot. Reassess when new data arrives."});
+    scenarios.push({title:"Before any entry",copy:"Market open, fresh data, acceptable price, liquidity, risk and position checks must all pass. B and C remain research observations."});
+    setSafeHTML(document.getElementById("stitch-scenarios"),scenarios.map(function(x){return '<div class="stitch-scenario"><h3>'+escapeHtml(x.title)+'</h3><p>'+escapeHtml(x.copy)+'</p></div>';}).join(""));
+    stitchRows=stitchBuildRows(d,freshness,aReady,phase);renderStitchMatrix();
+    setText("stitch-matrix-note","Each row is a contract leg within its tier's strategy. Keep spread legs together. "+(freshness?"Current snapshot":"Historical / unverified snapshot")+" · "+timeText);
+    if(stitchObservedPrices.length&&stitchSession(stitchObservedPrices[0].time)!==stitchSession(observed))stitchObservedPrices=[];
+    if(freshness&&spot!==null&&spot>0&&(!stitchObservedPrices.length||observed>stitchObservedPrices[stitchObservedPrices.length-1].time)){stitchObservedPrices.push({time:observed,price:spot});stitchObservedPrices=stitchObservedPrices.slice(-300);}
+    var values=stitchChartSamples(stitchHistory,stitchObservedPrices,observed),svg=document.getElementById("stitch-chart-svg"),line=document.getElementById("stitch-chart-line");
+    if(svg)svg.hidden=values.length<2;
+    if(values.length<2){setText("stitch-chart-range","--");setText("stitch-chart-note","Price history unavailable · waiting for two timestamped observations from this session.");return;}
     var low=Math.min.apply(null,values.map(function(x){return x.price;})),high=Math.max.apply(null,values.map(function(x){return x.price;}));
-    var points=values.map(function(x,i){return (i*320/(values.length-1)).toFixed(1)+","+(60-(x.price-low)/(high-low||1)*50).toFixed(1);}).join(" ");
-    setSafeHTML(document.getElementById("stitch-chart"),'<svg viewBox="0 0 320 70" role="img" aria-label="Verified NIFTY prices observed in this browser session"><polyline points="'+points+'" fill="none" stroke="'+(freshness?'#6dffba':'#a4b3aa')+'" stroke-width="2"/></svg><small>OBSERVED IN THIS SCREEN · '+values.length+' verified updates'+(freshness?'':' · HISTORICAL / NOT LIVE')+'</small>');
+    var first=values[0].time,last=values[values.length-1].time;
+    var coords=values.map(function(x){return ((x.time-first)/(last-first||1)*320).toFixed(1)+","+(high===low?40:70-(x.price-low)/(high-low)*60).toFixed(1);}).join(" ");
+    // Trusted static SVG; only finite numeric coordinates enter its attributes.
+    if(line&&line.setAttribute){line.setAttribute("points",coords);line.setAttribute("stroke",freshness?"#6dffba":"#a4b3aa");}
+    function clock(t){return new Date(t).toLocaleTimeString("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",hour12:false});}
+    setText("stitch-chart-range",clock(first)+"–"+clock(last)+" IST");
+    setText("stitch-chart-note",values.length+" timestamped observations · partial session history"+(freshness?"":" · historical / not live"));
   }
 
   function renderSignalJourney(d) {
@@ -3285,6 +3367,15 @@
     Array.prototype.slice.call(document.querySelectorAll('[data-jump-tab]')).forEach(function(b){
       b.addEventListener('click',function(){ showTab(b.getAttribute('data-jump-tab')); window.scrollTo({top:0,behavior:'smooth'}); });
     });
+  })();
+
+  (function initStitchFilters(){
+    var buttons=Array.prototype.slice.call(document.querySelectorAll('[data-stitch-filter]'));
+    buttons.forEach(function(button){button.addEventListener('click',function(){
+      stitchFilter=button.getAttribute('data-stitch-filter');
+      buttons.forEach(function(b){b.setAttribute('aria-pressed',String(b===button));});
+      renderStitchMatrix();
+    });});
   })();
 
   (function initStateDock(){

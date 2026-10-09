@@ -44,7 +44,7 @@ assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
-assert.match(worker, /edge-shell-v7/, "Users must get a refreshed PWA shell");
+assert.match(worker, /edge-shell-v8/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
 assert.match(html, /id="edge-refresh-app"/, "Update/reload control must remain accessible in Lab");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
@@ -315,3 +315,42 @@ for(const name of ['trade','flow','lab','radar']){
   for(const other of ['radar','trade','flow','lab'].filter(x=>x!==name))assert.equal(navElement('tab-'+other).classList.contains('active'),false);
 }
 console.log('Stitch navigation: Home, Signals, Insights and Control routing PASS');
+
+// Complete adaptation: quote sides, candidate status, history boundaries, and empty fields.
+const full=d('A','READY_TO_EXECUTE',true);
+full.spot=25482.6;
+full.decision.entry={priceReady:true,liquidityReady:true,reason:'All entry checks passed',trigger:'Reclaim resistance',invalidation:['Lose reclaimed structure']};
+full.decision.researchCandidatePlans={plans:{
+ A:{available:true,executionAllowed:true,backendStatus:'READY_TO_EXECUTE',strategy:'BULL_CALL_SPREAD',description:'Authoritative spread',legs:{buyLeg:{strike:25450,type:'CE',ask:112,bid:110,premium:111},sellLeg:{strike:25550,type:'CE',ask:62,bid:60,premium:61}}},
+ B:{available:true,strategy:'BULL_CALL_SPREAD',description:'Research spread selected near delta targets',legs:{buyLeg:{strike:25450,type:'CE',ask:112}}},
+ C:{available:false}
+}};
+simpleSandbox.window.edgeBackendMarketStatus.phase='OPEN';
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-count-ready').textContent,'2');
+assert.equal(simpleEl('stitch-count-waiting').textContent,'1');
+assert.match(simpleEl('stitch-matrix').innerHTML,/Bid ₹60.00/,'Sell legs must use bid, never ask');
+assert.match(simpleEl('stitch-matrix').innerHTML,/Research spread selected/);
+assert.equal(simpleEl('stitch-change').textContent,'Movement unavailable','Missing movement must not become zero');
+simpleSandbox.stitchFilter='INVALIDATED';simpleSandbox.renderStitchMatrix();
+assert.match(simpleEl('stitch-matrix').innerHTML,/No invalidated candidates/);
+full.decision.orchestration={status:'READY_INVALIDATED',executionAllowed:false};
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-count-ready').textContent,'0');
+assert.equal(simpleEl('stitch-count-invalidated').textContent,'2');
+assert.match(simpleEl('stitch-matrix').innerHTML,/backend invalidated/);
+simpleSandbox.stitchFilter='ALL';
+full.decision.orchestration={status:'WAIT_FOR_PRICE',executionAllowed:false};
+simpleSandbox.renderSimpleSignals(full);
+assert.equal(simpleEl('stitch-decision-state').textContent,'WAIT FOR PRICE');
+const chartStamp=Date.parse('2026-10-09T09:00:00Z');
+const series=simpleSandbox.stitchChartSamples([
+ {ts:'2026-10-08T09:00:00Z',spot:24000},
+ {ts:'2026-10-09T04:00:00Z',spot:25000},
+ {ts:'2026-10-09T04:05:00Z',spot:25005},
+ {ts:'2026-10-09T10:00:00Z',spot:26000},
+ {ts:'bad',spot:4},{ts:'2026-10-09T05:00:00Z',spot:null}
+],[],chartStamp);
+assert.equal(series.length,2,'Chart must exclude other sessions, future times and missing prices');
+assert.match(html,/<polyline id="stitch-chart-line"/,'Chart is a trusted static SVG, not sanitizer-stripped HTML');
+console.log('Complete adaptation: matrix, quote sides, filters, missing data and session history PASS');
