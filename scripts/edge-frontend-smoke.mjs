@@ -152,7 +152,7 @@ assert.ok(html.includes('setText("last-session"'), "Closed-market last-session d
 
 // Evaluate actual market-status display transitions in isolation.
 const statusStart=html.indexOf("  function updateMarketStatusUI() {");
-const statusEnd=html.indexOf("  window.edgeApplyMarketStatus=updateMarketStatusUI;",statusStart);
+const statusEnd=html.indexOf("  window.edgeApplyMarketStatus=function(){updateMarketStatusUI();renderSimpleSignals();};",statusStart);
 assert.ok(statusStart>0&&statusEnd>statusStart);
 const elements=new Map();
 function getEl(id){
