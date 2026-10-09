@@ -216,7 +216,7 @@ const simpleSandbox={
 vm.createContext(simpleSandbox);
 vm.runInContext(html.slice(simpleStart,simpleEnd),simpleSandbox);
 function d(tier,status,allowed,age=0) {
-  return {timestamp:new Date(Date.now()-age).toISOString(),decision:{
+  return {timestamp:new Date(Date.now()-age).toISOString(),market:{phase:"OPEN"},decision:{
     signalTier:{tier,executionAllowed:tier==="A"&&allowed},
     orchestration:{status,executionAllowed:allowed}}};
 }
@@ -235,6 +235,14 @@ simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now()-240000;
 simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
 assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Stale market feed must veto green");
 simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now();
+const mismatched=d("A","READY_TO_EXECUTE",true);
+mismatched.market.phase="CLOSED";
+simpleSandbox.renderSimpleSignals(mismatched);
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Snapshot market phase must match OPEN");
+simpleSandbox.window.edgeBackendMarketStatus.liveDataFresh=undefined;
+simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
+assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Missing backend live-data confirmation must fail closed");
+simpleSandbox.window.edgeBackendMarketStatus.liveDataFresh=true;
 simpleSandbox.navigator.onLine=false;
 simpleSandbox.renderSimpleSignals(d("A","READY_TO_EXECUTE",true));
 assert.doesNotMatch(simpleEl("simple-tier-a-status").textContent,/GREEN/,"Offline mode must veto green");
