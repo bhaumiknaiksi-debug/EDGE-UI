@@ -6,31 +6,26 @@ EDGE is a personal **NIFTY 50 options research and decision-support app**. It br
 
 This repository contains the **web frontend, installable PWA and Capacitor mobile wrapper**. The separate [EDGE backend](https://github.com/bhaumiknaiksi-debug/edge-backend) supplies market data, research and authoritative execution decisions. Trades are placed manually through the user's broker; EDGE does not submit orders.
 
-> **Branch scope:** This README describes the EDGE 2.0 interface on `feat/stitch-edge-2-ui`. Features on this branch are not necessarily available on the production `main` deployment until merged.
+> **EDGE 2.0 redesign:** The redesigned Home / Signals / Insights / Control interface is being reviewed in [PR #44](https://github.com/bhaumiknaiksi-debug/EDGE-UI/pull/44). It is separate from the current `main` interface described below.
 
 ## What EDGE shows
 
-| Area | Purpose |
+**Simple mode** presents the current or last available NIFTY snapshot, backend market-session status, A/B/C signal calls and the contracts being considered for each tier.
+
+**Pro mode** exposes four sections:
+
+| Section | Purpose |
 | --- | --- |
-| **Home** | NIFTY Market Pulse, the current decision, A/B/C signal tiers, expandable evidence and a compact strike watchlist. |
-| **Signals** | Actual backend candidate contracts, strategy context, quote references and filters for ready, waiting, blocked or invalidated candidates. |
-| **Insights** | Available session observations, reference levels and conditional entry/invalidation scenarios. Closed-market snapshots are labeled historical. |
-| **Control** | Web notification settings and app recovery controls. Pro mode also exposes evidence collection and research diagnostics. |
+| **Market** | Market overview, signal journey, candidate structures, chart interpretation and reference levels. |
+| **Action** | Backend entry plan, execution conditions and risk/position detail. |
+| **Details** | Technical option intelligence. |
+| **Lab** | Research evidence, collection health, notification settings and app recovery controls. |
 
-### Simple and Pro
+Switching modes changes presentation, not trading rules. Market-open/closed status comes from the backend. Historical or unverified data must not be interpreted as a live entry signal.
 
-**Simple** emphasizes the market, the next decision and the contracts being watched. Supporting explanations expand when needed.
+### EDGE 2.0 design branch
 
-**Pro** exposes the existing action desk, technical indicators, option intelligence, research evidence and diagnostic detail. Switching modes changes presentation, not trading rules.
-
-### Market Pulse
-
-- Spot price, available movement, chart direction, expiry and volatility context.
-- Support/resistance and other reference levels supplied by the backend.
-- A timestamped price trace using available same-session history and verified observations collected while the page is open.
-- Explicit live, historical, unverified and unavailable states.
-
-The trace can contain only part of a session. It is not a complete exchange candle feed. Missing observations and prices are not replaced with sample values.
+The [design branch](https://github.com/bhaumiknaiksi-debug/EDGE-UI/tree/feat/stitch-edge-2-ui) adds a charcoal/mint visual system, bottom navigation, a prominent decision card, expandable evidence, a filtered strike matrix and a closed-market briefing. It also adds a timestamped partial-session chart and responsive browser tests. These features remain under review until the design PR is merged.
 
 ## Signals and execution safety
 
@@ -53,7 +48,7 @@ The Simple decision card shows **BUY NOW** only when all of the following agree:
 
 The current presenter accepts a market-status check and decision snapshot up to 90 seconds old, and a market fetch up to 120 seconds old, with a bounded allowance for timestamp skew. Missing confirmation fails closed.
 
-Waiting, blocked, stale, offline, pre-open and closed-market states do not become permission to trade. Candidate rows use ask references for buy legs and bid references for sell legs, falling back to labeled LTP where available. Quotes must be rechecked before manual entry, and spread legs must be evaluated together.
+Waiting, blocked, stale, offline, pre-open and closed-market states do not become permission to trade. Displayed quotes must be rechecked before manual entry, and spread legs must be evaluated together.
 
 EDGE is a research tool. A displayed signal does not establish profitability or guarantee an outcome.
 
@@ -77,7 +72,7 @@ Clone the repository and select the branch you want to inspect:
 ```bash
 git clone https://github.com/bhaumiknaiksi-debug/EDGE-UI.git
 cd EDGE-UI
-git switch feat/stitch-edge-2-ui
+git switch main
 ```
 
 Serve the repository root with Python 3:
@@ -120,17 +115,18 @@ node --check web-push.js
 node --check sw.js
 ```
 
-For browser coverage:
+The checks cover frontend syntax, polling behavior, execution safety and server-confirmed push enrollment. GitHub Actions also covers Web Push integration and native bootstrap/iOS simulator builds.
+
+The design branch adds isolated browser fixtures and responsive screenshots. To run them on that branch:
 
 ```bash
+git switch feat/stitch-edge-2-ui
 npm install --no-save --package-lock=false playwright
 npx playwright install --with-deps chromium
 node scripts/edge-visual-check.cjs
 ```
 
-The browser check starts a local server on port `8765`, uses isolated market fixtures, checks 320/390/768/1280-pixel layouts, exercises both modes and all four tabs, and verifies decision states, chart visibility, filters and disclosures. Screenshots are written to `visual-results/`; do not commit generated test images.
-
-GitHub Actions runs frontend checks and publishes the `edge-design-screenshots` artifact. Separate workflows cover Web Push integration and native bootstrap/iOS simulator builds. Fixture tests verify presentation behavior; they do not verify live market-feed continuity or actual notification delivery.
+This check uses port `8765` and writes screenshots to `visual-results/`. Fixture checks do not verify live market-feed continuity or actual notification delivery.
 
 ## Web deployment and PWA
 
@@ -138,11 +134,11 @@ Deploy the repository root as a static site. The existing web deployment uses Ve
 
 `vercel.json` defines revalidation headers for the HTML shell, service worker and supporting scripts. The service worker prefers network responses, with cached app-shell assets available as a fallback. It does not intentionally cache cross-origin market/API responses.
 
-For shell changes, keep the service-worker cache version and its regression assertion aligned. A cached interface is not proof of a live market connection. **Control → Update & Reload** provides an app recovery action.
+For shell changes, keep the service-worker cache version and its regression assertion aligned. A cached interface is not proof of a live market connection. **Pro → Lab → Update & Reload** provides an app recovery action.
 
 ## Notifications
 
-Browser Web Push controls live in **Control → Lock Screen Alerts**. Enrollment requires supported browser APIs, notification permission and authenticated backend registration using the private enrollment code. The test action is available only after server-confirmed enrollment.
+Browser Web Push controls live in **Pro → Lab → Lock Screen Alerts**. Enrollment requires supported browser APIs, notification permission and authenticated backend registration using the private enrollment code. The test action is available only after server-confirmed enrollment.
 
 Backend-confirmed execution-ready and invalidation events can be delivered through the push channel when the backend is configured to send them. Browser permission, a saved subscription or a successful build does not prove that an alert was delivered. Verify actual delivery separately.
 
@@ -180,7 +176,7 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 - Preserve the strict execution gate when changing presentation.
 - Keep B/C research distinct from executable A signals.
 - Show data timestamps and unavailable states; never fabricate prices, performance or readiness percentages.
-- Keep operational controls in Control and advanced detail in Pro.
+- Keep operational controls in the last tab and advanced detail in Pro.
 - Validate UI changes against waiting, blocked, invalidated, stale and closed-market states as well as ready states.
 - Review frontend changes independently from backend uptime and notification-delivery work.
 
