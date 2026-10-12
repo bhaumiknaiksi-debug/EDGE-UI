@@ -7,6 +7,7 @@ on:
       - "web-push.js"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
+      - "scripts/edge-visual-check.cjs"
       - ".github/workflows/frontend-smoke.yml"
   push:
     branches: [main]
@@ -15,6 +16,7 @@ on:
       - "web-push.js"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
+      - "scripts/edge-visual-check.cjs"
       - ".github/workflows/frontend-smoke.yml"
 
 permissions:
@@ -23,7 +25,7 @@ permissions:
 jobs:
   frontend-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,3 +33,17 @@ jobs:
           node-version: "22"
       - name: Check JS and recovery behavior
         run: node scripts/edge-frontend-smoke.mjs
+
+      - name: Install browser test runtime
+        run: npm install --no-save --package-lock=false playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify responsive UI and decision states
+        run: node scripts/edge-visual-check.cjs
+      - name: Save visual review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-design-screenshots
+          path: visual-results/
+          if-no-files-found: ignore
