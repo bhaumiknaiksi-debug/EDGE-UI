@@ -919,6 +919,8 @@
   body:not(.pro-mode) #stitch-decision.ready{background:linear-gradient(145deg,#18332a,#1a1c1f);border-color:rgba(109,255,186,.55)}
   body:not(.pro-mode) #stitch-decision h1{font-size:clamp(36px,10vw,54px);line-height:1.05;margin:12px 0 8px;overflow-wrap:anywhere}
   body:not(.pro-mode) #stitch-decision-copy{color:#e2e2e6;font-size:15px;line-height:1.45}
+  .copilot-ready-contract{margin-top:13px;padding:11px 12px;border-radius:9px;border:1px solid rgba(109,255,186,.35);background:rgba(109,255,186,.06);color:#e2e2e6;font:600 12px/1.5 var(--mono);overflow-wrap:anywhere}
+  .copilot-ready-contract[hidden]{display:none!important}
   .copilot-action{display:flex;align-items:baseline;justify-content:space-between;gap:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:13px;margin-top:17px}
   .copilot-action span{font:10px var(--mono);color:#a4b3aa;flex-shrink:0}
   .copilot-action strong{font:600 13px/1.4 var(--body);color:#f3e1c7;text-align:right}
@@ -980,6 +982,7 @@
   <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
     <div class="stitch-kicker">YOUR NEXT MOVE</div><h1 id="stitch-decision-state" role="status">VERIFYING</h1>
     <p id="stitch-decision-copy">Waiting for confirmed backend data.</p>
+    <div class="copilot-ready-contract" id="copilot-ready-contract" hidden aria-live="polite"></div>
     <div class="copilot-action"><span>NEXT ACTION</span><strong id="copilot-next-action">Do not trade until verified</strong></div>
   </section>
   <section class="simple-session-card" id="simple-session-card" aria-label="Exchange session status">
@@ -2383,6 +2386,18 @@
     });
 
     if(typeof renderStitchPresentation==="function")renderStitchPresentation(snapshot,freshness,aReady);
+    // A strike summary is visible only when the strict backend execution gate passes.
+    // A missing contract is explicitly unavailable; it must never be fabricated.
+    var readyContract=document.getElementById("copilot-ready-contract");
+    if(readyContract){
+      readyContract.hidden=!aReady;
+      if(aReady){
+        var readyPlan=plans.A||{},readyLegs=readyPlan.legs||{};
+        var primary=readyLegs.buyLeg||readyLegs.sellLeg||readyLegs.ceLong||readyLegs.peLong||readyLegs.ceShort||readyLegs.peShort||{};
+        var id=primary.contractId|| (primary.strike && primary.type?"NIFTY "+primary.strike+" "+primary.type:"");
+        readyContract.textContent=id?"CONTRACT TO REVIEW · "+id:"CONTRACT NOT PROVIDED · OPEN PRO TO VERIFY";
+      }else readyContract.textContent="";
+    }
     setText("copilot-next-action",aReady?"Review verified entry plan before manual trade":
       !freshness?"Stay out · live conditions not verified":"Stay out · wait for backend confirmation");
 
@@ -2471,12 +2486,12 @@
   function renderStitchPresentation(snapshot,freshness,aReady){
     var d=snapshot||{},dec=d.decision||{},o=dec.orchestration||{},market=d.market||{},ctx=market.context||{};
     var phase=(window.edgeBackendMarketStatus||{}).phase,closed=phase==="CLOSED"||phase==="PRE_OPEN";
-    var state=aReady?"BUY NOW":closed?"MARKET CLOSED":!freshness?"DATA NOT VERIFIED":
+    var state=aReady?"READY · REVIEW":closed?"MARKET CLOSED":!freshness?"DATA NOT VERIFIED":
       ({WAIT_FOR_TRIGGER:"WAIT FOR TRIGGER",WAIT_FOR_PRICE:"WAIT FOR PRICE",WAIT_FOR_LIQUIDITY:"WAIT FOR LIQUIDITY",POSITION_BLOCKED:"POSITION BLOCKED",READY_INVALIDATED:"INVALIDATED",INVALIDATED:"INVALIDATED",MARKET_CLOSED:"MARKET CLOSED"})[o.status]||"NO TRADE";
     setText("stitch-decision-state",state);
     var blockers=Array.isArray(o.blockers)?o.blockers.map(stitchReason):[];
     var reason=blockers.length?blockers.join(" · "):dec.entry&&dec.entry.reason||o.summary||o.reason||dec.reason;
-    setText("stitch-decision-copy",aReady?"Entry is cleared. Check the current price and risk plan in Pro before manual entry.":closed?"Entries are locked. Review the last available session in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
+    setText("stitch-decision-copy",aReady?"Backend execution gates passed. Review the live contract, entry price, stop-loss and risk before deciding on manual entry.":closed?"Entries are locked. Review the last available session in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
     var card=document.getElementById("stitch-decision");if(card)card.className="stitch-card stitch-decision"+(aReady?" ready":"");
     var spot=stitchNumber(market.spotPrice??market.spot??market.niftySpot??d.spot);
     setText("simple-spot-price",stitchPrice(spot));
