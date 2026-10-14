@@ -30,7 +30,13 @@ function fixture(state){
    await page.goto('http://127.0.0.1:8765');await page.waitForFunction(()=>document.getElementById('stitch-decision-state').textContent==='MARKET CLOSED');
    // Invoke the existing history refresh rather than wait for its periodic timer.
    await page.evaluate(()=>pollTimeline());await page.waitForFunction(()=>document.getElementById('stitch-chart-line').getAttribute('points').length>0);
-   assert.equal(await page.locator('#stitch-chart-svg').isVisible(),true,'The populated chart must be visibly rendered');
+   // The co-pilot intentionally hides detailed chart evidence until requested.
+   assert.equal(await page.locator('#stitch-chart-svg').isVisible(),false,'Chart stays collapsed by default');
+   assert.equal(await page.locator('#copilot-next-action').textContent(),'Stay out · live conditions not verified');
+   assert.equal(await page.evaluate(()=>{const a=document.getElementById('stitch-decision').getBoundingClientRect(),b=document.querySelector('.simple-market-card').getBoundingClientRect();return a.top<b.top;}),true,'Decision must precede market detail');
+   await page.locator('.copilot-market-details summary').click();
+   assert.equal(await page.locator('#stitch-chart-svg').isVisible(),true,'Expanded chart must be visible when populated');
+   await page.locator('.copilot-market-details summary').click();
    for(const mode of ['simple','pro']){
     await page.locator('[data-view-mode="'+mode+'"]').click();
     for(const tab of ['radar','trade','flow','lab']){
@@ -49,6 +55,7 @@ function fixture(state){
     for(const state of ['READY_TO_EXECUTE','WAIT_FOR_TRIGGER','WAIT_FOR_PRICE','WAIT_FOR_LIQUIDITY','POSITION_BLOCKED','READY_INVALIDATED','NO_TRADE','STALE','PRE_OPEN']){
      current=fixture(state);await page.evaluate(f=>{window.edgeBackendMarketStatus=f.market;window.edgeBackendMarketStatusCheckedAt=Date.now();lastData=f.data;updateMarketStatusUI();renderSimpleSignals(f.data);},current);
      const title=await page.locator('#stitch-decision-state').textContent();assert.equal(title==='BUY NOW',state==='READY_TO_EXECUTE',state+' execution presentation');
+     assert.equal(await page.locator('#copilot-next-action').textContent(),state==='READY_TO_EXECUTE'?'Review verified entry plan before manual trade':state==='STALE'||state==='PRE_OPEN'?'Stay out · live conditions not verified':'Stay out · wait for backend confirmation',state+' next-action safety');
      await page.screenshot({path:`visual-results/state-${state}.png`,fullPage:true});
     }
     await page.locator('[data-edge-tab="trade"]').click();await page.locator('[data-stitch-filter="READY"]').click();assert.match(await page.locator('#stitch-matrix').textContent(),/No ready candidates/);
