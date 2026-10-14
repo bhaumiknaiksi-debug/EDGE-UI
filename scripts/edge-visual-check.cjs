@@ -55,6 +55,7 @@ function fixture(state){
     for(const state of ['READY_TO_EXECUTE','WAIT_FOR_TRIGGER','WAIT_FOR_PRICE','WAIT_FOR_LIQUIDITY','POSITION_BLOCKED','READY_INVALIDATED','NO_TRADE','STALE','PRE_OPEN']){
      current=fixture(state);await page.evaluate(f=>{window.edgeBackendMarketStatus=f.market;window.edgeBackendMarketStatusCheckedAt=Date.now();lastData=f.data;updateMarketStatusUI();renderSimpleSignals(f.data);},current);
      const title=await page.locator('#stitch-decision-state').textContent();assert.equal(title==='READY · REVIEW',state==='READY_TO_EXECUTE',state+' execution presentation');
+     if(state==='READY_TO_EXECUTE')assert.equal(await page.locator('#ws-status').textContent(),'FEED LIVE','READY header must not claim last-session data');
      assert.equal(await page.locator('#copilot-next-action').textContent(),state==='READY_TO_EXECUTE'?'Review verified entry plan before manual trade':state==='STALE'||state==='PRE_OPEN'?'Stay out · live conditions not verified':'Stay out · wait for backend confirmation',state+' next-action safety');
      assert.equal(await page.locator('#copilot-ready-contract').isVisible(),state==='READY_TO_EXECUTE',state+' verified-contract visibility');
      if(state==='READY_TO_EXECUTE')assert.match(await page.locator('#copilot-ready-contract').textContent(),/NIFTY 20 OCT 25450 CE/);
