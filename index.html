@@ -2347,6 +2347,10 @@
       fetched>0 && fetched<=now+20000 && now-fetched<=120000 &&
       Number.isFinite(observed) && observed<=now+20000 && now-observed<=90000 &&
       status.liveDataFresh===true);
+    // Keep the header's feed label consistent with the same verified freshness
+    // gate used by the decision card; never show LAST SESSION beside READY.
+    if(typeof setStatus==="function")setStatus(freshness?"live":
+      status.phase==="CLOSED"||status.phase==="PRE_OPEN"?"closed":"stale");
     var market=snapshot&&snapshot.market||{};
     var spot=Number(market.spotPrice??market.spot??market.niftySpot);
     setText("simple-spot-price",Number.isFinite(spot)&&spot>0?spot.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}):"--");
