@@ -6,7 +6,7 @@ const path=require('node:path');
 const assert=require('node:assert/strict');
 const root=process.cwd();
 const server=http.createServer(async(req,res)=>{
-  try {const pathname=new URL(req.url,'http://localhost').pathname;const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(root+path.sep))throw Error('Invalid path');res.setHeader('Content-Type',file.endsWith('.html')?'text/html':file.endsWith('.js')?'text/javascript':'text/plain');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end();}
+  try {const pathname=new URL(req.url,'http://localhost').pathname;const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(root+path.sep))throw Error('Invalid path');res.setHeader('Content-Type',file.endsWith('.html')?'text/html':file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/plain');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end();}
 });
 function fixture(state){
  const closed=['CLOSED','PRE_OPEN'].includes(state),stale=state==='STALE';
@@ -53,6 +53,19 @@ function fixture(state){
     }
     await page.locator('[data-edge-tab="trade"]').click();await page.locator('[data-stitch-filter="READY"]').click();assert.match(await page.locator('#stitch-matrix').textContent(),/No ready candidates/);
     await page.locator('[data-edge-tab="radar"]').click();await page.locator('.stitch-intelligence summary').first().click();assert.equal(await page.locator('#stitch-intel-direction-copy').isVisible(),true);
+   }
+   if(width===390){
+    await page.locator('[data-edge-tab="lab"]').click();
+    const journal={budget:{availableCapital:10000,netRealizedPnl:0,openRisk:0,availableRisk:1000,confirmed:false,locked:false},trades:[]};let posts=[];
+    await context.route('**/api/v1/trades**',async r=>{assert.equal(r.request().headers().authorization,'Bearer test-owner-code');if(r.request().method()==='POST'){const d=r.request().postDataJSON();posts.push(d);if(r.request().url().endsWith('/open'))journal.trades=[{...d,id:d.requestId,reservedRisk:750}];if(r.request().url().endsWith('/close'))journal.trades[0]={...journal.trades[0],closedAt:new Date().toISOString(),netPnl:550};if(r.request().url().endsWith('/confirm'))journal.budget.confirmed=true;}await r.fulfill({contentType:'application/json',body:JSON.stringify(journal)});});
+    await page.locator('#journal-code').fill('test-owner-code');await page.locator('#journal-login button').click();await page.locator('#journal-private').waitFor({state:'visible'});
+    assert.equal(await page.locator('#journal-code').inputValue(),'');
+    await page.locator('#journal-reconciled').check();await page.locator('#journal-confirm button').click();await page.waitForFunction(()=>document.getElementById('journal-state').textContent.includes('confirmed'));
+    for(const [name,value] of Object.entries({contract:'NIFTY 20 OCT 25000 CE',quantity:'65',entry:'100',stop:'90'}))await page.locator('#journal-open [name="'+name+'"]').fill(value);
+    await page.locator('#journal-open button').click();await page.locator('.journal-trade').waitFor();assert.equal(posts.at(-1).quantity,65);assert.ok(posts.at(-1).requestId.length>=16);
+    await page.locator('.journal-trade [name="exit"]').fill('110');await page.locator('.journal-trade [name="charges"]').fill('100');await page.locator('.journal-trade button').click();await page.waitForFunction(()=>document.getElementById('journal-trades').textContent.includes('Closed'));
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'journal mobile overflow');
+    await page.screenshot({path:'visual-results/manual-trade-log.png',fullPage:true});
    }
    assert.deepEqual(errors,[],`${width}px JavaScript errors`);await context.close();
   }

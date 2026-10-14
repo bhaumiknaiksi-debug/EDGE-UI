@@ -183,3 +183,7 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 ## Related repository
 
 [**edge-backend**](https://github.com/bhaumiknaiksi-debug/edge-backend) — market data, signal research, execution gates, evidence and server-side notifications.
+
+### Manual trade log
+
+Open **Control → Manual trade log** and unlock with the existing alert owner code. The code remains in tab memory. Record every actual entry and full close, including actual round-trip charges, then confirm today's records match your broker. EDGE reserves open planned risk and capital against the ₹10,000 capital ceiling and ₹1,000 daily loss allowance. New entry approval is recalculated on the next backend market poll after changes. The log does not submit orders or automatically reconcile broker positions. Keep estimated costs realistic; stop fills and slippage can exceed planned loss. For partial positions, record individual fills separately.

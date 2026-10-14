@@ -9,6 +9,8 @@ const staticFiles = [
   "offline.html",
   "pwa.js",
   "web-push.js",
+  "trade-log.js",
+  "trade-log.css",
   "sw.js",
   "edge-icon.svg"
 ];
