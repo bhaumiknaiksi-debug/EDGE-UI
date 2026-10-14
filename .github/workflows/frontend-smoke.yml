@@ -5,6 +5,8 @@ on:
     paths:
       - "index.html"
       - "web-push.js"
+      - "trade-log.js"
+      - "trade-log.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
@@ -14,6 +16,8 @@ on:
     paths:
       - "index.html"
       - "web-push.js"
+      - "trade-log.js"
+      - "trade-log.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
