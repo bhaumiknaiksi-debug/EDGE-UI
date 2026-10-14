@@ -912,6 +912,33 @@
   .pro-mode .human-card,.pro-mode .pulse-hero,.pro-mode .human-action,.pro-mode .signal-journey-card,.pro-mode .spot-hero,.pro-mode .level-map-card,.pro-mode .why-card{background:var(--surface);border-color:var(--border);box-shadow:none}
   .pro-mode .human-title,.pro-mode #spot-price,.pro-mode .sr-val,.pro-mode .bias-card,.pro-mode .alpha-strike{text-shadow:none}
   .edge-tab{transition:none}.edge-tab:hover{transform:none}
+
+  /* Co-pilot: decision first, details on demand. Presentation only. */
+  body:not(.pro-mode) #simple-signal-terminal{display:flex;flex-direction:column;gap:12px}
+  body:not(.pro-mode) #stitch-decision{order:0;padding:22px 20px;border-radius:18px;background:linear-gradient(145deg,#2b271d,#1a1c1f);border:1px solid rgba(255,188,104,.4)}
+  body:not(.pro-mode) #stitch-decision.ready{background:linear-gradient(145deg,#18332a,#1a1c1f);border-color:rgba(109,255,186,.55)}
+  body:not(.pro-mode) #stitch-decision h1{font-size:clamp(36px,10vw,54px);line-height:1.05;margin:12px 0 8px;overflow-wrap:anywhere}
+  body:not(.pro-mode) #stitch-decision-copy{color:#e2e2e6;font-size:15px;line-height:1.45}
+  .copilot-action{display:flex;align-items:baseline;justify-content:space-between;gap:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:13px;margin-top:17px}
+  .copilot-action span{font:10px var(--mono);color:#a4b3aa;flex-shrink:0}
+  .copilot-action strong{font:600 13px/1.4 var(--body);color:#f3e1c7;text-align:right}
+  body:not(.pro-mode) .simple-market-card{order:1;padding:14px 18px}
+  body:not(.pro-mode) .simple-market-price{font-size:clamp(29px,8vw,38px);margin:6px 0}
+  body:not(.pro-mode) .simple-session-card{order:2;padding:12px 16px}
+  body:not(.pro-mode) #simple-signal-terminal>.stitch-kicker{order:3;margin:8px 2px 0}
+  body:not(.pro-mode) #simple-tier-a{order:4}
+  body:not(.pro-mode) #simple-tier-b{order:5}
+  body:not(.pro-mode) #simple-tier-c{order:6}
+  body:not(.pro-mode) .stitch-intelligence{order:7}
+  body:not(.pro-mode) #simple-signal-terminal>.stitch-card:not(.stitch-decision):not(.stitch-intelligence){order:8}
+  body:not(.pro-mode) .simple-tier-disclaimer{order:9}
+  .copilot-market-details{border-top:1px solid var(--border);margin-top:13px;padding-top:11px}
+  .copilot-market-details summary{cursor:pointer;color:var(--accent);font-size:12px;font-weight:600;min-height:30px}
+  .copilot-market-details:not([open]) .stitch-chart,.copilot-market-details:not([open]) .stitch-levels{display:none}
+  #simple-signal-terminal .simple-tier-card{padding:14px 16px}
+  #simple-signal-terminal .simple-tier-state{overflow-wrap:anywhere}
+  @media(max-width:360px){.copilot-action{flex-direction:column;gap:4px}.copilot-action strong{text-align:left}}
+
 </style>
 </head>
 <body>
@@ -950,6 +977,11 @@
 
 <!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
 <main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE market and three signal tiers">
+  <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
+    <div class="stitch-kicker">YOUR NEXT MOVE</div><h1 id="stitch-decision-state" role="status">VERIFYING</h1>
+    <p id="stitch-decision-copy">Waiting for confirmed backend data.</p>
+    <div class="copilot-action"><span>NEXT ACTION</span><strong id="copilot-next-action">Do not trade until verified</strong></div>
+  </section>
   <section class="simple-session-card" id="simple-session-card" aria-label="Exchange session status">
     <div class="simple-session-header"><span id="simple-session-badge">VERIFYING</span><span id="simple-session-greeting">Checking market status</span></div>
     <div class="simple-session-closed" id="simple-session-closed" hidden>
@@ -964,13 +996,12 @@
     <div class="pulse-price-row"><div class="simple-market-price" id="simple-spot-price">--</div><div><strong id="stitch-change">Movement unavailable</strong><small id="stitch-direction">Direction unavailable</small></div></div>
     <div class="simple-market-tags"><span id="simple-expiry">Expiry unavailable</span><span id="simple-dte">--</span><span id="simple-volatility">Volatility unavailable</span></div>
     <div class="simple-market-note" id="simple-market-note">Waiting for live market data</div>
+    <details class="copilot-market-details"><summary>Explore chart and key levels</summary>
     <div class="stitch-chart" id="stitch-chart"><div class="stitch-chart-head"><span>NIFTY · SESSION TRACE</span><span id="stitch-chart-range">--</span></div><svg id="stitch-chart-svg" viewBox="0 0 320 80" role="img" aria-label="Timestamped NIFTY price observations" hidden><path d="M0 20H320 M0 40H320 M0 60H320" stroke="#333a37" fill="none" stroke-dasharray="3 4"/><polyline id="stitch-chart-line" points="" fill="none" stroke="#6dffba" stroke-width="2"/></svg><small id="stitch-chart-note">Waiting for verified price history.</small></div>
     <div class="stitch-levels"><div><span class="stitch-kicker">Support area</span><strong id="stitch-support">--</strong></div><div><span class="stitch-kicker">Resistance area</span><strong id="stitch-resistance">--</strong></div></div>
+    </details>
   </section>
-  <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
-    <div class="stitch-kicker">YOUR NEXT MOVE</div><h1 id="stitch-decision-state" role="status">VERIFYING</h1>
-    <p id="stitch-decision-copy">Waiting for confirmed backend data.</p>
-  </section>
+
   <div class="stitch-kicker">THREE SIGNAL TIERS · SEPARATE RESEARCH STATES</div>
   <section class="simple-tier-card" id="simple-tier-a" aria-labelledby="simple-tier-a-label">
     <div class="simple-tier-top"><span class="simple-tier-letter a">A</span><span class="simple-tier-kind" id="simple-tier-a-label">EXECUTION READY</span></div>
@@ -2352,6 +2383,8 @@
     });
 
     if(typeof renderStitchPresentation==="function")renderStitchPresentation(snapshot,freshness,aReady);
+    setText("copilot-next-action",aReady?"Review verified entry plan before manual trade":
+      !freshness?"Stay out · live conditions not verified":"Stay out · wait for backend confirmation");
 
     var bActive=freshness&&!backendReady&&tier.tier==="B" && orchestration.executionAllowed!==true;
     var cActive=freshness&&!backendReady&&tier.tier==="C" && orchestration.executionAllowed!==true;
