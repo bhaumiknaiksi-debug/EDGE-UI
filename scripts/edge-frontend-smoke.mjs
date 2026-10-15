@@ -272,12 +272,12 @@ simpleSandbox.window.edgeBackendMarketStatus.lastFetch=Date.now();
 simpleSandbox.window.edgeBackendMarketStatusCheckedAt=Date.now();
 for(const state of ['NO_TRADE','WAIT_FOR_TRIGGER','POSITION_BLOCKED','READY_INVALIDATED']){
   simpleSandbox.renderSimpleSignals(d('A',state,true));
-  assert.notEqual(simpleEl('stitch-decision-state').textContent,'BUY NOW',state+' veto must survive redesign');
+  assert.notEqual(simpleEl('stitch-decision-state').textContent,'READY · REVIEW',state+' veto must survive redesign');
 }
 simpleSandbox.renderSimpleSignals(d('A','WAIT_FOR_TRIGGER',false));
 assert.equal(simpleEl('stitch-decision-state').textContent,'WAIT FOR TRIGGER');
 simpleSandbox.renderSimpleSignals(d('A','READY_TO_EXECUTE',true));
-assert.equal(simpleEl('stitch-decision-state').textContent,'BUY NOW');
+assert.equal(simpleEl('stitch-decision-state').textContent,'READY · REVIEW');
 for(const phase of ['CLOSED','PRE_OPEN']){
   simpleSandbox.window.edgeBackendMarketStatus.phase=phase;
   const candidate=d('A','READY_TO_EXECUTE',true);
