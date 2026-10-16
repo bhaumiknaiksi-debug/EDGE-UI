@@ -24,10 +24,25 @@ new vm.Script(pwa, { filename: "pwa.js" });
 
 const alerts = html.indexOf('id="edge-alert-settings"');
 const lab = html.indexOf('<div id="tab-lab" class="edge-panel" role="tabpanel">');
-const flow = html.indexOf('<div id="tab-flow" class="edge-panel" role="tabpanel">');
 const radar = html.indexOf('id="tab-radar"');
-assert.ok(lab > radar && alerts > lab && alerts < flow,
-  "Alert controls must live at the bottom of Lab, not globally above all tabs");
+const trade = html.indexOf('id="tab-trade"');
+const marketContext = html.indexOf('id="edge-market-context"');
+const insights = html.indexOf('id="stitch-insights"');
+const advanced = html.indexOf('id="edge-advanced-diagnostics"');
+assert.ok(lab > trade && alerts > lab && advanced > lab && alerts > advanced,
+  "Journal, advanced diagnostics and alert controls must live inside Control");
+assert.ok(radar < marketContext && marketContext < insights && insights < trade,
+  "Existing Market Context and option intelligence must be nested into Home before Signals");
+assert.deepEqual([...html.matchAll(/data-edge-tab="([^"]+)"/g)].map(m=>m[1]),['radar','trade','lab'],
+  "Navigation must have only Home, Signals and Control");
+assert.doesNotMatch(html,/id="tab-flow"|data-section="flow"/,"Insights must not remain a separate route");
+assert.match(html,/<details class="edge-advanced-diagnostics" id="edge-advanced-diagnostics">/,
+  "Optional diagnostics must be collapsed by default");
+assert.match(html,/function initAdvancedDiagnostics\(\)/,"Advanced diagnostics must load on demand");
+assert.doesNotMatch(html,/\/evidence\/(intelligence|health|price-action)/,
+  "Removed research screens must not trigger network requests");
+assert.match(html,/\/evidence\/signal-funnel/,
+  "Why-EDGE-says-no diagnostics must remain available");
 assert.ok(html.indexOf('id="edge-refresh-app"') > lab,
   "Recovery controls must also move out of the global header");
 assert.ok(html.indexOf('id="simple-signal-terminal"') > 0 &&
@@ -38,13 +53,13 @@ for (const t of ["a","b","c"]) {
 }
 assert.match(html, /body:not\(\.pro-mode\) \.edge-panel/,
   "Simple mode must hide the full Pro dashboard");
-assert.match(html, /ILLUSTRATIVE COSTS · BROKER NOT SET/,
-  "A research fee assumption must never be presented as the user's broker");
+assert.doesNotMatch(html,/id="ev-oos-friction"|id="ev-wf-profile"/,
+  "Research-only brokerage models must not clutter the trading interface");
 assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
-assert.match(worker, /edge-shell-v9/, "Users must get a refreshed PWA shell");
+assert.match(worker, /edge-shell-v10/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
 assert.match(html, /id="edge-refresh-app"/, "Update/reload control must remain accessible in Lab");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
@@ -302,19 +317,19 @@ function navElement(id){
   }
   return navigationElements.get(id);
 }
-const navButtons=['radar','trade','flow','lab'].map(id=>{const b=navElement('button-'+id);b.attrs['data-edge-tab']=id;return b;});
+const navButtons=['radar','trade','lab'].map(id=>{const b=navElement('button-'+id);b.attrs['data-edge-tab']=id;return b;});
 const navContext={document:{body:navElement('body'),getElementById:navElement,querySelectorAll(selector){return selector==='[data-edge-tab]'?navButtons:[];}},sessionStorage:{getItem(){return null;},setItem(){}},window:{scrollTo(){}}};
 vm.createContext(navContext);
 const navStart=html.indexOf('  (function initEdgeTabs(){');
 const navEnd=html.indexOf('  (function initStateDock(){',navStart);
 vm.runInContext(html.slice(navStart,navEnd),navContext);
-for(const name of ['trade','flow','lab','radar']){
+for(const name of ['trade','lab','radar']){
   navElement('button-'+name).listeners.click();
   assert.equal(navElement('body').attrs['data-section'],name);
   assert.equal(navElement('tab-'+name).classList.contains('active'),true);
-  for(const other of ['radar','trade','flow','lab'].filter(x=>x!==name))assert.equal(navElement('tab-'+other).classList.contains('active'),false);
+  for(const other of ['radar','trade','lab'].filter(x=>x!==name))assert.equal(navElement('tab-'+other).classList.contains('active'),false);
 }
-console.log('Stitch navigation: Home, Signals, Insights and Control routing PASS');
+console.log('Lean navigation: Home, Signals and Control routing PASS');
 
 // Complete adaptation: quote sides, candidate status, history boundaries, and empty fields.
 const full=d('A','READY_TO_EXECUTE',true);
