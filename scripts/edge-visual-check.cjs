@@ -33,18 +33,28 @@ function fixture(state){
    assert.equal(await page.locator('#stitch-chart-svg').isVisible(),true,'The populated chart must be visibly rendered');
    for(const mode of ['simple','pro']){
     await page.locator('[data-view-mode="'+mode+'"]').click();
-    for(const tab of ['radar','trade','flow','lab']){
+    for(const tab of ['radar','trade','lab']){
      await page.locator('[data-edge-tab="'+tab+'"]').click();
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`${width}px ${mode}/${tab} overflow`);
      if(mode==='simple'){
-      const id={radar:'simple-signal-terminal',trade:'stitch-signals',flow:'stitch-insights',lab:'edge-alert-settings'}[tab];assert.equal(await page.locator('#'+id).isVisible(),true,`${mode}/${tab} visible`);
+      const id={radar:'simple-signal-terminal',trade:'stitch-signals',lab:'edge-alert-settings'}[tab];assert.equal(await page.locator('#'+id).isVisible(),true,`${mode}/${tab} visible`);
       assert.equal(await page.locator('#edge-alert-settings').isVisible(),tab==='lab','Settings only in Control');
      }
      if(width===390)await page.screenshot({path:`visual-results/${mode}-${tab}.png`,fullPage:true});
     }
    }
    if(width===390){
-    await page.screenshot({path:'visual-results/control-viewport.png'});
+    await page.locator('[data-edge-tab="radar"]').click();
+     assert.equal(await page.locator('#edge-market-context').isVisible(),true,'Market Context available on Home');
+     assert.equal(await page.locator('#stitch-insights').isVisible(),false,'Market Context collapsed by default');
+     await page.locator('#edge-market-context > summary').click();
+     assert.equal(await page.locator('#stitch-insights').isVisible(),true,'Existing insights appear on demand');
+     await page.screenshot({path:'visual-results/home-market-context.png',fullPage:true});
+     await page.locator('#edge-market-context > summary').click();
+     await page.locator('[data-edge-tab="lab"]').click();
+     assert.equal(await page.locator('#edge-advanced-diagnostics').isVisible(),true,'Advanced section remains accessible');
+     assert.equal(await page.locator('#funnel-stages').isVisible(),false,'Diagnostics collapsed by default');
+     await page.screenshot({path:'visual-results/control-viewport.png'});
     await page.locator('[data-view-mode="simple"]').click();await page.locator('[data-edge-tab="radar"]').click();
     for(const state of ['READY_TO_EXECUTE','WAIT_FOR_TRIGGER','WAIT_FOR_PRICE','WAIT_FOR_LIQUIDITY','POSITION_BLOCKED','READY_INVALIDATED','NO_TRADE','STALE','PRE_OPEN']){
      current=fixture(state);await page.evaluate(f=>{window.edgeBackendMarketStatus=f.market;window.edgeBackendMarketStatusCheckedAt=Date.now();lastData=f.data;updateMarketStatusUI();renderSimpleSignals(f.data);},current);
@@ -69,6 +79,6 @@ function fixture(state){
    }
    assert.deepEqual(errors,[],`${width}px JavaScript errors`);await context.close();
   }
-  console.log('PASS: four viewport widths, both modes, all tabs, nine execution states, chart, filters, and disclosures');
+  console.log('PASS: four viewport widths, both modes, three tabs, nine execution states, chart, filters, and disclosures');
  } finally {await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
