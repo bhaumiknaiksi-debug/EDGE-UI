@@ -893,7 +893,7 @@
   .stitch-panel{display:none}
   body:not(.pro-mode)[data-section="radar"] #simple-signal-terminal{display:grid}
   body:not(.pro-mode):not([data-section="radar"]) #simple-signal-terminal{display:none}
-  body[data-section="trade"] #stitch-signals,body[data-section="flow"] #stitch-insights{display:grid}
+  body[data-section="trade"] #stitch-signals{display:grid}
   body:not(.pro-mode)[data-section="lab"] #tab-lab{display:block!important}
   body:not(.pro-mode) #tab-lab>.section-wrap{display:none}
   .card,.bias-card,.decision-card,.lab-manifesto{background:var(--surface);border-color:var(--border);box-shadow:none;border-radius:14px}.card-label{font-size:10px}.card{padding:18px}.edge-recovery-tools{flex-wrap:wrap}
@@ -914,14 +914,28 @@
   .pro-mode .human-card,.pro-mode .pulse-hero,.pro-mode .human-action,.pro-mode .signal-journey-card,.pro-mode .spot-hero,.pro-mode .level-map-card,.pro-mode .why-card{background:var(--surface);border-color:var(--border);box-shadow:none}
   .pro-mode .human-title,.pro-mode #spot-price,.pro-mode .sr-val,.pro-mode .bias-card,.pro-mode .alpha-strike{text-shadow:none}
   .edge-tab{transition:none}.edge-tab:hover{transform:none}
+
+  /* Lightweight three-tab navigation; market analysis and execution rules are unchanged. */
+  .edge-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .edge-market-context{display:none;max-width:680px;width:calc(100% - 28px);margin:14px auto 24px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+  body[data-section="radar"] #edge-market-context{display:block}
+  .edge-market-context>summary,.edge-advanced-diagnostics>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:14px 17px;font:600 14px var(--body);color:var(--text)}
+  .edge-market-context>summary::-webkit-details-marker,.edge-advanced-diagnostics>summary::-webkit-details-marker{display:none}
+  .edge-market-context>summary span,.edge-advanced-diagnostics>summary span{color:var(--muted);font:11px var(--body);text-align:right}
+  .edge-market-context[open]>summary,.edge-advanced-diagnostics[open]>summary{border-bottom:1px solid var(--border)}
+  body[data-section="radar"] #stitch-insights{display:grid;width:100%;margin:0;padding:14px}
+  .edge-market-context:not([open]) #stitch-insights{display:none!important}
+  .edge-market-context>.section-wrap{margin:0 auto 14px}
+  .edge-advanced-diagnostics{max-width:680px;width:calc(100% - 28px);margin:18px auto;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+  .edge-advanced-diagnostics>.section-wrap{padding:0 14px;margin:14px auto}
+  @media(max-width:410px){.edge-market-context>summary,.edge-advanced-diagnostics>summary{align-items:flex-start;flex-direction:column;gap:3px}.edge-market-context>summary span,.edge-advanced-diagnostics>summary span{text-align:left}}
 </style>
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
   <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">HOME<small>market pulse</small></button>
   <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">SIGNALS<small>strike monitor</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-flow" data-edge-tab="flow">INSIGHTS<small>market context</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">CONTROL<small>settings &amp; evidence</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">CONTROL<small>settings &amp; alerts</small></button>
 </nav>
 
   <!-- HEADER -->
@@ -1003,10 +1017,7 @@
 <section class="stitch-panel" id="stitch-signals" aria-label="Signals Matrix">
   <div class="stitch-card"><div class="stitch-kicker">SIGNALS MATRIX</div><h2>Strikes under radar</h2><p id="stitch-matrix-note">Waiting for backend candidates.</p><div class="stitch-filters" role="group" aria-label="Filter candidate status"><button type="button" data-stitch-filter="ALL" aria-pressed="true">All <span id="stitch-count-all">0</span></button><button type="button" data-stitch-filter="READY" aria-pressed="false">Ready <span id="stitch-count-ready">0</span></button><button type="button" data-stitch-filter="WAITING" aria-pressed="false">Waiting <span id="stitch-count-waiting">0</span></button><button type="button" data-stitch-filter="BLOCKED" aria-pressed="false">Blocked <span id="stitch-count-blocked">0</span></button><button type="button" data-stitch-filter="INVALIDATED" aria-pressed="false">Invalidated <span id="stitch-count-invalidated">0</span></button></div><div id="stitch-matrix" aria-live="polite"></div></div>
 </section>
-<section class="stitch-panel" id="stitch-insights" aria-label="Market insights">
-  <div class="stitch-card"><div class="stitch-kicker" id="stitch-briefing-label">MARKET CONTEXT</div><h2>Clarity before conviction</h2><p id="stitch-briefing-time">No verified snapshot yet.</p><p id="stitch-briefing-story">Waiting for market context.</p><div class="stitch-levels"><div><span class="stitch-kicker">Previous day high</span><strong id="stitch-prev-high">--</strong></div><div><span class="stitch-kicker">Previous day low</span><strong id="stitch-prev-low">--</strong></div></div><div class="stitch-levels"><div><span class="stitch-kicker">Snapshot session high</span><strong id="stitch-session-high">--</strong></div><div><span class="stitch-kicker">Snapshot session low</span><strong id="stitch-session-low">--</strong></div></div><ul class="stitch-recap" id="stitch-recap"></ul><p>Reference levels describe the snapshot session; they are not trade instructions.</p></div>
-  <div class="stitch-card"><div class="stitch-kicker">CONDITIONAL PLAYBOOK</div><h2 id="stitch-scenario-title">What needs to happen next</h2><p id="stitch-scenario-note">Fresh confirmation is required.</p><div id="stitch-scenarios"></div></div>
-</section>
+
 
 
   <!-- TOKEN EXPIRED BANNER -->
@@ -1252,6 +1263,19 @@
 
   </div>
 </div>
+<details class="edge-market-context" id="edge-market-context">
+  <summary>Market context <span>Key levels · Price action · Option details</span></summary>
+<section class="stitch-panel" id="stitch-insights" aria-label="Market insights">
+  <div class="stitch-card"><div class="stitch-kicker" id="stitch-briefing-label">MARKET CONTEXT</div><h2>Clarity before conviction</h2><p id="stitch-briefing-time">No verified snapshot yet.</p><p id="stitch-briefing-story">Waiting for market context.</p><div class="stitch-levels"><div><span class="stitch-kicker">Previous day high</span><strong id="stitch-prev-high">--</strong></div><div><span class="stitch-kicker">Previous day low</span><strong id="stitch-prev-low">--</strong></div></div><div class="stitch-levels"><div><span class="stitch-kicker">Snapshot session high</span><strong id="stitch-session-high">--</strong></div><div><span class="stitch-kicker">Snapshot session low</span><strong id="stitch-session-low">--</strong></div></div><ul class="stitch-recap" id="stitch-recap"></ul><p>Reference levels describe the snapshot session; they are not trade instructions.</p></div>
+  <div class="stitch-card"><div class="stitch-kicker">CONDITIONAL PLAYBOOK</div><h2 id="stitch-scenario-title">What needs to happen next</h2><p id="stitch-scenario-note">Fresh confirmation is required.</p><div id="stitch-scenarios"></div></div>
+</section>
+<div class="section-wrap">
+    <div class="card full" id="intel-card" style="display:none;">
+      <div class="card-label">TECHNICAL OPTION DATA</div>
+      <div id="intel-content"></div>
+    </div>
+  </div>
+</details>
 <div id="tab-trade" class="edge-panel" role="tabpanel">
 <!-- TRADE DECISION -->
   <div class="section-wrap" id="decision-block" style="display:none;">
@@ -1306,20 +1330,11 @@
 <small>Planned stops are not guaranteed loss caps. Costs are estimates until closed. Full-position closes only; for partial fills, record each separately. Entry approval refreshes on the next market poll after a journal change.</small>
 <div id="journal-trades"></div></div></section>
 
-  <div class="stitch-control-title"><div class="stitch-kicker">CONTROL ROOM</div><h2>Your EDGE, your settings.</h2><p>Manage alerts and app updates below. Switch to Pro for evidence and diagnostics.</p></div>
-  <div class="section-wrap">
-    <div class="lab-manifesto">
-      <div class="research-flag">◉ EDGE LAB · RESEARCH ONLY</div>
-      <div class="lab-manifesto-title">Ideas have to earn trust here.</div>
-      <div class="lab-manifesto-copy">EDGE records what actually happened, tests it on later data, checks whether it repeats, subtracts realistic costs, and still refuses to turn research into a live signal automatically.</div>
-      <div class="lab-path">
-        <span>OBSERVE</span><i>→</i><span>TEST</span><i>→</i><span>REPEAT</span><i>→</i><span>REVIEW</span>
-      </div>
-    </div>
-  </div>
+  <details class="edge-advanced-diagnostics" id="edge-advanced-diagnostics">
+    <summary>Advanced diagnostics <span>Signal blockers and strike analyser</span></summary>
   <div class="section-wrap">
     <div class="card full signal-funnel-card">
-      <div class="ev-head"><div><div class="card-label">SIGNAL FUNNEL · WHY EDGE SAYS NO</div><div class="ev-sub">OBSERVATIONS → GATES → NEAR MISSES</div></div><div class="research-flag">RESEARCH ONLY</div></div>
+      <div class="ev-head"><div><div class="card-label">SIGNAL FUNNEL · WHY EDGE SAYS NO</div><div class="ev-sub">OBSERVATIONS → GATES → NEAR MISSES</div></div><button class="ev-refresh" type="button" id="edge-funnel-refresh">REFRESH</button></div>
       <div class="funnel-top">
         <div class="funnel-stat"><div class="v" id="funnel-a">--</div><div class="l">A · READY</div></div>
         <div class="funnel-stat"><div class="v" id="funnel-b">--</div><div class="l">B · STRONG</div></div>
@@ -1332,142 +1347,6 @@
       <div class="mini-label" style="margin-top:12px;">RESEARCH DIAGNOSTICS · NOT GATES</div>
       <div class="funnel-rows" id="funnel-diagnostics"><div class="ev-empty">No chart diagnostics yet.</div></div>
       <div class="funnel-note" id="funnel-note">Counts are market observations, not independent trades. The funnel is diagnostic; it does not loosen EDGE.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="ev-head"><div><div class="card-label">PRICE ACTION LAB · B/C OUTCOMES</div><div class="ev-sub">DO THESE RESEARCH CANDIDATES ACTUALLY SURVIVE?</div></div><div class="research-flag">RESEARCH ONLY</div></div>
-      <div class="pa-grid">
-        <div class="pa-stat"><span>MEASURED B/C EPISODES</span><strong id="pa-total">--</strong></div>
-        <div class="pa-stat"><span>B / C SAMPLES</span><strong id="pa-tier-counts">-- / --</strong></div>
-      </div>
-      <div class="mini-label" style="margin-top:12px;">60-MINUTE RESULTS BY TIER</div>
-      <div class="pa-groups" id="pa-by-tier"><div class="ev-empty">No measured B/C outcomes yet.</div></div>
-      <div class="mini-label" style="margin-top:12px;">CHART CONTEXT</div>
-      <div class="pa-groups" id="pa-context"><div class="ev-empty">Waiting for measured price-action episodes.</div></div>
-      <div class="ev-method" id="pa-method">B/C remain counterfactual research candidates. Measurement does not authorize execution.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full evidence-health-card">
-      <div class="ev-head"><div><div class="card-label">EVIDENCE HEALTH</div><div class="ev-sub">Is EDGE actually remembering today?</div></div><div class="ev-oos-status wait" id="health-status">CHECKING</div></div>
-      <div class="health-hero"><div><span>VERIFIED MARKET DAYS</span><strong id="health-days">--</strong></div><div><span>NO-TRADE DAYS RECORDED</span><strong id="health-no-trade">--</strong></div></div>
-      <div class="health-grid"><div class="health-row"><span>Last evidence append</span><strong id="health-append">--</strong></div><div class="health-row"><span>Archive backup</span><strong id="health-backup">--</strong></div><div class="health-row"><span>Durability proof</span><strong id="health-verify">--</strong></div><div class="health-row"><span>Outcome harvester</span><strong id="health-harvest">--</strong></div><div class="health-row"><span>READY episodes today</span><strong id="health-ready">--</strong></div><div class="health-row"><span>Measured outcomes</span><strong id="health-measured">--</strong></div><div class="health-row"><span>Missing sessions</span><strong id="health-missing">--</strong></div><div class="health-row"><span>Local durable store</span><strong id="health-store">--</strong></div></div>
-      <div class="health-alert" id="health-alert">Health data has not loaded yet. Missing data is not treated as healthy.</div>
-      <div class="ev-method">A verified day requires retained market evidence plus a successful archive round-trip proof. This measures collection integrity, not trading performance.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full evidence-hero">
-      <div class="research-flag">◉ RESEARCH ONLY · ZERO LIVE DECISION IMPACT</div>
-      <div class="evidence-head">
-        <div>
-          <div class="card-label">WHAT ACTUALLY HAPPENED?</div>
-          <div class="evidence-big" id="ev-episodes">--</div>
-          <div class="evidence-caption">MEASURED EXECUTION EPISODES</div>
-        </div>
-        <div class="evidence-status" id="ev-status">LOADING MEMORY...</div>
-      </div>
-      <div class="ev-grid">
-        <div class="ev-stat"><div class="ev-stat-label">MIN SAMPLE GATE</div><div class="ev-stat-val" id="ev-min-samples">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">AVG MFE / MAE</div><div class="ev-stat-val" id="ev-excursion">--</div></div>
-      </div>
-      <div class="ev-horizons" id="ev-horizons"></div>
-      <div class="ev-method" id="ev-method">Only measured READY_TO_EXECUTE episodes. Descriptive evidence is not permission to trade.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div class="card-label" style="margin-bottom:0;">HOW STRATEGIES HAVE BEHAVED · 60M</div>
-        <button class="ev-refresh" type="button" id="ev-refresh">REFRESH</button>
-      </div>
-      <div class="ev-dimension" id="ev-strategy"></div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="card-label">WHERE THE RESULTS CAME FROM · 60M</div>
-      <div class="ev-dimension" id="ev-context"></div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="research-flag">◉ SETUP SCANNER · OBSERVER ONLY</div>
-      <div class="card-label">WHICH SETUPS SURVIVED CONTACT WITH THE MARKET? · 60M</div>
-      <div class="ev-empty" style="padding-top:0;">Which setups actually survived contact with the market? Sample gate ≠ permission to trade.</div>
-      <div class="ev-dimension" id="ev-setups"></div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="card-label">SETUP COMBINATIONS UNDER OBSERVATION · 60M</div>
-      <div class="ev-dimension" id="ev-setup-combos"></div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="research-flag">◉ RESEARCH GOVERNANCE · DESCRIPTIVE ONLY</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div class="card-label" style="margin-bottom:0;">HOW MATURE IS THE EVIDENCE? · 60M</div>
-        <div class="ev-oos-status wait" id="ev-gov-status">WAITING FOR GOVERNANCE</div>
-      </div>
-      <div class="ev-grid">
-        <div class="ev-stat"><div class="ev-stat-label">MEASURED / GATE</div><div class="ev-stat-val" id="ev-gov-samples">-- / --</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">VALID FOLDS</div><div class="ev-stat-val" id="ev-gov-folds">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">POSITIVE NET FOLDS</div><div class="ev-stat-val" id="ev-gov-positive">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">MEDIAN / WORST NET</div><div class="ev-stat-val" id="ev-gov-net" style="font-size:16px;">-- / --</div></div>
-      </div>
-      <div class="ev-dimension" id="ev-gov-gates"></div>
-      <div class="ev-method" id="ev-gov-method">Governance describes research maturity. It never authorizes a live signal.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="research-flag">◉ CANDIDATE REGISTRY · RESEARCH TRIAGE ONLY</div>
-      <div class="card-label">RESEARCH FUNNEL · 60M</div>
-      <div class="research-funnel" id="research-funnel">
-        <div class="funnel-row"><div class="funnel-copy"><span>Being watched</span><small>Observed combinations</small></div><div class="funnel-track"><i id="funnel-observing-fill"></i></div><strong id="ev-cand-observing">0</strong></div>
-        <div class="funnel-row"><div class="funnel-copy"><span>Enough observations</span><small>Sample gate reached</small></div><div class="funnel-track"><i id="funnel-sample-fill"></i></div><strong id="ev-cand-sample">0</strong></div>
-        <div class="funnel-row"><div class="funnel-copy"><span>Tested on later data</span><small>Chronological holdout available</small></div><div class="funnel-track"><i id="funnel-holdout-fill"></i></div><strong id="ev-cand-holdout">0</strong></div>
-        <div class="funnel-row"><div class="funnel-copy"><span>Repeated across time</span><small>Walk-forward replication</small></div><div class="funnel-track"><i id="funnel-replicated-fill"></i></div><strong id="ev-cand-replicated">0</strong></div>
-        <div class="funnel-row candidate"><div class="funnel-copy"><span>Worth human research</span><small>Research candidate · not a signal</small></div><div class="funnel-track"><i id="funnel-ready-fill"></i></div><strong id="ev-cand-ready">0</strong></div>
-      </div>
-      <div class="funnel-stop">Research stops here. Nothing in this funnel can authorize a trade.</div>
-      <div class="ev-dimension" id="ev-candidates"></div>
-      <div class="ev-method" id="ev-cand-method">A research candidate is not a live signal and cannot promote itself into the decision engine.</div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="research-flag">◉ CHRONOLOGICAL HOLDOUT · NO SHUFFLE</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div class="card-label" style="margin-bottom:0;">DOES IT STILL WORK ON LATER DATA? · 60M</div>
-        <div class="ev-oos-status wait" id="ev-oos-status">WAITING FOR DATA</div>
-      </div>
-      <div class="ev-grid">
-        <div class="ev-stat"><div class="ev-stat-label">TRAIN / TEST</div><div class="ev-stat-val" id="ev-oos-split">-- / --</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">RESEARCH COST ASSUMPTION</div><div class="ev-stat-val" id="ev-oos-friction" style="font-size:16px;">--</div></div>
-      </div>
-      <div class="ev-method" id="ev-oos-cutoff">Newest observations stay untouched until the holdout check.</div>
-      <div class="ev-dimension" id="ev-oos-groups"></div>
-    </div>
-  </div>
-  <div class="section-wrap">
-    <div class="card full">
-      <div class="research-flag">◉ WALK-FORWARD · EXPANDING WINDOW</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <div class="card-label" style="margin-bottom:0;">DOES IT REPEAT ACROSS TIME? · 60M</div>
-        <div class="ev-oos-status wait" id="ev-wf-status">WAITING FOR FOLDS</div>
-      </div>
-      <div class="ev-grid">
-        <div class="ev-stat"><div class="ev-stat-label">FOLDS</div><div class="ev-stat-val" id="ev-wf-folds">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">FORWARD TEST N</div><div class="ev-stat-val" id="ev-wf-test">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">RESEARCH COST ASSUMPTION</div><div class="ev-stat-val" id="ev-wf-profile" style="font-size:14px;">--</div></div>
-        <div class="ev-stat"><div class="ev-stat-label">NET 60M COVERAGE</div><div class="ev-stat-val" id="ev-wf-net">--</div></div>
-      </div>
-      <div class="ev-method" id="ev-wf-method">Forward blocks must repeat before EDGE treats a pattern as replicated evidence.</div>
-      <div class="ev-dimension" id="ev-wf-groups"></div>
     </div>
   </div>
 <!-- STRIKE ANALYSER -->
@@ -1486,7 +1365,8 @@
     </div>
   </div>
 
-  <!-- Settings live at the bottom of the last (LAB) tab, not above every tab. -->
+  </details>
+  <!-- Settings live at the bottom of the Control tab, not above every tab. -->
   <!-- Independent settings entry; never gated on successful market-data fetch. -->
   <details class="edge-alerts-entry" id="edge-alert-settings">
     <summary>🔔 LOCK SCREEN ALERTS · SETTINGS</summary>
@@ -1500,18 +1380,7 @@
   </div>
 
   </div>
-<div id="tab-flow" class="edge-panel" role="tabpanel">
-<!-- OPTION INTELLIGENCE -->
-  <div class="section-wrap">
-    <div class="card full" id="intel-card" style="display:none;">
-      <div class="card-label">TECHNICAL OPTION DATA</div>
-      <div id="intel-content"></div>
-    </div>
-  </div>
-
   <footer>EDGE · decision support, not order execution · backend truth first</footer>
-</div>
-
 <button class="edge-state-dock watch" id="edge-state-dock" type="button" data-jump-tab="trade" aria-label="Open current EDGE decision">
   <span class="dock-dot" id="dock-dot"></span>
   <span class="dock-main"><strong id="dock-state">WAIT</strong><small id="dock-copy">Checking the market…</small></span>
@@ -2468,7 +2337,7 @@
     setText("stitch-decision-state",state);
     var blockers=Array.isArray(o.blockers)?o.blockers.map(stitchReason):[];
     var reason=blockers.length?blockers.join(" · "):dec.entry&&dec.entry.reason||o.summary||o.reason||dec.reason;
-    setText("stitch-decision-copy",aReady?"Entry is cleared. Check the current price and risk plan in Pro before manual entry.":closed?"Entries are locked. Review the last available session in Insights.":!freshness?"Fresh market and decision data must agree before any entry.":typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
+    setText("stitch-decision-copy",aReady?"Entry is cleared. Check the current price and risk plan in Pro before manual entry.":closed?"Entries are locked. Review market context on Home.":!freshness?"Fresh market and decision data must agree before any entry.":typeof reason==="string"&&reason?reason:"The backend has not cleared an entry. Wait for confirmation.");
     var card=document.getElementById("stitch-decision");if(card)card.className="stitch-card stitch-decision"+(aReady?" ready":"");
     var spot=stitchNumber(market.spotPrice??market.spot??market.niftySpot??d.spot);
     setText("simple-spot-price",stitchPrice(spot));
@@ -2896,227 +2765,7 @@
     setSafeHTML(content, html);
   }
 
-  // -- Evidence Intelligence --------------------------------------------------
-  var evidenceTimer = null;
-  function pctTone(v) {
-    var n=Number(v); if(!Number.isFinite(n)) return "";
-    return n>0 ? "ev-positive" : n<0 ? "ev-negative" : "ev-neutral";
-  }
-  function evFmt(v, suffix) {
-    var n=Number(v); return Number.isFinite(n) ? n.toFixed(2)+(suffix||"") : "--";
-  }
-  function metric60(m) {
-    if(!m || !m.horizons) return null;
-    return m.horizons["60"] || m.horizons[60] || null;
-  }
-  function healthTime(v){if(!v)return"--";var d=new Date(v);if(Number.isNaN(d.getTime()))return"--";return d.toLocaleString("en-IN",{timeZone:"Asia/Kolkata",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});}
-  function renderEvidenceHealth(h){if(!h||h.version!=="EVIDENCE_HEALTH_V1"){setText("health-status","UNAVAILABLE");setText("health-days","--");setText("health-no-trade","--");["health-append","health-backup","health-verify","health-harvest","health-ready","health-measured","health-missing","health-store"].forEach(function(id){setText(id,"--");});var a=document.getElementById("health-alert");if(a){a.className="health-alert bad";a.textContent="Evidence Health is unavailable. Missing health data is not treated as zero or healthy.";}return;}setText("health-status",h.healthy?"HEALTHY":"ATTENTION");var st=document.getElementById("health-status");if(st)st.className="ev-oos-status "+(h.healthy?"good":"wait");setText("health-days",h.verifiedMarketDays);setText("health-no-trade",h.noTradeDays);setText("health-append",healthTime(h.lastAppend));setText("health-backup",healthTime(h.archive&&h.archive.lastBackup));var v=h.archive&&h.archive.lastVerification;setText("health-verify",v?(v.ok?"PASSED · "+healthTime(v.timestamp):"FAILED · "+healthTime(v.timestamp)):"NOT PROVEN");setText("health-harvest",(h.harvester&&h.harvester.lastError)?"ERROR":healthTime(h.harvester&&h.harvester.lastRun));setText("health-ready",h.today&&h.today.readyEpisodes);setText("health-measured",h.harvester&&h.harvester.measured);setText("health-missing",Array.isArray(h.missingSessions)?h.missingSessions.length:"--");setText("health-store",h.storage&&h.storage.durable?"DURABLE":"NOT CONFIRMED");var alert=document.getElementById("health-alert");if(alert){var issues=Array.isArray(h.issues)?h.issues:[];alert.className="health-alert "+(h.healthy?"good":"bad");alert.textContent=h.healthy?"Collection checks are currently healthy. Last append: "+healthTime(h.lastAppend)+".":issues.length?"Attention: "+issues.join(" · ").replace(/_/g," "):"Health could not be confirmed.";}}
-  function pollEvidenceHealth(){fetch(BACKEND+"/evidence/health").then(function(r){if(!r.ok)throw new Error("health "+r.status);return r.json();}).then(renderEvidenceHealth).catch(function(){renderEvidenceHealth(null);});}
-
-  function renderEvidenceRows(target, groups, namePrefix) {
-    var el=document.getElementById(target); if(!el) return;
-    var rows=[];
-    Object.keys(groups||{}).forEach(function(name){
-      var m=groups[name], h=metric60(m);
-      rows.push({name:(namePrefix||"")+name,samples:Number(m.samples)||0,qualified:!!m.qualified,win:h&&h.winRatePct,ret:h&&h.avgReturnPct});
-    });
-    rows.sort(function(a,b){ return b.samples-a.samples; });
-    if(!rows.length){ setSafeHTML(el,'<div class="ev-empty">NOT ENOUGH MEASURED EPISODES YET. EDGE IS WATCHING, NOT INVENTING.</div>'); return; }
-    var html='<div class="ev-row head"><span>GROUP</span><span class="ev-num">N</span><span class="ev-num">WIN</span><span class="ev-num">AVG</span></div>';
-    rows.slice(0,8).forEach(function(r){
-      html+='<div class="ev-row"><span class="ev-name">'+escapeHtml(r.name)+(r.qualified?' ✓':'')+'</span><span class="ev-num">'+r.samples+'</span><span class="ev-num">'+(Number.isFinite(Number(r.win))?Number(r.win).toFixed(1)+'%':'--')+'</span><span class="ev-num '+pctTone(r.ret)+'">'+(Number.isFinite(Number(r.ret))?Number(r.ret).toFixed(2)+'%':'--')+'</span></div>';
-    });
-    setSafeHTML(el,html);
-  }
-  function renderOosRows(target, groups) {
-    var el=document.getElementById(target); if(!el) return;
-    var rows=[];
-    Object.keys(groups||{}).forEach(function(name){
-      var g=groups[name]||{}, train=g.train&&g.train.gross, testGross=g.test&&g.test.gross, testNet=g.test&&g.test.frictionAdjusted;
-      var gross60=metric60(testGross), net60=metric60(testNet);
-      rows.push({
-        name:name,
-        ready:!!g.validationReady,
-        trainN:Number(train&&train.samples)||0,
-        testN:Number(testGross&&testGross.samples)||0,
-        gross:gross60&&gross60.avgReturnPct,
-        net:net60&&net60.avgReturnPct
-      });
-    });
-    rows.sort(function(a,b){ return (b.trainN+b.testN)-(a.trainN+a.testN); });
-    if(!rows.length){ setSafeHTML(el,'<div class="ev-empty">NO HOLDOUT GROUPS YET. EDGE NEEDS MEASURED EPISODES BEFORE IT CAN ARGUE WITH ITSELF.</div>'); return; }
-    var html='<div class="ev-oos-row head"><span>SETUP</span><span class="ev-num">TR</span><span class="ev-num">TE</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
-    rows.slice(0,8).forEach(function(r){
-      html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(r.name)+(r.ready?' ✓':'')+'</span><span class="ev-num">'+r.trainN+'</span><span class="ev-num">'+r.testN+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(finiteResearchNumber(r.gross)?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(finiteResearchNumber(r.net)?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
-    });
-    setSafeHTML(el,html);
-  }
-  function frictionLabel(fm) {
-    fm=fm||{};
-    if(fm.mode==="CALIBRATED_PROFILE" && fm.calibratedProfile){
-      return "ILLUSTRATIVE COSTS · BROKER NOT SET";
-    }
-    if(fm.mode==="STRESS") return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
-    // V3 friction models predate the explicit mode field; preserve their configured state.
-    if(fm.configured) return (fm.roundTripBpsOnGrossPremium||0)+" BPS + ₹"+(fm.flatRupeesPerLegRoundTrip||0)+"/LEG";
-    return "GROSS ONLY";
-  }
-  function frictionDetail(fm) {
-    fm=fm||{};
-    var cp=fm.calibratedProfile;
-    if(!cp) return fm.basis||"No calibrated cost profile.";
-    var slip=Number(fm.slippageBps)||0;
-    return "ILLUSTRATIVE RESEARCH MODEL — not your actual broker charges. NET figures are scenario results, not personal expected profits. Recorded lot sizing when available (1-lot fallback) · brokerage ₹"+cp.brokeragePerExecutedOrderRupees+
-      "/executed order · STT "+cp.sttSellPct+"% sell · exchange "+cp.exchangeTransactionPct+
-      "% premium · IPFT ₹"+cp.ipftPerCroreRupees+"/crore · stamp "+cp.stampDutyBuyPct+
-      "% buy · GST "+cp.gstPct+"% on brokerage/exchange/IPFT · SEBI ₹"+cp.sebiPerCroreRupees+
-      "/crore · slippage stress "+slip+" bps.";
-  }
-  function finiteResearchNumber(v) { return v!==null && v!==undefined && v!=='' && Number.isFinite(Number(v)); }
-  function renderWalkForwardRows(target,groups) {
-    var el=document.getElementById(target); if(!el) return;
-    var rows=[];
-    Object.keys(groups||{}).forEach(function(name){
-      var g=groups[name]||{},agg=g.aggregateTest||{},gross=metric60(agg.gross),net=metric60(agg.frictionAdjusted);
-      rows.push({
-        name:name,replicated:!!g.replicatedAcrossFolds,
-        folds:(Number(g.eligibleFolds)||0)+"/"+(Number(g.totalFolds)||0),
-        n:Number(agg.gross&&agg.gross.samples)||0,
-        gross:gross&&gross.avgReturnPct,net:net&&net.avgReturnPct
-      });
-    });
-    rows.sort(function(a,b){return b.n-a.n;});
-    if(!rows.length){setSafeHTML(el,'<div class="ev-empty">NO WALK-FORWARD FOLDS YET. MORE MEASURED EXECUTION EPISODES ARE REQUIRED.</div>');return;}
-    var html='<div class="ev-wf-row head"><span>SETUP</span><span class="ev-num">FOLDS</span><span class="ev-num">N</span><span class="ev-num">GROSS</span><span class="ev-num">NET</span></div>';
-    rows.slice(0,8).forEach(function(r){
-      html+='<div class="ev-wf-row"><span class="ev-name">'+escapeHtml(r.name)+(r.replicated?' ✓':'')+'</span><span class="ev-num">'+r.folds+'</span><span class="ev-num">'+r.n+'</span><span class="ev-num '+pctTone(r.gross)+'">'+(finiteResearchNumber(r.gross)?Number(r.gross).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(r.net)+'">'+(finiteResearchNumber(r.net)?Number(r.net).toFixed(2)+'%':'--')+'</span></div>';
-    });
-    setSafeHTML(el,html);
-  }
-  function renderResearchFunnel(counts) {
-    counts=counts||{};
-    var vals=[
-      ["funnel-observing-fill",Number(counts.OBSERVING)||0],
-      ["funnel-sample-fill",Number(counts.SAMPLE_QUALIFIED)||0],
-      ["funnel-holdout-fill",Number(counts.HOLDOUT_AVAILABLE)||0],
-      ["funnel-replicated-fill",Number(counts.REPLICATED)||0],
-      ["funnel-ready-fill",Number(counts.RESEARCH_CANDIDATE)||0]
-    ];
-    var max=Math.max.apply(null,vals.map(function(x){return x[1];}).concat([1]));
-    vals.forEach(function(x){var el=document.getElementById(x[0]);if(el)el.style.width=(x[1]===0?0:Math.max(6,(x[1]/max)*100))+"%";});
-  }
-
-  function renderCandidateRegistry(reg) {
-    var el=document.getElementById("ev-candidates");
-    if(!reg){
-      renderResearchFunnel({});
-      setText("ev-cand-observing","--");setText("ev-cand-sample","--");setText("ev-cand-holdout","--");setText("ev-cand-replicated","--");setText("ev-cand-ready","--");
-      setSafeHTML(el,'<div class="ev-empty">V6 CANDIDATE REGISTRY IS NOT AVAILABLE FROM THE BACKEND YET.</div>');
-      setText("ev-cand-method","Waiting for Evidence Intelligence V6 candidate data. No zero-count inference is made.");
-      return;
-    }
-    var counts=reg.counts||{};
-    renderResearchFunnel(counts);
-    setText("ev-cand-observing",counts.OBSERVING||0);setText("ev-cand-sample",counts.SAMPLE_QUALIFIED||0);setText("ev-cand-holdout",counts.HOLDOUT_AVAILABLE||0);setText("ev-cand-replicated",counts.REPLICATED||0);setText("ev-cand-ready",counts.RESEARCH_CANDIDATE||0);
-    var rows=reg.candidates||[];
-    if(!rows.length){setSafeHTML(el,'<div class="ev-empty">NO CANDIDATE COMBINATIONS YET. EDGE NEEDS MEASURED EXECUTION EPISODES.</div>');setText("ev-cand-method",(reg&&reg.methodology)||"Research triage only; no live-decision impact.");return;}
-    var html='<div class="ev-oos-row head"><span>RESEARCH COMBINATION</span><span class="ev-num">N</span><span class="ev-num">FOLDS</span><span class="ev-num">NET MED</span><span class="ev-num">NET WORST</span></div>';
-    rows.slice(0,10).forEach(function(c){var o=c.observed||{};html+='<div class="ev-oos-row"><span class="ev-name">'+escapeHtml(c.status+" · "+c.key)+'</span><span class="ev-num">'+(c.measuredEpisodes||0)+'</span><span class="ev-num">'+(o.positiveFolds||0)+'/'+(o.validFolds||0)+'</span><span class="ev-num '+pctTone(o.medianNetFoldReturnPct)+'">'+(finiteResearchNumber(o.medianNetFoldReturnPct)?Number(o.medianNetFoldReturnPct).toFixed(2)+'%':'--')+'</span><span class="ev-num '+pctTone(o.worstNetFoldReturnPct)+'">'+(finiteResearchNumber(o.worstNetFoldReturnPct)?Number(o.worstNetFoldReturnPct).toFixed(2)+'%':'--')+'</span></div>';});
-    setSafeHTML(el,html);setText("ev-cand-method",reg.methodology||"Research triage only; no live-decision impact.");
-  }
-  function renderResearchGovernance(g) {
-    var st=document.getElementById("ev-gov-status");
-    if(!g){
-      if(st){st.textContent="V5 NOT AVAILABLE";st.className="ev-oos-status wait";}
-      setText("ev-gov-samples","-- / --");setText("ev-gov-folds","--");setText("ev-gov-positive","--");setText("ev-gov-net","-- / --");
-      setSafeHTML(document.getElementById("ev-gov-gates"),'<div class="ev-empty">GOVERNANCE DATA IS NOT AVAILABLE YET.</div>');
-      return;
-    }
-    var gates=g.gates||{},o=g.observed||{},th=g.thresholds||{};
-    var reviewReady=g.status==="REVIEW_READY";
-    if(st){var gs=String(g.status||"UNKNOWN");var simpleGs={INSUFFICIENT_DATA:"NEEDS MORE DATA",ACCUMULATING_VALIDATION:"BUILDING EVIDENCE",REPLICATED_RESEARCH:"REPEATING SO FAR",REVIEW_READY:"READY FOR HUMAN REVIEW"};st.innerHTML=escapeHtml(simpleGs[gs]||gs.replace(/_/g," "))+'<span class="pro-inline"> · '+escapeHtml(gs.replace(/_/g," "))+'</span>';st.className="ev-oos-status "+(reviewReady?"good":"wait");}
-    setText("ev-gov-samples",(o.measuredEpisodes||0)+" / "+(th.minMeasuredEpisodes||"--"));
-    setText("ev-gov-folds",(o.validFolds||0)+" / "+(th.minValidFolds||"--"));
-    setText("ev-gov-positive",(o.positiveFolds||0)+" / "+(o.validFolds||0));
-    setText("ev-gov-net",(finiteResearchNumber(o.medianNetFoldReturnPct)?Number(o.medianNetFoldReturnPct).toFixed(2)+"%":"--")+" / "+(finiteResearchNumber(o.worstNetFoldReturnPct)?Number(o.worstNetFoldReturnPct).toFixed(2)+"%":"--"));
-    var labels=[["ENOUGH OBSERVATIONS","SAMPLE SUFFICIENT",gates.sampleSufficient],["TESTED ON LATER DATA","HOLDOUT READY",gates.holdoutReady],["REPEATED ACROSS TIME","REPLICATED",gates.replicated],["REAL TRADING COSTS INCLUDED","REAL COST MODEL",gates.frictionConfigured],["STILL HOLDS AFTER COSTS","COST-ADJUSTED STABLE",gates.costAdjustedStable]];
-    var html='<div class="ev-row head"><span>GATE</span><span class="ev-num">STATE</span><span></span><span></span></div>';
-    labels.forEach(function(x){html+='<div class="ev-row"><span class="ev-name">'+x[0]+' <span class="pro-inline">· '+x[1]+'</span></span><span class="ev-num '+(x[2]?"ev-positive":"ev-neutral")+'">'+(x[2]?"YES":"NOT YET")+'</span><span></span><span></span></div>';});
-    setSafeHTML(document.getElementById("ev-gov-gates"),html);
-    setText("ev-gov-method",(g.interpretation||"Research maturity only.")+(finiteResearchNumber(o.netDispersionStdDevPct)?" · Net fold dispersion "+Number(o.netDispersionStdDevPct).toFixed(2)+"%.":""));
-  }
-  function renderEvidenceIntelligence(j) {
-    renderResearchGovernance(j.governance||null);
-    renderCandidateRegistry(j.candidates||null);
-    setText("ev-episodes",j.measuredEpisodes||0);
-    setText("ev-min-samples",j.minSamples||20);
-    var overall=j.overall||{};
-    setText("ev-excursion",evFmt(overall.avgMfePct,"%")+" / "+evFmt(overall.avgMaePct,"%"));
-    var hs=document.getElementById("ev-horizons"), html="";
-    [15,30,60,120].forEach(function(h){
-      var m=overall.horizons && (overall.horizons[String(h)]||overall.horizons[h]);
-      html+='<div class="ev-horizon"><div class="h">'+h+'M WIN</div><div class="v '+pctTone(m&&m.avgReturnPct)+'">'+(m&&Number.isFinite(Number(m.winRatePct))?Number(m.winRatePct).toFixed(1)+'%':'--')+'</div></div>';
-    });
-    setSafeHTML(hs,html);
-    var st=document.getElementById("ev-status");
-    if(st){ st.textContent=(overall.qualified?"SAMPLE GATE MET":"BUILDING SAMPLE")+(j.generatedAt?" · "+new Date(j.generatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):""); st.className="evidence-status"+(overall.qualified?" good":""); }
-    var method=j.methodology||{};
-    setText("ev-method",(method.population||"MEASURED episodes only")+" · "+(method.qualification||"Qualification is a sample-count marker, not proof of edge.")+" · "+(method.friction||"Friction model pending."));
-    renderEvidenceRows("ev-strategy",(j.dimensions||{}).strategy||{});
-    var context={};
-    ["regime","volatility","session","openingRange","vwapSide","vwapSlope","relativeVolume","atr"].forEach(function(dim){
-      var groups=(j.dimensions||{})[dim]||{};
-      Object.keys(groups).forEach(function(k){ context[dim.toUpperCase()+" · "+k]=groups[k]; });
-    });
-    renderEvidenceRows("ev-context",context);
-
-    var scanner={};
-    [
-      ["scannerOpeningRange","OR"],
-      ["scannerVwapContinuation","VWAP CONT"],
-      ["scannerVwapPullback","VWAP PULLBACK"],
-      ["scannerMomentum","MOMENTUM"]
-    ].forEach(function(pair){
-      var groups=(j.dimensions||{})[pair[0]]||{};
-      Object.keys(groups).forEach(function(k){ scanner[pair[1]+" · "+k]=groups[k]; });
-    });
-    renderEvidenceRows("ev-setups",scanner);
-    renderEvidenceRows("ev-setup-combos",j.scannerGroups||{});
-
-    var validation=j.validation||null;
-    var oos=document.getElementById("ev-oos-status");
-    if(!validation){
-      if(oos){oos.textContent="V3 NOT AVAILABLE";oos.className="ev-oos-status wait";}
-      setText("ev-oos-split","-- / --");
-      setText("ev-oos-friction","--");
-      setText("ev-oos-cutoff","Waiting for Evidence Intelligence V3.");
-      renderOosRows("ev-oos-groups",{});
-    } else {
-      if(oos){oos.textContent=validation.enoughForHoldout?"HOLDOUT GATE MET":"BUILDING HOLDOUT";oos.className="ev-oos-status "+(validation.enoughForHoldout?"good":"wait");}
-      setText("ev-oos-split",(validation.trainEpisodes||0)+" / "+(validation.testEpisodes||0));
-      var fm=validation.frictionModel||{};
-      setText("ev-oos-friction",frictionLabel(fm));
-      setText("ev-oos-cutoff",(validation.cutoffTimestamp?"Holdout starts "+new Date(validation.cutoffTimestamp).toLocaleString("en-IN")+". ":"")+(validation.methodology||"Chronological holdout; no shuffle."));
-      renderOosRows("ev-oos-groups",validation.scannerGroups||{});
-    }
-
-    var wf=j.walkForward||null, wfs=document.getElementById("ev-wf-status");
-    if(!wf){
-      if(wfs){wfs.textContent="V4 NOT AVAILABLE";wfs.className="ev-oos-status wait";}
-      setText("ev-wf-folds","--");setText("ev-wf-test","--");setText("ev-wf-profile","--");setText("ev-wf-net","--");
-      setText("ev-wf-method","Waiting for Evidence Intelligence V4.");
-      renderWalkForwardRows("ev-wf-groups",{});
-    } else {
-      if(wfs){wfs.textContent=wf.enoughForWalkForward?"REPLICATION GATE MET":"BUILDING FOLDS";wfs.className="ev-oos-status "+(wf.enoughForWalkForward?"good":"wait");}
-      setText("ev-wf-folds",wf.foldCount||0);
-      var agg=wf.aggregateTest||{},gross=agg.gross||{},net=agg.frictionAdjusted||{},net60=metric60(net);
-      setText("ev-wf-test",gross.samples||0);
-      setText("ev-wf-profile",frictionLabel(wf.frictionModel||{}));
-      setText("ev-wf-net",(net60&&Number.isFinite(Number(net60.measured)))?net60.measured:"--");
-      setText("ev-wf-method",(wf.methodology||"Expanding-window forward validation.")+" · "+frictionDetail(wf.frictionModel||{}));
-      renderWalkForwardRows("ev-wf-groups",wf.scannerGroups||{});
-    }
-  }
+  // Optional diagnostics: fetch only while Advanced is expanded.
   function renderSignalFunnel(j){
     if(!j){
       ["funnel-a","funnel-b","funnel-c","funnel-near"].forEach(function(id){setText(id,"--");});
@@ -3154,42 +2803,17 @@
       .catch(function(){renderSignalFunnel(null);});
   }
 
-  function renderPriceActionResearch(j){
-    if(!j){setText("pa-total","--");setText("pa-tier-counts","-- / --");setSafeHTML(document.getElementById("pa-by-tier"),'<div class="ev-empty">PRICE ACTION RESEARCH UNAVAILABLE.</div>');return;}
-    setText("pa-total",j.totalMeasured!==undefined?j.totalMeasured:"--");
-    var bt=j.byTier&&j.byTier.B||{},ct=j.byTier&&j.byTier.C||{};
-    setText("pa-tier-counts",(bt.samples||0)+" / "+(ct.samples||0));
-    function metricRows(groups,limit){
-      var rows=Object.keys(groups||{}).map(function(k){var m=groups[k]||{};return{name:k,samples:m.samples||0,win:m.winRate60mPct,ret:m.avgReturn60mPct};});
-      rows.sort(function(a,b){return b.samples-a.samples;});
-      return rows.slice(0,limit||8).map(function(r){return '<div class="funnel-row"><span>'+escapeHtml(String(r.name).replace(/_/g," "))+' · N '+r.samples+'</span><span>'+((r.ret!==null&&r.ret!==undefined)?Number(r.ret).toFixed(2)+"%":"--")+' / '+((r.win!==null&&r.win!==undefined)?Number(r.win).toFixed(0)+"% win":"--")+'</span></div>';}).join("");
+  function initAdvancedDiagnostics(){
+    var details=document.getElementById("edge-advanced-diagnostics");
+    if(!details)return;
+    var refresh=document.getElementById("edge-funnel-refresh"), timer=null;
+    function sync(){
+      if(timer){clearInterval(timer);timer=null;}
+      if(details.open){pollSignalFunnel();timer=setInterval(pollSignalFunnel,60000);}
     }
-    var tierEl=document.getElementById("pa-by-tier");if(tierEl)setSafeHTML(tierEl,metricRows(j.byTier,4)||'<div class="ev-empty">No measured B/C outcomes yet.</div>');
-    var merged={};
-    [["CHART",j.byChartVerdict],["CPR",j.byCprWidth],["TREND",j.byTrendStrength],["LEVEL",j.byPrimaryLevelEvent],["OPTION",j.byOptionAlignment]].forEach(function(pair){
-      Object.keys(pair[1]||{}).forEach(function(k){merged[pair[0]+" · "+k]=pair[1][k];});
-    });
-    var ctx=document.getElementById("pa-context");if(ctx)setSafeHTML(ctx,metricRows(merged,10)||'<div class="ev-empty">Waiting for measured price-action episodes.</div>');
-    setText("pa-method",j.methodology||"Research-only descriptive outcomes.");
-  }
-  function pollPriceActionResearch(){
-    fetch(BACKEND+"/evidence/price-action").then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();}).then(renderPriceActionResearch).catch(function(){renderPriceActionResearch(null);});
-  }
-
-  function pollEvidenceIntelligence() {
-    fetch(BACKEND+"/evidence/intelligence?minSamples=20")
-      .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
-      .then(renderEvidenceIntelligence)
-      .catch(function(){ var st=document.getElementById("ev-status"); if(st){st.textContent="EVIDENCE PIPE UNAVAILABLE";st.className="evidence-status";} });
-  }
-  function startEvidenceIntelligence() {
-    pollEvidenceIntelligence();
-    pollEvidenceHealth();
-    pollSignalFunnel();
-    pollPriceActionResearch();
-    clearInterval(evidenceTimer);
-    evidenceTimer=setInterval(function(){pollEvidenceIntelligence();pollEvidenceHealth();pollSignalFunnel();pollPriceActionResearch();},60000);
-    var btn=document.getElementById("ev-refresh"); if(btn) btn.addEventListener("click",pollEvidenceIntelligence);
+    details.addEventListener("toggle",sync);
+    if(refresh)refresh.addEventListener("click",pollSignalFunnel);
+    if(details.open)sync();
   }
 
   // -- Strike analyser --------------------------------------------------------
@@ -3367,7 +2991,7 @@
     startPolling();
     startMarketStatusTimer();
     startStaleChecker();
-    startEvidenceIntelligence();
+    initAdvancedDiagnostics();
   });
 
   if ("serviceWorker" in navigator) {
@@ -3380,7 +3004,6 @@
     var panels = {
       radar: document.getElementById('tab-radar'),
       trade: document.getElementById('tab-trade'),
-      flow: document.getElementById('tab-flow'),
       lab: document.getElementById('tab-lab')
     };
     function showTab(name){
