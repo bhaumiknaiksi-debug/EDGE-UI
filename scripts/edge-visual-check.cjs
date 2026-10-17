@@ -77,6 +77,23 @@ function fixture(state){
           episodes:[{symbol:'NIFTY26O1322500CE',quantity:65,entry:124.90,exit:139.15,
             openedAt:'2026-10-09T12:10:56',closedAt:'2026-10-09T12:58:16',grossPnl:926.25,netPnl:null,charges:null}]};
         journal.importResult={added:2,duplicates:0};
+      }
+      if(r.request().url().endsWith('/pnl')){
+        assert.equal(d.clientId,'TEST123','P&L import must match protected account');
+        assert.equal(d.startDate,'2026-10-10');
+        assert.equal(d.endDate,'2026-10-17');
+        assert.equal(d.grossPnl,2333.5);
+        assert.equal(d.charges,99.1261);
+        assert.equal(d.rows.length,2);
+        journal.pnlResult={period:'2026-10-10_2026-10-17',unchanged:false,replaced:false};
+        journal.pnl={affectsRiskLedger:false,reports:[{
+          id:'2026-10-10_2026-10-17',startDate:'2026-10-10',endDate:'2026-10-17',
+          grossPnl:2333.5,charges:99.1261,otherCredits:0,unrealizedPnl:0,netPnl:2234.37,
+          symbols:2,matchedSymbols:0,unmatchedSymbols:2,items:[
+           {kind:'PNL_ONLY',symbol:'NIFTY26O1322500CE',quantity:65,entry:48.25,exit:60.8,grossPnl:815.75,openedAt:null,closedAt:null,detail:'Tradebook needed for execution time'},
+           {kind:'PNL_ONLY',symbol:'NIFTY26O1923100CE',quantity:65,entry:90.4,exit:113.75,grossPnl:1517.75,openedAt:null,closedAt:null,detail:'Tradebook needed for execution time'}
+          ]
+        }]};
       }}await r.fulfill({contentType:'application/json',body:JSON.stringify(journal)});});
     await page.locator('#journal-code').fill('test-owner-code');await page.locator('#journal-login button').click();await page.locator('#journal-private').waitFor({state:'visible'});
     assert.equal(await page.locator('#journal-code').inputValue(),'');
@@ -120,6 +137,30 @@ function fixture(state){
     await page.locator('#journal-history-filter').selectOption('all');
     assert.equal(journal.budget.availableCapital,10000,'Import cannot modify live risk ledger capital');
     assert.equal(posts.at(-1).requestId.length>=16,true,'Batch import uses an idempotent request ID');
+    await page.locator('#kite-import > summary').click();
+    const pbefore=posts.length;
+    await page.locator('#kite-file').setInputFiles({name:'kite-pnl-synthetic.xlsx',
+      mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer:Buffer.from('UEsDBBQAAAAIAOt1UV3xFeuZ/wEAALQGAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDEueG1sjZVdb9sgGIX/CuJidzVf81dnu1KTuIo0NVuTTtolTWiMZuMIk3Tpr5+TWbHdQTvJF/DyHh6fAxLJze+qBAehG1mrFBIPQyDUut5ItU3h4yq/iiBoDFcbXtZKpPAoGniTJS+1/tUUQhjQ6lWTwsKY3TVCzboQFW+8eidUu/Jc64qbdqq3qNlpwTdnUVUiinGAKi4VzJJzbcoNzxJdvwCdwrCtrk+D2xACk0KpSqnE0ui2LpssMdmklEIZMJ8myGQJOhXRuhNNXKLVbLkilI0lqGVewIRcyO3Qvsu3T7zaffkKloYbUZ3+orUJ8nN1AZ51XQGKaXBFcPsBU/ez8D2y35N9l+mC661obJY7zSnOQxbHHqEBSdDBBgp6UOAALUwhNJhosZEGnI2BqXiSxkoOBmTsYPYHSlyH8yB4KV/FBnT5WlnhgEUZY57vAEY9MHIAH5X+H2T0sT3W05iLtjxWT3VpIzgl8+X83iKYOgXf91wZaY4W0cwput0fwQ9e7oVFlbvtiLJ0yu6csvcPeRxq3IcaO7a7n+ernzRYEEapj/FkZs3XpabYmm48OPCgv19djMNVRljg0Tct+bgl9qmHxx13o46I+F7ouMaf8SWDdvhBBjFlxJWBU23PoGt3ZDBa9aMweGswH3WELGZDh38zGLUQn4T/hoAGDwO6vDjZH1BLAQIUAxQAAAAIAOt1UV3xFeuZ/wEAALQGAAAYAAAAAAAAAAAAAACAAQAAAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWxQSwUGAAAAAAEAAQBGAAAANQIAAAAA','base64')});
+    await page.waitForFunction(()=>document.getElementById('kite-preview-status').textContent.includes('Kite P&L · 2026-10-10 to 2026-10-17'));
+    assert.equal(posts.length,pbefore,'Viewing P&L report must never write history before confirmation');
+    assert.match(await page.locator('#kite-preview-status').textContent(),/Net ₹2234\.37/);
+    assert.equal(await page.locator('#kite-client').inputValue(),'TEST123');
+    await page.locator('#kite-import-confirm').click();
+    await page.waitForFunction(()=>document.getElementById('journal-status').textContent.includes('Kite P&L statement reconciled'));
+    assert.equal(await page.locator('#kite-import').getAttribute('open'),null);
+    assert.match(await page.locator('#kite-pnl-gross').textContent(),/₹2,333\.50/);
+    assert.match(await page.locator('#kite-pnl-charges').textContent(),/₹99\.13/);
+    assert.match(await page.locator('#kite-pnl-net').textContent(),/₹2,234\.37/);
+    assert.equal(await page.locator('#kite-report-period').inputValue(),'2026-10-10_2026-10-17');
+    assert.equal(await page.locator('.kite-history-row').count(),2,'Two instrument-level P&L results');
+    assert.equal(await page.locator('.kite-history-row .kite-type').first().textContent(),'P&L');
+    assert.match(await page.locator('.kite-history-row .kite-entry').first().textContent(),/≈₹/);
+    assert.match(await page.locator('#kite-pnl-scope-note').textContent(),/Rows show gross P&L/);
+    await page.locator('#kite-report-period').selectOption('book');
+    assert.match(await page.locator('#kite-history-summary').textContent(),/1 trade · \+₹926\.25 gross/);
+    assert.equal(await page.locator('#kite-reconciled-totals').isVisible(),false,'Do not label Tradebook gross as broker net');
+    assert.equal(journal.budget.availableCapital,10000,'Either import may not alter live risk');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'journal mobile overflow');
     await page.screenshot({path:'visual-results/kite-trade-history-mobile.png',fullPage:true});
     await page.screenshot({path:'visual-results/manual-trade-log.png',fullPage:true});
