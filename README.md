@@ -177,6 +177,16 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 
 [**edge-backend**](https://github.com/bhaumiknaiksi-debug/edge-backend) — market data, signal research, execution gates, evidence and server-side notifications.
 
+
+### Import Kite F&O Tradebook
+
+In **Control → Trade Log**, unlock with the existing owner code, expand **Import Kite Tradebook**, and choose a Zerodha Console tradebook export (`.xlsx` or `.csv`). EDGE reads Excel locally using the browser's built-in ZIP decompression and XML parser; no third-party spreadsheet library, CDN, or external upload service is required. Verify the detected Client ID and the preview, then explicitly choose **Import confirmed fills**.
+
+The current importer supports NIFTY option buy/sell fills. It accepts up to 120 fills per upload (larger periods should be exported in smaller date ranges), and ignores other instruments with a visible skipped-row count. The server validates every fill and deduplicates overlapping exports by broker trade/order IDs. Imported completed positions and unmatched quantities appear as **Kite broker history** inside Trade Log, separate from manually entered open/close records.
+
+**Gross profits are before charges; actual net P&L cannot be inferred from tradebook alone.** Importing history never changes capital availability, daily loss limits, today's reconciliation or execution READY signals. If the backend import endpoint has not been deployed yet, the preview still works but confirmation cannot persist the rows.
+
+
 ### Manual trade log
 
 Open **Control → Manual trade log** and unlock with the existing alert owner code. The code remains in tab memory. Record every actual entry and full close, including actual round-trip charges, then confirm today's records match your broker. EDGE reserves open planned risk and capital against the ₹10,000 capital ceiling and ₹1,000 daily loss allowance. New entry approval is recalculated on the next backend market poll after changes. The log does not submit orders or automatically reconcile broker positions. Keep estimated costs realistic; stop fills and slippage can exceed planned loss. For partial positions, record individual fills separately.
