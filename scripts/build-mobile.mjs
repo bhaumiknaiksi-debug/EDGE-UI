@@ -10,6 +10,7 @@ const staticFiles = [
   "pwa.js",
   "web-push.js",
   "trade-log.js",
+  "kite-import.js",
   "trade-log.css",
   "sw.js",
   "edge-icon.svg"
