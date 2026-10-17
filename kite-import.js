@@ -138,7 +138,7 @@
   function findPnlHeader(rows){
     for(let i=0;i<Math.min(rows.length,200);i++){
       const cols=(rows[i]||[]).map(name);
-      if(['symbol','quantity','buyvalue','sellvalue','realizedpnl'].every(k=>cols.includes(k)))
+      if(['symbol','quantity','buyvalue','sellvalue','realizedpl'].every(k=>cols.includes(k)))
         return {row:i,cols};
     }
     return null;
@@ -180,13 +180,13 @@
       const quantity=numeric(row[at('quantity')],'quantity');
       const buyValue=numeric(row[at('buyvalue')],'buy value');
       const sellValue=numeric(row[at('sellvalue')],'sell value');
-      const realizedPnl=numeric(row[at('realizedpnl')],'realized P&L');
+      const realizedPnl=numeric(row[at('realizedpl')],'realized P&L');
       if(!Number.isInteger(quantity)||quantity<=0)throw Error('Invalid P&L quantity in row '+(i+1));
       result.push({symbol,quantity,buyValue,sellValue,realizedPnl});
     }
     if(!result.length||result.length>150)throw Error('No supported NIFTY option P&L entries found (maximum 150).');
-    const grossPnl=findSummary('realizedpnl'),charges=findSummary('charges');
-    const otherCredits=findSummary('othercreditdebit'),unrealizedPnl=findSummary('unrealizedpnl');
+    const grossPnl=findSummary('realizedpl'),charges=findSummary('charges');
+    const otherCredits=findSummary('othercreditdebit'),unrealizedPnl=findSummary('unrealizedpl');
     const total=Math.round(result.reduce((s,x)=>s+x.realizedPnl,0)*100)/100;
     if(Math.abs(total-grossPnl)>.02)throw Error('P&L statement totals do not match its instrument rows. Check report filters.');
     return {kind:'pnl',clientId:clientIdFrom(rows,head.row),startDate:range[1],endDate:range[2],
