@@ -6,26 +6,19 @@ EDGE is a personal **NIFTY 50 options research and decision-support app**. It br
 
 This repository contains the **web frontend, installable PWA and Capacitor mobile wrapper**. The separate [EDGE backend](https://github.com/bhaumiknaiksi-debug/edge-backend) supplies market data, research and authoritative execution decisions. Trades are placed manually through the user's broker; EDGE does not submit orders.
 
-> **EDGE 2.0 redesign:** The redesigned Home / Signals / Insights / Control interface is being reviewed in [PR #44](https://github.com/bhaumiknaiksi-debug/EDGE-UI/pull/44). It is separate from the current `main` interface described below.
+> **Lean three-tab UI:** The optional research presentation is no longer part of the everyday trading interface. Backend signal selection, orchestration, risk controls and evidence storage have not been changed by this UI cleanup.
 
 ## What EDGE shows
 
-**Simple mode** presents the current or last available NIFTY snapshot, backend market-session status, A/B/C signal calls and the contracts being considered for each tier.
+**Home** shows the live or last available NIFTY snapshot, the backend market-session status, and the A/B/C candidates. **Market Context** expands on Home to show the existing previous-day/session levels, chart story, conditional playbook and technical option information without creating another tab.
 
-**Pro mode** exposes four sections:
+**Signals** displays the backend's strike shortlist with contract prices, tier and blocking reasons.
 
-| Section | Purpose |
-| --- | --- |
-| **Market** | Market overview, signal journey, candidate structures, chart interpretation and reference levels. |
-| **Action** | Backend entry plan, execution conditions and risk/position detail. |
-| **Details** | Technical option intelligence. |
-| **Lab** | Research evidence, collection health, notification settings and app recovery controls. |
+**Control** keeps the real trade journal, alert enrollment/settings and app recovery. **Advanced diagnostics** is collapsed by default and provides the existing "Why EDGE Says No" signal funnel and manual strike analyser. Its diagnostic endpoint is fetched only while the section is open.
 
-Switching modes changes presentation, not trading rules. Market-open/closed status comes from the backend. Historical or unverified data must not be interpreted as a live entry signal.
+**Simple/Pro** remains an independent display-detail toggle. Simple shows the market and three signal tiers; Pro exposes more technical details. Switching modes or tabs never upgrades a candidate or bypasses backend execution rules.
 
-### EDGE 2.0 design branch
-
-The [design branch](https://github.com/bhaumiknaiksi-debug/EDGE-UI/tree/feat/stitch-edge-2-ui) adds a charcoal/mint visual system, bottom navigation, a prominent decision card, expandable evidence, a filtered strike matrix and a closed-market briefing. It also adds a timestamped partial-session chart and responsive browser tests. These features remain under review until the design PR is merged.
+The retired research dashboards (measured outcomes, governance, holdout, walk-forward, research funnel and price-action measurement) and their frontend background polling are removed. This does **not** delete historical evidence, modify the backend evidence service, or replace the broker-supplied manual trade log.
 
 ## Signals and execution safety
 
@@ -101,7 +94,7 @@ When using another backend, update the origin consistently in:
 
 The backend must permit the frontend origin through CORS. Keep broker credentials, enrollment secrets, private push keys and signing credentials out of frontend source and Git history.
 
-Principal integrations include `/data`, `/history`, `/api/v1/market/status`, the `/evidence/*` research endpoints and `/api/v1/push/*` notification endpoints. The UI tolerates missing research fields by showing unavailable states.
+Principal integrations include `/data`, `/history`, `/api/v1/market/status`, `/api/v1/push/*` and an on-demand `/evidence/signal-funnel` diagnostics request. Evidence intelligence, collection health and price-action research are no longer polled by this frontend.
 
 ## Checks
 
@@ -117,7 +110,7 @@ node --check sw.js
 
 The checks cover frontend syntax, polling behavior, execution safety and server-confirmed push enrollment. GitHub Actions also covers Web Push integration and native bootstrap/iOS simulator builds.
 
-The design branch adds isolated browser fixtures and responsive screenshots. To run them on that branch:
+Isolated browser fixtures and responsive screenshots can be run with:
 
 ```bash
 git switch feat/stitch-edge-2-ui
@@ -134,11 +127,11 @@ Deploy the repository root as a static site. The existing web deployment uses Ve
 
 `vercel.json` defines revalidation headers for the HTML shell, service worker and supporting scripts. The service worker prefers network responses, with cached app-shell assets available as a fallback. It does not intentionally cache cross-origin market/API responses.
 
-For shell changes, keep the service-worker cache version and its regression assertion aligned. A cached interface is not proof of a live market connection. **Pro → Lab → Update & Reload** provides an app recovery action.
+For shell changes, keep the service-worker cache version and its regression assertion aligned. A cached interface is not proof of a live market connection. **Control → Update & Reload** provides an app recovery action.
 
 ## Notifications
 
-Browser Web Push controls live in **Pro → Lab → Lock Screen Alerts**. Enrollment requires supported browser APIs, notification permission and authenticated backend registration using the private enrollment code. The test action is available only after server-confirmed enrollment.
+Browser Web Push controls live in **Control → Lock Screen Alerts**. Enrollment requires supported browser APIs, notification permission and authenticated backend registration using the private enrollment code. The test action is available only after server-confirmed enrollment.
 
 Backend-confirmed execution-ready and invalidation events can be delivered through the push channel when the backend is configured to send them. Browser permission, a saved subscription or a successful build does not prove that an alert was delivered. Verify actual delivery separately.
 
@@ -176,7 +169,7 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 - Preserve the strict execution gate when changing presentation.
 - Keep B/C research distinct from executable A signals.
 - Show data timestamps and unavailable states; never fabricate prices, performance or readiness percentages.
-- Keep operational controls in the last tab and advanced detail in Pro.
+- Keep operational controls in Control and on-demand diagnostic detail in its collapsed Advanced section.
 - Validate UI changes against waiting, blocked, invalidated, stale and closed-market states as well as ready states.
 - Review frontend changes independently from backend uptime and notification-delivery work.
 
