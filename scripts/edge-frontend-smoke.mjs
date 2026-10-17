@@ -34,7 +34,7 @@ assert.match(html,/<table class="kite-trades-table">/,"Broker fills must render 
 assert.match(html,/id="journal-manual-tools"/,"Risk and manual reconciliation must remain accessible in Advanced");
 assert.match(html,/id="journal-entry-details"/,"Manual trade entry must remain available but collapsed");
 assert.doesNotMatch(html.slice(html.indexOf('<section id="trade-log"'),html.indexOf('</section>',html.indexOf('<section id="trade-log"'))),/₹10,000 capital ceiling/,"Trade Log must not show capital headline");
-assert.match(kiteJournal,/\$('journal-login'\).hidden=true/,"Owner prompt must disappear after successful unlock");
+assert.ok(kiteJournal.includes("$('journal-login').hidden=true"),"Owner prompt must disappear after successful unlock");
 assert.match(kiteJournal,/data-label/,"Compact rows must retain accessible field labels");
 assert.match(kiteJournal,/trade\.grossPnl/,"Gross P&L must come only from backend-reconciled fills");
 assert.match(kiteImporter,/DecompressionStream\('deflate-raw'\)/,"XLSX must work locally without a third-party CDN");
