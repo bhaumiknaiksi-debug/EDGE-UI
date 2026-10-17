@@ -50,11 +50,11 @@
   const signedMoney=n=>(Number(n)>0?'+':Number(n)<0?'−':'')+fullMoney(Math.abs(Number(n)));
   // NIFTY tradebook contract ID includes expiry code and a 5-digit strike.
   function displayContract(symbol){
-    const match=/^NIFTY[0-9A-Z]+?(\\d{5})(CE|PE)$/.exec(String(symbol||''));
+    const match=/^NIFTY[0-9A-Z]+?(\d{5})(CE|PE)$/.exec(String(symbol||''));
     return match?{name:'NIFTY 50',strike:match[1]+' '+match[2]}:{name:String(symbol||'—'),strike:''};
   }
   function dateLabel(iso){
-    const match=/^(\\d{4})-(\\d{2})-(\\d{2})/.exec(String(iso||''));
+    const match=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||''));
     return match?match[3]+'/'+match[2]:'—';
   }
   function makeCell(className, label, text){
