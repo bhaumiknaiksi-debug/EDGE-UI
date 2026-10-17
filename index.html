@@ -1308,45 +1308,96 @@
 
   </div>
 <div id="tab-lab" class="edge-panel" role="tabpanel">
-<section id="trade-log" class="edge-journal" aria-label="Manual trade log">
-<h2>Trade Log</h2>
-<p>₹10,000 capital ceiling · ₹1,000 daily loss allowance including charges. Record actual broker fills here; EDGE does not place orders.</p>
-<form id="journal-login" class="journal-grid"><label>Owner code (same code used for alerts)<input id="journal-code" type="password" autocomplete="off" required></label><button>Unlock trade log</button></form>
-<p id="journal-status" role="status">Your code stays in this tab’s memory.</p>
-<div id="journal-private" hidden>
-<output id="journal-budget"></output><p id="journal-state"></p><button id="journal-refresh" type="button">Refresh records</button>
-<form id="journal-confirm"><label><input id="journal-reconciled" type="checkbox" required>I have recorded all open positions and today’s completed trades, and checked them against my broker.</label><button>Confirm today’s records</button></form>
-<details class="kite-import" id="kite-import">
-  <summary>Import Kite Tradebook <span>Excel / CSV</span></summary>
-  <div class="kite-import-body">
-    <p>Choose your Kite F&amp;O Tradebook (.xlsx or .csv). EDGE reads it on your device, extracts NIFTY option fills, and shows a preview. Nothing is saved until you confirm the import.</p>
-    <label>Kite Tradebook file<input id="kite-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
-    <label>Client ID (verify account)<input id="kite-client" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Detected from Tradebook"></label>
-    <p id="kite-preview-status" role="status">Choose your export to preview completed and unmatched fills.</p>
-    <div id="kite-preview" class="kite-preview" aria-label="Kite tradebook preview"></div>
-    <button type="button" id="kite-import-confirm" disabled hidden>Confirm import</button>
-    <p id="kite-import-status" role="status">Kite tradebooks contain execution prices but not complete trading charges. Imports are kept as broker history and never change live risk or READY signals.</p>
+<section id="trade-log" class="edge-journal" aria-label="Trade history">
+  <div class="journal-topline">
+    <div>
+      <h2>Trade Log</h2>
+      <p class="journal-subtitle">Your completed Kite option trades, in one place.</p>
+    </div>
+    <button id="journal-refresh" class="journal-refresh" type="button" aria-label="Refresh trade history" title="Refresh trade history" hidden>↻</button>
   </div>
-</details>
-<section class="kite-imported-history" aria-label="Imported Kite broker history">
-  <h3>Kite broker history</h3>
-  <p id="kite-history-summary">No broker history imported.</p>
-  <div id="kite-history-list"></div>
+  <form id="journal-login" class="journal-login">
+    <label>Owner code<input id="journal-code" type="password" autocomplete="off" required placeholder="Unlock your private trades"></label>
+    <button>Unlock trade log</button>
+  </form>
+  <p id="journal-status" class="journal-status" role="status" aria-live="polite">Unlock to view your private trading history.</p>
+  <div id="journal-private" hidden>
+    <details id="kite-import" class="kite-import">
+      <summary>Import Kite tradebook <span>Excel / CSV</span></summary>
+      <div class="kite-import-body">
+        <p>Choose a Kite F&amp;O tradebook. Review your NIFTY option fills before saving; repeat uploads are deduplicated.</p>
+        <label>Kite Tradebook file<input id="kite-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
+        <label>Client ID (verify account)<input id="kite-client" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Detected from Tradebook"></label>
+        <p id="kite-preview-status" role="status">Select an export to preview trades.</p>
+        <div id="kite-preview" class="kite-preview" aria-label="Kite tradebook preview"></div>
+        <button type="button" id="kite-import-confirm" disabled hidden>Confirm import</button>
+        <p id="kite-import-status" role="status">Broker history is separate from live risk controls.</p>
+      </div>
+    </details>
+
+    <div class="journal-history-heading">
+      <div class="journal-history-title">All trades <span id="kite-history-count"></span></div>
+      <label class="journal-filter-label" for="journal-history-filter">
+        <span>Filter</span>
+        <select id="journal-history-filter" aria-label="Filter trades">
+          <option value="all">All trades</option>
+          <option value="profit">Profitable</option>
+          <option value="loss">Loss-making</option>
+          <option value="flat">Break-even</option>
+        </select>
+      </label>
+    </div>
+    <div class="journal-history-summary">
+      <strong id="kite-history-summary">No trades imported yet.</strong>
+      <span>Gross P&amp;L · excluding broker charges</span>
+    </div>
+    <p id="kite-unmatched-warning" class="journal-unmatched-warning" role="status" hidden></p>
+    <div class="kite-trades-frame">
+      <table class="kite-trades-table">
+        <thead><tr>
+          <th scope="col">Date</th><th scope="col">Instrument</th><th scope="col">Type</th>
+          <th scope="col">Entry</th><th scope="col">Exit</th><th scope="col">P&amp;L (₹)</th>
+        </tr></thead>
+        <tbody id="kite-history-list">
+          <tr class="kite-empty"><td colspan="6">Import a Kite tradebook to see your trade history.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="journal-safety-tools" id="journal-manual-tools">
+      <summary>Advanced · Live risk &amp; manual records <span>Optional tools</span></summary>
+      <div class="journal-safety-content">
+        <p class="journal-safety-note">Kite exports are historical records. They do not update today's live-risk ledger. Reconcile actual open positions and fills here when trading.</p>
+        <output id="journal-budget"></output>
+        <p id="journal-state"></p>
+        <form id="journal-confirm" class="journal-confirm">
+          <label><input id="journal-reconciled" type="checkbox" required>I have checked today's completed trades and all open positions against my broker.</label>
+          <button>Confirm today's records</button>
+        </form>
+        <details class="journal-manual-entry" id="journal-entry-details">
+          <summary>Enter a live trade manually <span>Only if not yet imported / reconciled</span></summary>
+          <div class="journal-manual-entry-body">
+            <p>Only for recording actual fills while trading. Recording a Tier B/C trade does not upgrade its signal or bypass risk gates.</p>
+            <form id="journal-open" class="journal-grid">
+              <label>Contract / structure<input name="contract" placeholder="NIFTY expiry strike CE or PE" pattern="[A-Za-z0-9 |._-]{3,100}" required></label>
+              <label>Strategy<select id="journal-strategy" name="strategy"><option value="LONG_CALL">Long call</option><option value="LONG_PUT">Long put</option><option value="OTHER">Other structure</option></select></label>
+              <label>Quantity (units, not lots)<input name="quantity" type="number" min="1" step="1" required></label>
+              <label>Actual entry premium<input name="entry" type="number" min="0.01" step="0.01" required></label>
+              <label>Planned stop premium<input id="journal-stop" name="stop" type="number" min="0" step="0.01" required></label>
+              <label>Estimated total costs + slippage reserve<input name="estimatedCosts" type="number" min="0.01" step="0.01" value="100" required></label>
+              <label data-other hidden>Capital / broker margin before costs<input name="capitalUsed" type="number" min="0.01" step="0.01"></label>
+              <label data-other hidden>Planned loss before costs<input name="plannedLoss" type="number" min="0.01" step="0.01"></label>
+              <label>Signal reference (optional)<input name="signalId" maxlength="200"></label>
+              <button>Record filled trade</button>
+            </form>
+            <small>Trade fills are actual; stops and estimated costs are not guaranteed. Full-position closes only; record partial fills separately.</small>
+          </div>
+        </details>
+        <div id="journal-trades"></div>
+      </div>
+    </details>
+  </div>
 </section>
-<h3>Record an actual entry</h3><p>Logging a B/C trade does not upgrade its tier. Record fills even when they exceed your limits so the risk picture stays complete.</p>
-<form id="journal-open" class="journal-grid">
-<label>Contract / structure<input name="contract" placeholder="NIFTY expiry strike CE or PE" pattern="[A-Za-z0-9 |._-]{3,100}" required></label>
-<label>Strategy<select id="journal-strategy" name="strategy"><option value="LONG_CALL">Long call</option><option value="LONG_PUT">Long put</option><option value="OTHER">Other structure</option></select></label>
-<label>Quantity (units, not lots)<input name="quantity" type="number" min="1" step="1" required></label>
-<label>Actual entry premium<input name="entry" type="number" min="0.01" step="0.01" required></label>
-<label>Planned stop premium<input id="journal-stop" name="stop" type="number" min="0" step="0.01" required></label>
-<label>Estimated total costs + slippage reserve<input name="estimatedCosts" type="number" min="0.01" step="0.01" value="100" required></label>
-<label data-other hidden>Capital / broker margin before costs<input name="capitalUsed" type="number" min="0.01" step="0.01"></label>
-<label data-other hidden>Planned loss before costs<input name="plannedLoss" type="number" min="0.01" step="0.01"></label>
-<label>Signal reference (optional)<input name="signalId" maxlength="200"></label>
-<button>Record filled trade</button></form>
-<small>Planned stops are not guaranteed loss caps. Costs are estimates until closed. Full-position closes only; for partial fills, record each separately. Entry approval refreshes on the next market poll after a journal change.</small>
-<div id="journal-trades"></div></div></section>
 
   <details class="edge-advanced-diagnostics" id="edge-advanced-diagnostics">
     <summary>Advanced diagnostics <span>Signal blockers and strike analyser</span></summary>
