@@ -129,7 +129,7 @@ function fixture(state){
     assert.match(await page.locator('.kite-history-row .kite-entry').textContent(),/₹124\.90/);
     assert.match(await page.locator('.kite-history-row .kite-exit').textContent(),/₹139\.15/);
     assert.match(await page.locator('.kite-history-row .kite-pnl.profit').textContent(),/\+₹926\.25/);
-    assert.match(await page.locator('.journal-history-summary').textContent(),/excluding broker charges/);
+    assert.match(await page.locator('.journal-history-summary').textContent(),/Tradebook-only gross P&L · charges not included/);
     assert.equal(await page.locator('#journal-login').isVisible(),false,'Successful import must not revive auth form');
     assert.equal(await page.locator('#journal-manual-tools').getAttribute('open'),null,'Manual ledger stays collapsed after import');
     await page.locator('#journal-history-filter').selectOption('loss');
