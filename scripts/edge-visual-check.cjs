@@ -157,6 +157,7 @@ function fixture(state){
     assert.equal(await page.locator('.kite-history-row .kite-type').first().textContent(),'P&L');
     assert.match(await page.locator('.kite-history-row .kite-entry').first().textContent(),/≈₹/);
     assert.match(await page.locator('#kite-pnl-scope-note').textContent(),/Rows show gross P&L/);
+    await page.screenshot({path:'visual-results/kite-pnl-reconciled-mobile.png',fullPage:true});
     await page.locator('#kite-report-period').selectOption('book');
     assert.match(await page.locator('#kite-history-summary').textContent(),/1 trade · \+₹926\.25 gross/);
     assert.equal(await page.locator('#kite-reconciled-totals').isVisible(),false,'Do not label Tradebook gross as broker net');
