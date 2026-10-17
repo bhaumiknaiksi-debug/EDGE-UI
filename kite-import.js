@@ -1,4 +1,4 @@
-/* Kite Tradebook reader: local XLSX/CSV preview, no external scripts or third-party upload. */
+/* Kite Tradebook + P&L reader: private, local Excel/CSV parsing and preview. */
 (()=>{
   'use strict';
   const root=document.getElementById('trade-log'),fileInput=document.getElementById('kite-file');
@@ -104,7 +104,7 @@
     for(const [name,part] of parts){
       if(!name.startsWith('xl/worksheets/'))continue;
       const rows=sheetRows(await xmlEntry(part),shared);
-      if(findHeader(rows))return rows;
+      if(findHeader(rows)||findPnlHeader(rows))return rows;
     }
     throw Error('This workbook does not contain a Kite Tradebook table.');
   }
@@ -135,6 +135,63 @@
     }
     return null;
   }
+  function findPnlHeader(rows){
+    for(let i=0;i<Math.min(rows.length,200);i++){
+      const cols=(rows[i]||[]).map(name);
+      if(['symbol','quantity','buyvalue','sellvalue','realizedpnl'].every(k=>cols.includes(k)))
+        return {row:i,cols};
+    }
+    return null;
+  }
+  function clientIdFrom(rows,before){
+    for(const row of rows.slice(0,before)){
+      const at=(row||[]).findIndex(x=>name(x)==='clientid');
+      if(at>=0)return String(row[at+1]||'').trim().toUpperCase();
+    }
+    return '';
+  }
+  function numeric(v,context){
+    const normalized=String(v===null||v===undefined?'':v).replace(/[,₹\s]/g,'').trim();
+    const n=Number(normalized);
+    if(normalized===''||!Number.isFinite(n))throw Error('Invalid numeric value in Kite '+context+'.');
+    return n;
+  }
+  function parsePnl(rows){
+    const head=findPnlHeader(rows);if(!head)throw Error('No Kite P&L table found.');
+    const metadata=rows.slice(0,head.row).flat().map(x=>String(x||'')).find(x=>/P\s*&\s*L Statement for F\s*&\s*O from/i.test(x))||'';
+    const range=/from\s+(\d{4}-\d{2}-\d{2})\s+to\s+(\d{4}-\d{2}-\d{2})/i.exec(metadata);
+    if(!range)throw Error('Kite P&L reporting dates not found.');
+    const findSummary=(key)=>{
+      for(const row of rows.slice(0,head.row)){
+        const i=(row||[]).findIndex(x=>name(x)===key);
+        if(i>=0&&row[i+1]!==undefined&&row[i+1]!==''&&row[i+1]!==null)
+          return numeric(row[i+1],key);
+      }
+      throw Error('Kite P&L summary missing '+key+'.');
+    };
+    const at=k=>head.cols.indexOf(k);
+    const result=[];
+    for(let i=head.row+1;i<rows.length;i++){
+      const row=rows[i]||[],symbol=String(row[at('symbol')]||'').trim().toUpperCase();
+      if(!symbol)continue;
+      // Do not silently discard non-NIFTY profit while displaying the statement's net total.
+      if(!/^NIFTY[0-9A-Z]{6,30}(CE|PE)$/.test(symbol))
+        throw Error('This P&L export includes instruments other than supported NIFTY options. Use a NIFTY-only report.');
+      const quantity=numeric(row[at('quantity')],'quantity');
+      const buyValue=numeric(row[at('buyvalue')],'buy value');
+      const sellValue=numeric(row[at('sellvalue')],'sell value');
+      const realizedPnl=numeric(row[at('realizedpnl')],'realized P&L');
+      if(!Number.isInteger(quantity)||quantity<=0)throw Error('Invalid P&L quantity in row '+(i+1));
+      result.push({symbol,quantity,buyValue,sellValue,realizedPnl});
+    }
+    if(!result.length||result.length>150)throw Error('No supported NIFTY option P&L entries found (maximum 150).');
+    const grossPnl=findSummary('realizedpnl'),charges=findSummary('charges');
+    const otherCredits=findSummary('othercreditdebit'),unrealizedPnl=findSummary('unrealizedpnl');
+    const total=Math.round(result.reduce((s,x)=>s+x.realizedPnl,0)*100)/100;
+    if(Math.abs(total-grossPnl)>.02)throw Error('P&L statement totals do not match its instrument rows. Check report filters.');
+    return {kind:'pnl',clientId:clientIdFrom(rows,head.row),startDate:range[1],endDate:range[2],
+      grossPnl,charges,otherCredits,unrealizedPnl,rows:result};
+  }
   function day(value){
     if(typeof value==='number')return excelSerial(value).slice(0,10);
     const s=String(value||'').trim();
@@ -152,11 +209,7 @@
   }
   function parseTrades(rows){
     const head=findHeader(rows);if(!head)throw Error('Kite Tradebook columns not found.');
-    let clientId='';
-    for(const row of rows.slice(0,head.row)){
-      const at=(row||[]).findIndex(x=>name(x)==='clientid');
-      if(at>=0){clientId=String(row[at+1]||'').trim().toUpperCase();break;}
-    }
+    const clientId=clientIdFrom(rows,head.row);
     const at=k=>head.cols.indexOf(k),optional=k=>at(k)<0?null:at(k);
     const fills=[];let skipped=0;
     for(let i=head.row+1;i<rows.length;i++){
@@ -175,26 +228,40 @@
     }
     if(!fills.length)throw Error('No supported NIFTY option fills found.');
     if(fills.length>MAX_FILLS)throw Error('This Tradebook has '+fills.length+' fills. Please export a smaller date range (max '+MAX_FILLS+' per upload).');
-    return {fills,clientId,skipped};
+    return {kind:'tradebook',fills,clientId,skipped};
   }
   function renderPreview(data){
     approved=data;
     const status=$('kite-preview-status'),list=$('kite-preview'),btn=$('kite-import-confirm');
-    const buys=data.fills.filter(f=>f.side==='buy').length,sells=data.fills.length-buys;
-    status.textContent=data.fills.length+' NIFTY option fills found · '+buys+' buys · '+sells+' sells. '+
-      (data.skipped?data.skipped+' non-NIFTY / unsupported rows excluded. ':'')+
-      'Preview only; imported history has GROSS P&L, not net P&L.';
     list.replaceChildren();
-    data.fills.slice(0,12).forEach(f=>{
-      const div=document.createElement('div');div.className='kite-preview-row';
-      div.textContent=f.tradeDate+' · '+f.side.toUpperCase()+' '+f.symbol+' · '+f.quantity+' @ ₹'+f.price.toFixed(2);
-      list.append(div);
-    });
-    if(data.fills.length>12){const more=document.createElement('p');more.textContent='…and '+(data.fills.length-12)+' more fills';list.append(more);}
+    if(data.kind==='pnl'){
+      const net=Math.round((data.grossPnl+data.otherCredits-data.charges)*100)/100;
+      status.textContent='Kite P&L · '+data.startDate+' to '+data.endDate+' · '+
+        data.rows.length+' instruments · Gross ₹'+data.grossPnl.toFixed(2)+
+        ' · Charges ₹'+data.charges.toFixed(2)+' · Net ₹'+net.toFixed(2)+
+        '. No individual execution times or charges are available.';
+      for(const r of data.rows.slice(0,12)){
+        const el=document.createElement('div');el.className='kite-preview-row';
+        el.textContent=r.symbol+' · '+r.quantity+' units · Gross ₹'+r.realizedPnl.toFixed(2);
+        list.append(el);
+      }
+      btn.textContent='Confirm P&L statement';
+    }else{
+      const buys=data.fills.filter(f=>f.side==='buy').length,sells=data.fills.length-buys;
+      status.textContent=data.fills.length+' NIFTY option fills found · '+buys+' buys · '+sells+' sells. '+
+        (data.skipped?data.skipped+' unsupported rows excluded. ':'')+' Gross P&L until a P&L statement is imported.';
+      for(const f of data.fills.slice(0,12)){
+        const el=document.createElement('div');el.className='kite-preview-row';
+        el.textContent=f.tradeDate+' · '+f.side.toUpperCase()+' '+f.symbol+' · '+f.quantity+' @ ₹'+f.price.toFixed(2);
+        list.append(el);
+      }
+      btn.textContent='Import '+data.fills.length+' confirmed fills';
+    }
+    const size=data.kind==='pnl'?data.rows.length:data.fills.length;
+    if(size>12){const more=document.createElement('p');more.textContent='…and '+(size-12)+' more rows';list.append(more);}
     $('kite-client').value=data.clientId||'';
     $('kite-client').placeholder=data.clientId?'Detected from Kite':'Required: broker Client ID';
     btn.disabled=false;btn.hidden=false;
-    btn.textContent='Import '+data.fills.length+' confirmed fills';
   }
   fileInput.addEventListener('change',async()=>{
     approved=null;$('kite-import-confirm').hidden=true;$('kite-import-confirm').disabled=true;
@@ -204,10 +271,10 @@
     try{
       if(file.size<1||file.size>MAX_FILE)throw Error('File must be below 6 MB.');
       const suffix=file.name.split('.').pop().toLowerCase();
-      if(!['xlsx','csv'].includes(suffix))throw Error('Choose a Kite .xlsx or .csv tradebook.');
+      if(!['xlsx','csv'].includes(suffix))throw Error('Choose a Kite .xlsx or .csv tradebook or P&L statement.');
       const rows=suffix==='csv'?csvRows(await file.text()):await readXlsx(file);
-      renderPreview(parseTrades(rows));
-    }catch(error){$('kite-preview-status').textContent=error.message||'Could not read Kite tradebook.';}
+      renderPreview(findPnlHeader(rows)?parsePnl(rows):parseTrades(rows));
+    }catch(error){$('kite-preview-status').textContent=error.message||'Could not read the Kite report.';}
   });
   $('kite-import-confirm').addEventListener('click',()=>{
     if(!approved)return;
@@ -216,7 +283,8 @@
       $('kite-preview-status').textContent='Enter the correct Kite Client ID to protect against importing another account.';
       return;
     }
-    $('kite-preview-status').textContent='Submitting validated fills to your private EDGE journal…';
-    root.dispatchEvent(new CustomEvent('kite:import',{detail:{clientId,fills:approved.fills}}));
+    $('kite-preview-status').textContent='Saving reviewed Kite '+(approved.kind==='pnl'?'P&L statement':'tradebook')+'…';
+    const detail=approved.kind==='pnl'?{...approved,clientId}:{kind:'tradebook',clientId,fills:approved.fills};
+    root.dispatchEvent(new CustomEvent('kite:import',{detail}));
   });
 })();
