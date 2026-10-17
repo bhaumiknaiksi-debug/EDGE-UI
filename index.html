@@ -17,6 +17,7 @@
 <script src="/web-push.js" defer></script>
 <link rel="stylesheet" href="/trade-log.css">
 <script src="/trade-log.js" defer></script>
+<script src="/kite-import.js" defer></script>
 
 <style>
   :root {
@@ -1308,13 +1309,30 @@
   </div>
 <div id="tab-lab" class="edge-panel" role="tabpanel">
 <section id="trade-log" class="edge-journal" aria-label="Manual trade log">
-<h2>Manual trade log</h2>
+<h2>Trade Log</h2>
 <p>₹10,000 capital ceiling · ₹1,000 daily loss allowance including charges. Record actual broker fills here; EDGE does not place orders.</p>
 <form id="journal-login" class="journal-grid"><label>Owner code (same code used for alerts)<input id="journal-code" type="password" autocomplete="off" required></label><button>Unlock trade log</button></form>
 <p id="journal-status" role="status">Your code stays in this tab’s memory.</p>
 <div id="journal-private" hidden>
 <output id="journal-budget"></output><p id="journal-state"></p><button id="journal-refresh" type="button">Refresh records</button>
 <form id="journal-confirm"><label><input id="journal-reconciled" type="checkbox" required>I have recorded all open positions and today’s completed trades, and checked them against my broker.</label><button>Confirm today’s records</button></form>
+<details class="kite-import" id="kite-import">
+  <summary>Import Kite Tradebook <span>Excel / CSV</span></summary>
+  <div class="kite-import-body">
+    <p>Choose your Kite F&amp;O Tradebook (.xlsx or .csv). EDGE reads it on your device, extracts NIFTY option fills, and shows a preview. Nothing is saved until you confirm the import.</p>
+    <label>Kite Tradebook file<input id="kite-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
+    <label>Client ID (verify account)<input id="kite-client" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Detected from Tradebook"></label>
+    <p id="kite-preview-status" role="status">Choose your export to preview completed and unmatched fills.</p>
+    <div id="kite-preview" class="kite-preview" aria-label="Kite tradebook preview"></div>
+    <button type="button" id="kite-import-confirm" disabled hidden>Confirm import</button>
+    <p id="kite-import-status" role="status">Kite tradebooks contain execution prices but not complete trading charges. Imports are kept as broker history and never change live risk or READY signals.</p>
+  </div>
+</details>
+<section class="kite-imported-history" aria-label="Imported Kite broker history">
+  <h3>Kite broker history</h3>
+  <p id="kite-history-summary">No broker history imported.</p>
+  <div id="kite-history-list"></div>
+</section>
 <h3>Record an actual entry</h3><p>Logging a B/C trade does not upgrade its tier. Record fills even when they exceed your limits so the risk picture stays complete.</p>
 <form id="journal-open" class="journal-grid">
 <label>Contract / structure<input name="contract" placeholder="NIFTY expiry strike CE or PE" pattern="[A-Za-z0-9 |._-]{3,100}" required></label>
