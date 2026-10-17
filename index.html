@@ -1323,20 +1323,21 @@
   <p id="journal-status" class="journal-status" role="status" aria-live="polite">Unlock to view your private trading history.</p>
   <div id="journal-private" hidden>
     <details id="kite-import" class="kite-import">
-      <summary>Import Kite tradebook <span>Excel / CSV</span></summary>
+      <summary>Import Kite report <span>Tradebook / P&amp;L Excel</span></summary>
       <div class="kite-import-body">
-        <p>Choose a Kite F&amp;O tradebook. Review your NIFTY option fills before saving; repeat uploads are deduplicated.</p>
-        <label>Kite Tradebook file<input id="kite-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
+        <p>Choose Kite Tradebook or P&amp;L Excel/CSV. EDGE detects the format. Review everything before saving; overlapping reports are reconciled by date, never added together.</p>
+        <label>Kite Excel / CSV file<input id="kite-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"></label>
         <label>Client ID (verify account)<input id="kite-client" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" placeholder="Detected from Tradebook"></label>
-        <p id="kite-preview-status" role="status">Select an export to preview trades.</p>
+        <p id="kite-preview-status" role="status">Select Tradebook or P&amp;L Excel to preview its contents.</p>
         <div id="kite-preview" class="kite-preview" aria-label="Kite tradebook preview"></div>
         <button type="button" id="kite-import-confirm" disabled hidden>Confirm import</button>
-        <p id="kite-import-status" role="status">Broker history is separate from live risk controls.</p>
+        <p id="kite-import-status" role="status">Imports only update broker history, never live risk or signals.</p>
       </div>
     </details>
 
     <div class="journal-history-heading">
       <div class="journal-history-title">All trades <span id="kite-history-count"></span></div>
+      <select id="kite-report-period" class="kite-report-period" aria-label="Kite report period" hidden></select>
       <label class="journal-filter-label" for="journal-history-filter">
         <span>Filter</span>
         <select id="journal-history-filter" aria-label="Filter trades">
@@ -1349,8 +1350,14 @@
     </div>
     <div class="journal-history-summary">
       <strong id="kite-history-summary">No trades imported yet.</strong>
-      <span>Gross P&amp;L · excluding broker charges</span>
+      <span id="kite-history-basis">Gross P&amp;L · excluding broker charges</span>
     </div>
+    <div id="kite-reconciled-totals" class="kite-reconciled-totals" hidden>
+      <div><span>Gross</span><strong id="kite-pnl-gross"></strong></div>
+      <div><span>Charges</span><strong id="kite-pnl-charges"></strong></div>
+      <div><span>Net P&amp;L</span><strong id="kite-pnl-net"></strong></div>
+    </div>
+    <p id="kite-pnl-scope-note" class="kite-pnl-scope-note" hidden></p>
     <p id="kite-unmatched-warning" class="journal-unmatched-warning" role="status" hidden></p>
     <div class="kite-trades-frame">
       <table class="kite-trades-table">

@@ -182,7 +182,11 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 
 In **Control → Trade Log**, unlock with the existing owner code once per page session; the owner-code form disappears when authenticated. Imported Kite NIFTY options are the primary view: a compact, responsive six-column table with **Date, Instrument, Type, Entry premium, Exit premium, Gross P&L**. Mobile widths use two visual lines per trade to keep gross profit visible without sideways scrolling. **All / Profitable / Loss-making / Break-even** filters and an expandable per-trade unit/time detail are available.
 
-Choose **Import Kite tradebook** (.xlsx / .csv) to parse the file locally, preview and explicitly confirm. Overlapping imports are deduplicated. Gross P&L excludes brokerage/taxes; net P&L is not invented. Imported records are historical only and do not change active manual risk calculations or READY execution gates. The exported workbook is not uploaded to an external storage provider.
+Choose **Import Kite report** and upload either **Tradebook Excel/CSV** or **P&L Excel/CSV**. The browser recognizes both formats on-device, previews the extracted fills or instrument-level statement totals, and requires explicit confirmation before saving validated records through the existing owner-protected API. No raw Excel workbook is sent to EDGE's server or an external storage provider.
+
+Tradebook fills keep their exact dates and times, entries/exits and gross P&L; duplicate reuploads are ignored. Kite P&L statements store broker-reported gross realized P&L, report-period charges, other credits/debits and **exact aggregate net P&L**, without allocating charges to individual trades. Each reporting date range is a separate snapshot. Re-importing the same period updates it rather than adding profits twice; overlapping periods are **never summed**. Period selection keeps 1–17 Oct separate from 10–17 Oct. 
+
+Matching requires the same contract, selected statement period, quantity and gross buy/sell values. Any instrument lacking a fully matching Tradebook is represented by one **P&L-only summary** with no fabricated execution time; displayed buy/sell premiums are marked as averages. Imported records are historical, do not change manual risk budgets, do not automatically reconcile open positions, and do not alter READY signal eligibility.
 
 ### Advanced live risk and manual records
 
