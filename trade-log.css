@@ -102,3 +102,20 @@
   .kite-trades-table .kite-date,.kite-trades-table .kite-entry,.kite-trades-table .kite-exit{font-size:11px}
   .kite-trades-table .kite-pnl{font-size:12px}
 }
+
+/* P&L verification is period-scoped and deliberately separate from per-trade gross rows. */
+.kite-report-period{font-size:11px!important;max-width:180px;margin-left:auto;padding:6px 8px!important;color:#a9e9d1!important}
+.kite-reconciled-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #2d4549;border-bottom:1px solid #2d4549;padding:10px 0;margin:4px 0;gap:8px;font-variant-numeric:tabular-nums}
+.kite-reconciled-totals>div{min-width:0}
+.kite-reconciled-totals span{display:block;color:#8ba6a7;font-size:10px;margin-bottom:4px}
+.kite-reconciled-totals strong{display:block;color:#dde9e8;font-size:clamp(12px,2.6vw,17px);font-weight:700;white-space:nowrap}
+.kite-reconciled-totals strong.profit{color:#5ce49d}
+.kite-reconciled-totals strong.loss{color:#f77381}
+.kite-pnl-scope-note{color:#9bb3b2;font-size:11px;line-height:1.5}
+.kite-side.summary{color:#99bee7;border-color:#31475b;background:#13293b}
+@media(max-width:620px){
+ .journal-history-heading{flex-wrap:wrap}
+ .kite-report-period{order:1;max-width:100%;width:100%;margin:0}
+ .journal-filter-label{margin-left:auto}
+ .kite-reconciled-totals{gap:4px}
+}
