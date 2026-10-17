@@ -104,7 +104,8 @@ function fixture(state){
     assert.equal(await page.locator('#kite-client').inputValue(),'TEST123');
     await page.locator('#kite-import-confirm').click();
     await page.waitForFunction(()=>document.getElementById('kite-import-status').textContent.includes('2 new fills'));
-    assert.match(await page.locator('#kite-history-summary').textContent(),/1 trades · \+₹926\.25 gross/);
+    assert.match(await page.locator('#kite-history-summary').textContent(),/1 trade · \+₹926\.25 gross/);
+    assert.equal(await page.locator('#kite-import').getAttribute('open'),null,'Successful import closes the tall form automatically');
     assert.match(await page.locator('.kite-history-row .kite-instrument').textContent(),/NIFTY 50.*22500 CE/);
     assert.match(await page.locator('.kite-history-row .kite-date').textContent(),/09\/10/);
     assert.match(await page.locator('.kite-history-row .kite-type').textContent(),/Buy/);
