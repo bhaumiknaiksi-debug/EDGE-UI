@@ -178,15 +178,13 @@ See [MOBILE_SETUP.md](MOBILE_SETUP.md) for native setup and push integration det
 [**edge-backend**](https://github.com/bhaumiknaiksi-debug/edge-backend) — market data, signal research, execution gates, evidence and server-side notifications.
 
 
-### Import Kite F&O Tradebook
+### Kite trade history (compact view)
 
-In **Control → Trade Log**, unlock with the existing owner code, expand **Import Kite Tradebook**, and choose a Zerodha Console tradebook export (`.xlsx` or `.csv`). EDGE reads Excel locally using the browser's built-in ZIP decompression and XML parser; no third-party spreadsheet library, CDN, or external upload service is required. Verify the detected Client ID and the preview, then explicitly choose **Import confirmed fills**.
+In **Control → Trade Log**, unlock with the existing owner code once per page session; the owner-code form disappears when authenticated. Imported Kite NIFTY options are the primary view: a compact, responsive six-column table with **Date, Instrument, Type, Entry premium, Exit premium, Gross P&L**. Mobile widths use two visual lines per trade to keep gross profit visible without sideways scrolling. **All / Profitable / Loss-making / Break-even** filters and an expandable per-trade unit/time detail are available.
 
-The current importer supports NIFTY option buy/sell fills. It accepts up to 120 fills per upload (larger periods should be exported in smaller date ranges), and ignores other instruments with a visible skipped-row count. The server validates every fill and deduplicates overlapping exports by broker trade/order IDs. Imported completed positions and unmatched quantities appear as **Kite broker history** inside Trade Log, separate from manually entered open/close records.
+Choose **Import Kite tradebook** (.xlsx / .csv) to parse the file locally, preview and explicitly confirm. Overlapping imports are deduplicated. Gross P&L excludes brokerage/taxes; net P&L is not invented. Imported records are historical only and do not change active manual risk calculations or READY execution gates. The exported workbook is not uploaded to an external storage provider.
 
-**Gross profits are before charges; actual net P&L cannot be inferred from tradebook alone.** Importing history never changes capital availability, daily loss limits, today's reconciliation or execution READY signals. If the backend import endpoint has not been deployed yet, the preview still works but confirmation cannot persist the rows.
+### Advanced live risk and manual records
 
+**Control → Trade Log → Advanced · Live risk & manual records** contains reconciliation, manual entry and open-trade close forms. Live trade entry remains available behind a *second* disclosure for cases where the broker export has not yet been imported. This preserves the existing manual ledger's risk, loss and daily reconciliation checks, while removing the capital-limit paragraph and large entry form from the normal trade history screen. The backend still enforces its ₹10,000 capital ceiling and ₹1,000 daily loss allowance. Trading stops, estimated costs, and actual brokerage must be reconciled using broker records. The journal never places orders.
 
-### Manual trade log
-
-Open **Control → Manual trade log** and unlock with the existing alert owner code. The code remains in tab memory. Record every actual entry and full close, including actual round-trip charges, then confirm today's records match your broker. EDGE reserves open planned risk and capital against the ₹10,000 capital ceiling and ₹1,000 daily loss allowance. New entry approval is recalculated on the next backend market poll after changes. The log does not submit orders or automatically reconcile broker positions. Keep estimated costs realistic; stop fills and slippage can exceed planned loss. For partial positions, record individual fills separately.
