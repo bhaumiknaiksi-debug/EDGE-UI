@@ -1,1 +1,16 @@
 .edge-journal{max-width:1050px;margin:24px auto;padding:24px;border:1px solid #34504c;border-radius:18px;background:#101b1b;color:#d9e5e0}.edge-journal h2{font-size:24px;margin:0 0 12px}.edge-journal p{line-height:1.6;margin:12px 0}.journal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0}.edge-journal label{display:flex;flex-direction:column;gap:7px;font-size:14px}.edge-journal input,.edge-journal select,.edge-journal button{box-sizing:border-box;width:100%;min-width:0;padding:12px;border:1px solid #49615b;border-radius:8px;background:#182726;color:#e4eee8;font:inherit}.edge-journal button{cursor:pointer;color:#83edc3}.edge-journal button:disabled{opacity:.5}.edge-journal input[type=checkbox]{width:auto;align-self:flex-start}.edge-journal [hidden]{display:none!important}.journal-trade{border-top:1px solid #34504c;margin-top:18px;padding-top:8px}.edge-journal output{display:block;line-height:1.7}.edge-journal small{color:#a7bcb5}@media(max-width:500px){.edge-journal{margin:16px 10px;padding:16px}.journal-grid{grid-template-columns:1fr}}
+
+.kite-import{margin:18px 0;border:1px solid #34504c;border-radius:12px;background:#111f20;overflow:hidden}
+.kite-import>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:13px 15px;color:#83edc3;font-weight:650;list-style:none}
+.kite-import>summary span{font-size:12px;font-weight:400;color:#a7bcb5}
+.kite-import>summary::-webkit-details-marker{display:none}
+.kite-import[open]>summary{border-bottom:1px solid #34504c}
+.kite-import-body{padding:4px 15px 16px}
+.kite-import-body label{margin:14px 0}
+.kite-preview{max-height:250px;overflow:auto;border-top:1px solid #34504c;margin:10px 0}
+.kite-preview-row{font:12px/1.55 ui-monospace,SFMono-Regular,monospace;padding:9px 0;border-bottom:1px solid #2e4642;overflow-wrap:anywhere}
+.kite-imported-history{margin:16px 0 20px}
+.kite-imported-history h3{font-size:17px}
+.kite-imported-history .kite-history-row{padding:10px 0;border-top:1px solid #34504c;font-size:13px;line-height:1.6}
+.kite-imported-history .kite-history-row small{display:block}
+#kite-history-summary{font-size:13px}
