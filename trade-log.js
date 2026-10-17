@@ -16,9 +16,12 @@
       if(path==='/import'){
         const imported=data.importResult||{},status=$('kite-import-status');
         status.textContent='Import complete: '+Number(imported.added||0)+' new fills, '+Number(imported.duplicates||0)+
-          ' already imported. Gross profit only; exact net profit needs broker charges. Live trading limits unchanged.';
+          ' already imported. Gross P&L only; exact net profit needs broker charges.';
+        $('kite-import').open=false; // A completed import returns focus to the trade table.
       }
-      $('journal-status').textContent='Updated '+new Date().toLocaleTimeString();
+      $('journal-status').textContent=path==='/import'
+        ? 'Tradebook imported · '+Number(data.importResult?.added||0)+' new fills · '+Number(data.importResult?.duplicates||0)+' duplicates'
+        : 'Updated '+new Date().toLocaleTimeString();
     }catch(e){
       $('journal-status').textContent=e.message+'. '+(payload?'If the response was lost, retry with the same form to avoid duplicate records.':'Check your owner code and connection.');
       if(path==='/import')$('kite-import-status').textContent='Import could not be confirmed: '+e.message+'. No new records are verified saved; review or retry.';
@@ -107,7 +110,7 @@
       summary.textContent='No Kite trades imported';
       brokerEpisodes=[];renderHistoryRows();return;
     }
-    summary.textContent=count+' trades · '+signedMoney(Number(info.grossPnl||0))+' gross';
+    summary.textContent=count+' '+(count===1?'trade':'trades')+' · '+signedMoney(Number(info.grossPnl||0))+' gross';
     if(info.unmatchedSellQuantity||info.openBuyQuantity){
       warning.hidden=false;
       warning.textContent='Unmatched fills: '+(info.openBuyQuantity||0)+' open buy units and '+(info.unmatchedSellQuantity||0)+' sells without matching buys. Check your export date range.';
