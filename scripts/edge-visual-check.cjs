@@ -67,18 +67,44 @@ function fixture(state){
    if(width===390){
     await page.locator('[data-edge-tab="lab"]').click();
     const journal={budget:{availableCapital:10000,netRealizedPnl:0,openRisk:0,availableRisk:1000,confirmed:false,locked:false},trades:[]};let posts=[];
-    await context.route('**/api/v1/trades**',async r=>{assert.equal(r.request().headers().authorization,'Bearer test-owner-code');if(r.request().method()==='POST'){const d=r.request().postDataJSON();posts.push(d);if(r.request().url().endsWith('/open'))journal.trades=[{...d,id:d.requestId,reservedRisk:750}];if(r.request().url().endsWith('/close'))journal.trades[0]={...journal.trades[0],closedAt:new Date().toISOString(),netPnl:550};if(r.request().url().endsWith('/confirm'))journal.budget.confirmed=true;}await r.fulfill({contentType:'application/json',body:JSON.stringify(journal)});});
+    await context.route('**/api/v1/trades**',async r=>{assert.equal(r.request().headers().authorization,'Bearer test-owner-code');if(r.request().method()==='POST'){const d=r.request().postDataJSON();posts.push(d);if(r.request().url().endsWith('/open'))journal.trades=[{...d,id:d.requestId,reservedRisk:750}];if(r.request().url().endsWith('/close'))journal.trades[0]={...journal.trades[0],closedAt:new Date().toISOString(),netPnl:550};if(r.request().url().endsWith('/confirm'))journal.budget.confirmed=true;
+      if(r.request().url().endsWith('/import')){
+        assert.equal(d.clientId,'TEST123');
+        assert.equal(d.fills.length,2);
+        assert.equal(d.fills[0].symbol,'NIFTY26O1322500CE');
+        assert.equal(d.fills[0].time,'2026-10-09T12:10:56');
+        journal.broker={summary:{importedFills:2,completedTrades:1,grossPnl:926.25,openBuyQuantity:0,unmatchedSellQuantity:0,affectsRiskLedger:false},
+          episodes:[{symbol:'NIFTY26O1322500CE',quantity:65,entry:124.90,exit:139.15,
+            openedAt:'2026-10-09T12:10:56',closedAt:'2026-10-09T12:58:16',grossPnl:926.25,netPnl:null,charges:null}]};
+        journal.importResult={added:2,duplicates:0};
+      }}await r.fulfill({contentType:'application/json',body:JSON.stringify(journal)});});
     await page.locator('#journal-code').fill('test-owner-code');await page.locator('#journal-login button').click();await page.locator('#journal-private').waitFor({state:'visible'});
     assert.equal(await page.locator('#journal-code').inputValue(),'');
     await page.locator('#journal-reconciled').check();await page.locator('#journal-confirm button').click();await page.waitForFunction(()=>document.getElementById('journal-state').textContent.includes('confirmed'));
     for(const [name,value] of Object.entries({contract:'NIFTY 20 OCT 25000 CE',quantity:'65',entry:'100',stop:'90'}))await page.locator('#journal-open [name="'+name+'"]').fill(value);
     await page.locator('#journal-open button').click();await page.locator('.journal-trade').waitFor();assert.equal(posts.at(-1).quantity,65);assert.ok(posts.at(-1).requestId.length>=16);
     await page.locator('.journal-trade [name="exit"]').fill('110');await page.locator('.journal-trade [name="charges"]').fill('100');await page.locator('.journal-trade button').click();await page.waitForFunction(()=>document.getElementById('journal-trades').textContent.includes('Closed'));
+    // Synthetic XLSX mirrors Kite's row-15 header and shared-string tradebook layout.
+    // Trade data and Client ID below are fake test fixtures, never the owner's account.
+    await page.locator('#kite-import > summary').click();
+    const postsBefore=posts.length;
+    const sampleWorkbook=Buffer.from('UEsDBBQAAAAIAABKUV000ZEiJQEAAAQDAAAUAAAAeGwvc2hhcmVkU3RyaW5ncy54bWx9ksluwjAURX/Fyh48IKI2CkEVBCkb0irZdGnCK7EUO6mHCv6+RkhtZUOXPu/6vjFfn+WAvkAbMapVQuckWRe5MRZ5rswq6a2dMoxN14PkZj5OoHzkY9SSW//UJ2wmDfxoegArB8wISbHkQiWoG52yq4SlCXJKfDrY/ACfQhS5LTaDAGVRtc2xLXJ8hbdAWzYtZYsQNxd5GIeQVk21jww0PwLacgthpDx3PVeniDdwkr6YGGsB5r59e5kimxfXWT/LEL85rqywl5C/atFFHjf3eCq1PoJ+yMszdO6aG7VCRp77ate+s7SmC8aWhGzKUMAIS2eUzMhz9LWJxLs6JAcX9WZgiHZFCY0Rixq6I6vv6H5r9teSUZIt0/8ly6eM/pFgf+nFN1BLAwQUAAAACAAASlFdMLR4OUQBAADyBAAAGAAAAHhsL3dvcmtzaGVldHMvc2hlZXQxLnhtbH3U326CMBiH4VshPR+lCFQXwGRz7p/b0XYBBDs1k2Jaorv8dbpgf5+RM+ApX8hbIJ/+NNtgr4zdtLpgIoxYoHTdLjd6VbDPj/nNmE3L/NCab7tWqgvccm0Ltu663S3ntl6rprJhu1PayVdrmqpzp2bF7c6oanm8qdnyOIoy3lQbzcr8eG1WdVWZm/YQmIJJd7X+O7iTLOgKZt35voxyvi9zXv/bvW+iN+5m9INE2k9yh+flMRkFOEKcASaID4Ap4hwwQ3wElIhPgGPEZ8AJ4gugIM1eUQXqApVEekMlld5Rkyv7kZ33I/PXp7Q5aEajg0paHXRMy4Je1DupPu1YSuv5KuIknNCA/vBY0ICgFwFB0ysBz5+GkIMB5WBAORhQDgb0NY5oQDkY0FcxmoT0uRc4/eIVBE1oQdCMFOTef4b3P7DyF1BLAQIUAxQAAAAIAABKUV000ZEiJQEAAAQDAAAUAAAAAAAAAAAAAACAAQAAAAB4bC9zaGFyZWRTdHJpbmdzLnhtbFBLAQIUAxQAAAAIAABKUV0wtHg5RAEAAPIEAAAYAAAAAAAAAAAAAACAAVcBAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWxQSwUGAAAAAAIAAgCIAAAA0QIAAAAA','base64');
+    await page.locator('#kite-file').setInputFiles({name:'kite-synthetic.xlsx',
+      mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:sampleWorkbook});
+    await page.waitForFunction(()=>document.getElementById('kite-preview-status').textContent.includes('2 NIFTY option fills found'));
+    assert.equal(posts.length,postsBefore,'Preview must never write history before explicit confirmation');
+    assert.equal(await page.locator('#kite-client').inputValue(),'TEST123');
+    await page.locator('#kite-import-confirm').click();
+    await page.waitForFunction(()=>document.getElementById('kite-import-status').textContent.includes('2 new fills'));
+    assert.match(await page.locator('#kite-history-summary').textContent(),/Gross P&L \+₹926/);
+    assert.match(await page.locator('#kite-history-list').textContent(),/Actual charges unavailable/);
+    assert.equal(journal.budget.availableCapital,10000,'Import cannot modify live risk ledger capital');
+    assert.equal(posts.at(-1).requestId.length>=16,true,'Batch import uses an idempotent request ID');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'journal mobile overflow');
     await page.screenshot({path:'visual-results/manual-trade-log.png',fullPage:true});
    }
    assert.deepEqual(errors,[],`${width}px JavaScript errors`);await context.close();
   }
-  console.log('PASS: four viewport widths, both modes, three tabs, nine execution states, chart, filters, and disclosures');
+  console.log('PASS: four viewport widths, both modes, three tabs, XLSX import preview, nine execution states, chart, filters, and disclosures');
  } finally {await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
