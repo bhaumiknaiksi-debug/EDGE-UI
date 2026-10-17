@@ -43,7 +43,17 @@
     if(part.method===8){
       if(typeof DecompressionStream!=='function')throw Error('This browser cannot open compressed Excel files. Please export CSV from Kite.');
       const stream=new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-      raw=new Uint8Array(await new Response(stream).arrayBuffer());
+      const reader=stream.getReader(),chunks=[];let total=0;
+      try{
+        while(true){
+          const part=await reader.read();if(part.done)break;
+          total+=part.value.byteLength;
+          if(total>MAX_XML){await reader.cancel();throw Error('Oversized XLSX worksheet.');}
+          chunks.push(part.value);
+        }
+      }finally{reader.releaseLock();}
+      raw=new Uint8Array(total);let pos=0;
+      for(const chunk of chunks){raw.set(chunk,pos);pos+=chunk.byteLength;}
     }
     if(raw.byteLength>MAX_XML||raw.byteLength!==part.plain)throw Error('Oversized or damaged worksheet.');
     const source=decoder.decode(raw);
