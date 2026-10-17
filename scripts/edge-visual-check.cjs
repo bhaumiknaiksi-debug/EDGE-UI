@@ -80,10 +80,18 @@ function fixture(state){
       }}await r.fulfill({contentType:'application/json',body:JSON.stringify(journal)});});
     await page.locator('#journal-code').fill('test-owner-code');await page.locator('#journal-login button').click();await page.locator('#journal-private').waitFor({state:'visible'});
     assert.equal(await page.locator('#journal-code').inputValue(),'');
+    assert.equal(await page.locator('#journal-login').isVisible(),false,'Owner code form must disappear after unlock');
+    assert.equal(await page.locator('#journal-manual-tools').isVisible(),true,'Risk tools available but collapsed');
+    assert.equal(await page.locator('#journal-open').isVisible(),false,'Manual entry is not part of the tradebook-first view');
+    assert.equal(await page.locator('#journal-budget').isVisible(),false,'Capital and risk figures are not daily UI clutter');
+    await page.locator('#journal-manual-tools > summary').click();
     await page.locator('#journal-reconciled').check();await page.locator('#journal-confirm button').click();await page.waitForFunction(()=>document.getElementById('journal-state').textContent.includes('confirmed'));
+    await page.locator('#journal-entry-details > summary').click();
     for(const [name,value] of Object.entries({contract:'NIFTY 20 OCT 25000 CE',quantity:'65',entry:'100',stop:'90'}))await page.locator('#journal-open [name="'+name+'"]').fill(value);
     await page.locator('#journal-open button').click();await page.locator('.journal-trade').waitFor();assert.equal(posts.at(-1).quantity,65);assert.ok(posts.at(-1).requestId.length>=16);
     await page.locator('.journal-trade [name="exit"]').fill('110');await page.locator('.journal-trade [name="charges"]').fill('100');await page.locator('.journal-trade button').click();await page.waitForFunction(()=>document.getElementById('journal-trades').textContent.includes('Closed'));
+    await page.locator('#journal-entry-details > summary').click();
+    await page.locator('#journal-manual-tools > summary').click();
     // Synthetic XLSX mirrors Kite's row-15 header and shared-string tradebook layout.
     // Trade data and Client ID below are fake test fixtures, never the owner's account.
     await page.locator('#kite-import > summary').click();
@@ -96,15 +104,27 @@ function fixture(state){
     assert.equal(await page.locator('#kite-client').inputValue(),'TEST123');
     await page.locator('#kite-import-confirm').click();
     await page.waitForFunction(()=>document.getElementById('kite-import-status').textContent.includes('2 new fills'));
-    assert.match(await page.locator('#kite-history-summary').textContent(),/Gross P&L \+₹926/);
-    assert.match(await page.locator('#kite-history-list').textContent(),/Actual charges unavailable/);
+    assert.match(await page.locator('#kite-history-summary').textContent(),/1 trades · \+₹926\.25 gross/);
+    assert.match(await page.locator('.kite-history-row .kite-instrument').textContent(),/NIFTY 50.*22500 CE/);
+    assert.match(await page.locator('.kite-history-row .kite-date').textContent(),/09\/10/);
+    assert.match(await page.locator('.kite-history-row .kite-type').textContent(),/Buy/);
+    assert.match(await page.locator('.kite-history-row .kite-entry').textContent(),/₹124\.90/);
+    assert.match(await page.locator('.kite-history-row .kite-exit').textContent(),/₹139\.15/);
+    assert.match(await page.locator('.kite-history-row .kite-pnl.profit').textContent(),/\+₹926\.25/);
+    assert.match(await page.locator('.journal-history-summary').textContent(),/excluding broker charges/);
+    assert.equal(await page.locator('#journal-login').isVisible(),false,'Successful import must not revive auth form');
+    assert.equal(await page.locator('#journal-manual-tools').getAttribute('open'),null,'Manual ledger stays collapsed after import');
+    await page.locator('#journal-history-filter').selectOption('loss');
+    assert.match(await page.locator('#kite-history-list').textContent(),/No trades match this filter/);
+    await page.locator('#journal-history-filter').selectOption('all');
     assert.equal(journal.budget.availableCapital,10000,'Import cannot modify live risk ledger capital');
     assert.equal(posts.at(-1).requestId.length>=16,true,'Batch import uses an idempotent request ID');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'journal mobile overflow');
+    await page.screenshot({path:'visual-results/kite-trade-history-mobile.png',fullPage:true});
     await page.screenshot({path:'visual-results/manual-trade-log.png',fullPage:true});
    }
    assert.deepEqual(errors,[],`${width}px JavaScript errors`);await context.close();
   }
-  console.log('PASS: four viewport widths, both modes, three tabs, XLSX import preview, nine execution states, chart, filters, and disclosures');
+  console.log('PASS: four viewport widths, both modes, three tabs, tradebook table, hidden owner/manual controls, XLSX import preview, nine execution states, chart, filters, and disclosures');
  } finally {await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
