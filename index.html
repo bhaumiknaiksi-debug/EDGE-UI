@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="/trade-log.css">
 <script src="/trade-log.js" defer></script>
 <script src="/kite-import.js" defer></script>
+<link rel="stylesheet" href="/trade-snapshot.css">
+<script src="/trade-snapshot.js" defer></script>
 
 <style>
   :root {
@@ -994,18 +996,21 @@
     <div class="simple-tier-state" id="simple-tier-a-status" role="status">WAITING</div>
     <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-a-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-a-copy">Waiting for a confirmed live backend decision.</p>
+    <button class="edge-snapshot-action" type="button" data-edge-snapshot-tier="A" data-edge-snapshot-time="" disabled title="Save actual manual execution evidence. This never authorizes a trade.">I Traded This</button>
   </section>
   <section class="simple-tier-card" id="simple-tier-b" aria-labelledby="simple-tier-b-label">
     <div class="simple-tier-top"><span class="simple-tier-letter b">B</span><span class="simple-tier-kind" id="simple-tier-b-label">STRONG CANDIDATE</span></div>
     <div class="simple-tier-state" id="simple-tier-b-status">WATCHING</div>
     <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-b-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-b-copy">Research only. Not an entry signal.</p>
+    <button class="edge-snapshot-action" type="button" data-edge-snapshot-tier="B" data-edge-snapshot-time="" disabled title="Save actual manual execution evidence. This never authorizes a trade.">I Traded This</button>
   </section>
   <section class="simple-tier-card" id="simple-tier-c" aria-labelledby="simple-tier-c-label">
     <div class="simple-tier-top"><span class="simple-tier-letter c">C</span><span class="simple-tier-kind" id="simple-tier-c-label">DEVELOPING</span></div>
     <div class="simple-tier-state" id="simple-tier-c-status">WATCHING</div>
     <details class="stitch-tier-detail"><summary>Structure &amp; contract details</summary><div class="simple-tier-contracts" id="simple-tier-c-contracts">Contracts loading…</div></details>
     <p class="simple-tier-description" id="simple-tier-c-copy">Research only. Not an entry signal.</p>
+    <button class="edge-snapshot-action" type="button" data-edge-snapshot-tier="C" data-edge-snapshot-time="" disabled title="Save actual manual execution evidence. This never authorizes a trade.">I Traded This</button>
   </section>
   <section class="stitch-card stitch-intelligence"><div class="stitch-kicker">WHY EDGE SEES IT THIS WAY</div><p class="stitch-context-note" id="stitch-intelligence-note">Waiting for context.</p>
     <details><summary><span>01 · Market direction</span><strong id="stitch-intel-direction">Unavailable</strong></summary><p id="stitch-intel-direction-copy">Waiting for chart evidence.</p></details>
@@ -1021,6 +1026,13 @@
 
 
 
+  <dialog class="edge-snapshot-auth" id="edge-snapshot-auth" aria-labelledby="edge-snapshot-auth-title">
+    <form method="dialog"><h3 id="edge-snapshot-auth-title">Unlock Trade Snapshot</h3>
+      <p id="edge-snapshot-auth-note">Use the private EDGE owner code.</p>
+      <label>Owner code<input id="edge-snapshot-owner-code" type="password" autocomplete="off" required></label>
+      <button type="submit">Save Snapshot</button><button id="edge-snapshot-auth-cancel" type="button">Cancel</button>
+    </form>
+  </dialog>
   <!-- TOKEN EXPIRED BANNER -->
   <div class="token-banner" id="token-banner">
     <b>LIVE DATA NEEDS ATTENTION</b><br>
@@ -1371,6 +1383,11 @@
       </table>
     </div>
 
+    <section class="edge-snapshot-journal" aria-label="EDGE manual trade snapshots">
+      <div class="journal-history-heading"><strong>EDGE Trade Snapshots</strong><button id="edge-snapshot-reconcile" type="button">Reconcile Kite fills</button></div>
+      <p id="edge-snapshot-status" class="edge-snapshot-status" role="status" aria-live="polite">Capture market conditions beside A/B/C tier cards after your manual Kite trades.</p>
+      <div id="edge-snapshot-history" class="edge-snapshot-history" aria-live="polite"></div>
+    </section>
     <details class="journal-safety-tools" id="journal-manual-tools">
       <summary>Advanced · Live risk &amp; manual records <span>Optional tools</span></summary>
       <div class="journal-safety-content">
@@ -2259,7 +2276,12 @@
         return '<div class="candidate-leg"><span class="side">'+escapeHtml(x.side)+'</span><span class="contract">'+escapeHtml(contract)+'</span><span class="quote">'+escapeHtml(q)+'</span></div>';
       }).join(""):'<div class="candidate-meta">'+(available?"Contract legs unavailable.":"No candidate for the current market direction.")+'</div>';
       var readyClass=tier==="A"&&p.executionAllowed?" ready":"";
-      return '<div class="candidate-plan '+tier.toLowerCase()+readyClass+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div></div>';
+      var analysisTime=String(d&&d.timestamp||"");
+      var freshnessAge=Date.now()-Date.parse(analysisTime);
+      var fresh=Number.isFinite(freshnessAge)&&freshnessAge>=-20000&&freshnessAge<=120000;
+      var already=typeof window.edgeSnapshotWasSaved==="function"&&window.edgeSnapshotWasSaved(tier,analysisTime);
+      var capture=available&&legs.length?'<button class="edge-snapshot-action" type="button" data-edge-snapshot-tier="'+tier+'" data-edge-snapshot-time="'+escapeHtml(analysisTime)+'" data-edge-snapshot-saved="'+(already?"true":"false")+'" '+(fresh?"":"disabled")+' title="Save a manual Kite trade snapshot. Does not authorize entry.">'+(already?"✓ Snapshot saved":"I Traded This")+'</button>':"";
+      return '<div class="candidate-plan '+tier.toLowerCase()+readyClass+'"><div class="candidate-plan-head"><div><div class="candidate-tier">'+tier+'</div><div class="candidate-strategy">'+escapeHtml(strategyName(p.strategy))+'</div></div><div class="candidate-state">'+escapeHtml(state)+'</div></div><div class="candidate-legs">'+legHtml+'</div>'+optionRead(tier)+'<div class="candidate-meta">'+escapeHtml(meta.join(" · ")||(p.description||""))+'</div>'+capture+'</div>';
     }
     setSafeHTML(root,planHtml("A",plans.A)+planHtml("B",plans.B)+planHtml("C",plans.C));
   }
@@ -2319,6 +2341,14 @@
       var html=p.available&&legs.length?'<strong>'+title+'</strong>'+legs.join("")+'<div class="simple-contract-note">'+note+'</div>':
         '<span class="simple-contract-note">No backend-confirmed contract available</span>';
       setSafeHTML(document.getElementById("simple-tier-"+code+"-contracts"),html);
+      var snapshotButton=document.querySelector("#simple-tier-"+code+" [data-edge-snapshot-tier]");
+      if(snapshotButton){
+        snapshotButton.dataset.edgeSnapshotTime=String(snapshot&&snapshot.timestamp||"");
+        snapshotButton.disabled=!(p.available&&legs.length&&freshness);
+        var already=typeof window.edgeSnapshotWasSaved==="function"&&window.edgeSnapshotWasSaved(code.toUpperCase(),snapshotButton.dataset.edgeSnapshotTime);
+        snapshotButton.textContent=already?"✓ Snapshot saved":"I Traded This";
+        snapshotButton.setAttribute("data-edge-snapshot-saved",already?"true":"false");
+      }
     });
 
     if(typeof renderStitchPresentation==="function")renderStitchPresentation(snapshot,freshness,aReady);
