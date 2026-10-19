@@ -43,6 +43,12 @@ jobs:
       - name: Generate source assets
         run: npm run mobile:assets:source
 
+      - name: Verify snapshot assets were bundled
+        run: |
+          test -f www/trade-snapshot.js
+          test -f www/trade-snapshot.css
+          grep -q 'src="/trade-snapshot.js"' www/index.html
+
       - name: Create iOS native project
         run: npx cap add ios
 
