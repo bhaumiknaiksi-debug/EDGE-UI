@@ -1,0 +1,15 @@
+/* Observational trade snapshots are hidden until backend feature-flag status is confirmed. */
+.edge-snapshot-action{display:none!important;background:rgba(255,255,255,.045);color:var(--text);border:1px solid rgba(255,255,255,.22);padding:10px 12px;border-radius:9px;font:600 12px var(--body);margin-top:10px;min-height:42px;width:100%;cursor:pointer}
+html.edge-snapshots-enabled .edge-snapshot-action{display:block!important}
+.edge-snapshot-action:disabled{opacity:.4;cursor:not-allowed}
+.edge-snapshot-action[data-edge-snapshot-saved="true"]{border-color:rgba(0,255,136,.4);color:var(--accent)}
+.edge-snapshot-history{display:grid;gap:8px;margin-top:12px}
+.edge-snapshot-history-item{border:1px solid var(--border);background:var(--surface);padding:12px;border-radius:10px;display:grid;gap:5px}
+.edge-snapshot-history-item strong{font-size:12px}
+.edge-snapshot-history-item small{color:var(--muted);font:10px/1.5 var(--mono);overflow-wrap:anywhere}
+.edge-snapshot-status{font:11px/1.5 var(--mono);color:var(--muted);margin:8px 0}
+.edge-snapshot-auth{background:#111a20;color:#e5f0f4;border:1px solid #516674;border-radius:14px;padding:22px;width:min(90vw,420px)}
+.edge-snapshot-auth::backdrop{background:rgba(0,0,0,.7)}
+.edge-snapshot-auth label{display:grid;gap:8px;margin:12px 0;font-size:13px}
+.edge-snapshot-auth input{min-height:43px;padding:10px;background:#080d11;color:white;border:1px solid #597283;border-radius:8px}
+.edge-snapshot-auth button{padding:10px 15px;border-radius:8px;margin-right:7px}
