@@ -9,6 +9,8 @@ on:
       - "trade-log.css"
       - "trade-snapshot.js"
       - "trade-snapshot.css"
+      - "trade-planner.js"
+      - "trade-planner.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
@@ -22,6 +24,8 @@ on:
       - "trade-log.css"
       - "trade-snapshot.js"
       - "trade-snapshot.css"
+      - "trade-planner.js"
+      - "trade-planner.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
@@ -41,6 +45,7 @@ jobs:
           node-version: "22"
       - name: Check JS, snapshot controls, and recovery behavior
         run: |
+          node --check trade-planner.js
           node --check trade-snapshot.js
           node --check trade-log.js
           node -e "const fs=require('fs');const s=fs.readFileSync('index.html','utf8');for(const t of ['A','B','C'])if(!s.includes('data-edge-snapshot-tier=\"' + t + '\"'))process.exit(1);if(!s.includes('/trade-snapshot.js'))process.exit(1)"
