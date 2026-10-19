@@ -3,6 +3,8 @@
   'use strict';
   const API='https://edge-backend-r1ng.onrender.com/api/v1/trade-snapshots';
   let ownerToken='',enabled=false,pending=null,busy=false;
+  const saved=new Set();
+  window.edgeSnapshotWasSaved=(tier,timestamp)=>saved.has(tier+'|'+timestamp);
   const $=id=>document.getElementById(id);
   const escape=str=>String(str==null?'':str).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const readable=iso=>iso?new Date(iso).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
@@ -48,6 +50,7 @@
       const d=await authorized('','POST',{requestId:pending.requestId,tier:pending.tier,analysisTimestamp:pending.timestamp});
       if(d.saved!==true)throw Error('SNAPSHOT_NOT_CONFIRMED');
       const key=pending;pending=null;
+      saved.add(key.tier+'|'+key.timestamp);
       document.querySelectorAll('[data-edge-snapshot-tier]').forEach(b=>{
         if(b.dataset.edgeSnapshotTier===key.tier&&b.dataset.edgeSnapshotTime===key.timestamp){
           b.textContent='✓ Snapshot saved';b.setAttribute('data-edge-snapshot-saved','true');
@@ -86,6 +89,12 @@
     const root=$('edge-snapshot-history');if(!root)return;
     root.replaceChildren();
     if(!rows.length){root.textContent='No snapshots yet. Tap I Traded This after a Kite execution.';return;}
+    for(const row of rows){if(row.payload)saved.add(row.payload.tier+'|'+row.payload.analysisAt);}
+    document.querySelectorAll('[data-edge-snapshot-tier]').forEach(b=>{
+      if(window.edgeSnapshotWasSaved(b.dataset.edgeSnapshotTier,b.dataset.edgeSnapshotTime)){
+        b.textContent='✓ Snapshot saved';b.setAttribute('data-edge-snapshot-saved','true');
+      }
+    });
     for(const row of rows.slice(0,30)){
       const p=row.payload||{},candidate=p.selectedCandidate||{},legs=p.selectedLegs||[];
       const card=document.createElement('div');
