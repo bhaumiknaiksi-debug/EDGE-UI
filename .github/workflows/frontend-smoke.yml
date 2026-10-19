@@ -7,6 +7,8 @@ on:
       - "web-push.js"
       - "trade-log.js"
       - "trade-log.css"
+      - "trade-snapshot.js"
+      - "trade-snapshot.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
@@ -18,6 +20,8 @@ on:
       - "web-push.js"
       - "trade-log.js"
       - "trade-log.css"
+      - "trade-snapshot.js"
+      - "trade-snapshot.css"
       - "sw.js"
       - "scripts/edge-frontend-smoke.mjs"
       - "scripts/edge-visual-check.cjs"
@@ -35,8 +39,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check JS and recovery behavior
-        run: node scripts/edge-frontend-smoke.mjs
+      - name: Check JS, snapshot controls, and recovery behavior
+        run: |
+          node --check trade-snapshot.js
+          node --check trade-log.js
+          node -e "const fs=require('fs');const s=fs.readFileSync('index.html','utf8');for(const t of ['A','B','C'])if(!s.includes('data-edge-snapshot-tier=\"' + t + '\"'))process.exit(1);if(!s.includes('/trade-snapshot.js'))process.exit(1)"
+          node scripts/edge-frontend-smoke.mjs
 
       - name: Install browser test runtime
         run: npm install --no-save --package-lock=false playwright
