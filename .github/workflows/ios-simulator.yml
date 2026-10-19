@@ -43,6 +43,12 @@ jobs:
       - name: Build EDGE web bundle
         run: npm run mobile:build
 
+      - name: Verify snapshot assets were bundled
+        run: |
+          test -f www/trade-snapshot.js
+          test -f www/trade-snapshot.css
+          grep -q 'src="/trade-snapshot.js"' www/index.html
+
       - name: Create native iOS project
         run: npx cap add ios
 
