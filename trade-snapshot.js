@@ -7,6 +7,7 @@
   window.edgeSnapshotWasSaved=(tier,timestamp)=>saved.has(tier+'|'+timestamp);
   const $=id=>document.getElementById(id);
   const escape=str=>String(str==null?'':str).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const fmt=x=>Number.isFinite(Number(x))&&x!==null?'₹'+Number(x).toFixed(2):'—';
   const readable=iso=>iso?new Date(iso).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
   const status=msg=>{const el=$('edge-snapshot-status');if(el)el.textContent=msg;};
   const dlg=$('edge-snapshot-auth');
@@ -108,7 +109,20 @@
       match.textContent='Kite: '+(row.matchStatus||'PENDING_TRADEBOOK').replace(/_/g,' ') +
         (Number.isFinite(detail.grossPnl)?' · Gross '+(detail.grossPnl>=0?'+':'')+'₹'+detail.grossPnl.toFixed(2):'')+
         ' · Net per trade not verified';
-      card.append(title,contracts,match);root.append(card);
+      const hypothesis=p.tradePlan;
+      const evaluation=detail.planEvaluation;
+      const summary=document.createElement('small');
+      summary.textContent=hypothesis?.status==='MODEL_READY_SHADOW'
+        ?'PRE-TRADE SHADOW ESTIMATE · Ask '+fmt(hypothesis.entry?.ask)+' · Stop '+fmt(hypothesis.stop?.premium)+' · Target '+fmt(hypothesis.targets?.[0]?.premium)
+        :'Pre-trade price estimate unavailable or not supported';
+      card.append(title,contracts,summary,match);
+      if(evaluation){
+        const comparison=document.createElement('small');
+        comparison.textContent='ACTUAL KITE · Bought '+fmt(evaluation.brokerEntry)+' · Sold '+fmt(evaluation.brokerExit)+
+          ' · Entry difference '+fmt(evaluation.entrySlippagePoints)+' · Model not independently validated';
+        card.append(comparison);
+      }
+      root.append(card);
     }
   }
   async function refresh(){
