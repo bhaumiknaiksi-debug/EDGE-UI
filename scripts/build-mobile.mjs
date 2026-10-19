@@ -12,6 +12,8 @@ const staticFiles = [
   "trade-log.js",
   "kite-import.js",
   "trade-log.css",
+  "trade-snapshot.js",
+  "trade-snapshot.css",
   "sw.js",
   "edge-icon.svg"
 ];
