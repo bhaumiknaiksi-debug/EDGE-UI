@@ -15,6 +15,8 @@
       pending=null;
       if(path==='/pnl'&&data.pnlResult?.period)activeReportId=data.pnlResult.period;
       render(data);
+      if(!payload)window.dispatchEvent(new CustomEvent('edge:owner-unlocked',{detail:{token}}));
+      if(path==='/import'||path==='/pnl')window.dispatchEvent(new Event('edge:broker-imported'));
       if(path==='/import'){
         const imported=data.importResult||{},status=$('kite-import-status');
         status.textContent='Import complete: '+Number(imported.added||0)+' new fills, '+Number(imported.duplicates||0)+
