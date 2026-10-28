@@ -6,8 +6,8 @@ html.edge-snapshots-enabled .edge-snapshot-action{display:block!important}
 .edge-snapshot-history{display:grid;gap:8px;margin-top:12px}
 .edge-snapshot-history-item{border:1px solid var(--border);background:var(--surface);padding:12px;border-radius:10px;display:grid;gap:5px}
 .edge-snapshot-history-item strong{font-size:12px}
-.edge-snapshot-history-item small{color:var(--muted);font:10px/1.5 var(--mono);overflow-wrap:anywhere}
-.edge-snapshot-status{font:11px/1.5 var(--mono);color:var(--muted);margin:8px 0}
+.edge-snapshot-history-item small{color:var(--muted);font:12px/1.5 var(--mono);overflow-wrap:anywhere}
+.edge-snapshot-status{font:12px/1.5 var(--mono);color:var(--muted);margin:8px 0}
 .edge-snapshot-auth{background:#111a20;color:#e5f0f4;border:1px solid #516674;border-radius:14px;padding:22px;width:min(90vw,420px)}
 .edge-snapshot-auth::backdrop{background:rgba(0,0,0,.7)}
 .edge-snapshot-auth label{display:grid;gap:8px;margin:12px 0;font-size:13px}
