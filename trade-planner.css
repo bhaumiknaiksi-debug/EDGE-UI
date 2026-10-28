@@ -1,7 +1,7 @@
 .edge-trade-planner{border:1px solid rgba(155,179,197,.25);border-radius:10px;background:rgba(118,145,167,.055);padding:10px;margin:10px 0;display:grid;gap:8px}
-.edge-trade-planner>strong{font:700 10px/1.4 var(--mono,monospace);letter-spacing:.06em;opacity:.86}
+.edge-trade-planner>strong{font:700 12px/1.4 var(--mono,monospace);letter-spacing:.06em;opacity:.86}
 .edge-trade-planner-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .edge-trade-planner-grid span{display:grid;gap:3px;min-width:0}
-.edge-trade-planner-grid small{font:10px/1.4 var(--mono,monospace);opacity:.65}
+.edge-trade-planner-grid small{font:12px/1.4 var(--mono,monospace);opacity:.65}
 .edge-trade-planner-grid b{font:600 12px/1.35 var(--mono,monospace);overflow-wrap:anywhere}
-.edge-trade-planner-note{font:10px/1.4 var(--mono,monospace);opacity:.67}
+.edge-trade-planner-note{font:12px/1.4 var(--mono,monospace);opacity:.67}

@@ -6,7 +6,7 @@
 .edge-journal small{color:#91a8a9}
 .journal-topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
 .journal-subtitle{font-size:12px;color:#90a7ac;margin-top:6px!important}
-.journal-status{font-size:11px;color:#94abae;min-height:16px;margin:5px 0!important}
+.journal-status{font-size:12px;color:#94abae;min-height:16px;margin:5px 0!important}
 .edge-journal button,.edge-journal select,.edge-journal input{box-sizing:border-box;min-width:0;font:inherit}
 .edge-journal button{cursor:pointer;color:#75e4bf;background:#122525;border:1px solid #355653;border-radius:10px;padding:11px 14px}
 .edge-journal button:disabled{opacity:.5}
@@ -21,14 +21,14 @@
 .journal-grid button{width:100%}
 .kite-import{margin:15px 0 17px;border:1px solid #294c49;border-radius:12px;background:#0e2020;overflow:hidden}
 .kite-import>summary,.journal-safety-tools>summary,.journal-manual-entry>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;min-height:44px;padding:11px 13px;color:#7ae7bd;font-size:13px;font-weight:650}
-.kite-import>summary span,.journal-safety-tools>summary span,.journal-manual-entry>summary span{font-size:11px;font-weight:400;color:#90aaab;white-space:nowrap}
+.kite-import>summary span,.journal-safety-tools>summary span,.journal-manual-entry>summary span{font-size:12px;font-weight:400;color:#90aaab;white-space:nowrap}
 .kite-import>summary::-webkit-details-marker,.journal-safety-tools>summary::-webkit-details-marker,.journal-manual-entry>summary::-webkit-details-marker{display:none}
 .kite-import[open]>summary,.journal-safety-tools[open]>summary,.journal-manual-entry[open]>summary{border-bottom:1px solid #2d4547}
 .kite-import-body{padding:8px 14px 14px}
 .kite-import-body label{margin:12px 0}
 .kite-import-body input{width:100%}
 .kite-preview{max-height:240px;overflow:auto;border-top:1px solid #253c3f;margin:9px 0}
-.kite-preview-row{font:11px/1.6 ui-monospace,monospace;padding:8px 0;border-bottom:1px solid #203739;overflow-wrap:anywhere}
+.kite-preview-row{font:12px/1.6 ui-monospace,monospace;padding:8px 0;border-bottom:1px solid #203739;overflow-wrap:anywhere}
 .journal-history-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 6px}
 .journal-history-title{font-size:16px;font-weight:700;white-space:nowrap}
 .journal-history-title span{font-size:12px;font-weight:500;color:#99b0b0}
@@ -37,26 +37,26 @@
 .journal-filter-label select{font-size:12px;max-width:142px;height:37px;padding:6px 8px}
 .journal-history-summary{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;padding:6px 0 12px}
 .journal-history-summary strong{font-size:16px;letter-spacing:-.2px;font-weight:700;color:#d8e7e7}
-.journal-history-summary span{font-size:10px;color:#96abad}
+.journal-history-summary span{font-size:12px;color:#96abad}
 .journal-unmatched-warning{padding:10px 12px;border:1px solid #8a6336;border-radius:8px;background:#302516;color:#e9c596;font-size:12px}
 .kite-trades-frame{overflow:hidden;border:1px solid #243438;border-radius:12px;background:#0b151b}
 .kite-trades-table{width:100%;border-collapse:collapse;table-layout:auto;font-variant-numeric:tabular-nums}
 .kite-trades-table thead{background:#081420}
-.kite-trades-table th{padding:14px 10px;font-size:11px;font-weight:600;color:#91acba;text-align:left;white-space:nowrap;border-bottom:1px solid #253842}
+.kite-trades-table th{padding:14px 10px;font-size:12px;font-weight:600;color:#91acba;text-align:left;white-space:nowrap;border-bottom:1px solid #253842}
 .kite-trades-table td{padding:14px 10px;border-bottom:1px solid #263943;font-size:12px;vertical-align:middle;white-space:nowrap}
 .kite-trades-table tr:last-child td{border-bottom:0}
 .kite-date{color:#b5c9d1}
 .kite-instrument strong{display:block;font-size:13px;color:#edf4f4;font-weight:700}
 .kite-instrument .kite-strike{display:block;font-size:12px;margin-top:2px;color:#82aef1}
-.kite-side{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:5px 8px;border-radius:8px;border:1px solid #1c684f;background:#103529;color:#59ed9c;font-size:11px;font-weight:600}
+.kite-side{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:5px 8px;border-radius:8px;border:1px solid #1c684f;background:#103529;color:#59ed9c;font-size:12px;font-weight:600}
 .kite-trades-table .kite-entry,.kite-trades-table .kite-exit{color:#d8e3e6}
 .kite-trades-table .kite-pnl{text-align:right;font-size:14px;font-weight:700}
 .kite-trades-table .kite-pnl.profit{color:#57e78e}
 .kite-trades-table .kite-pnl.loss{color:#ff7482}
 .kite-trades-table .kite-pnl.flat{color:#a5b7c0}
 .kite-trade-details{white-space:normal;margin-top:3px;max-width:280px}
-.kite-trade-details summary{color:#8198a3;font-size:10px;cursor:pointer}
-.kite-trade-details small{display:block;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.kite-trade-details summary{color:#8198a3;font-size:12px;cursor:pointer}
+.kite-trade-details small{display:block;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .kite-empty td{padding:28px 12px!important;font-size:12px;color:#9aaeb0!important;text-align:center;white-space:normal}
 .journal-safety-tools{margin-top:18px;border:1px solid #2d4549;border-radius:12px;background:#101d22}
 .journal-safety-tools>summary{color:#bccfd1}
@@ -86,11 +86,11 @@
   .kite-trades-table .kite-type{grid-area:type}
   .kite-trades-table .kite-entry{grid-area:entry;font-size:12px}
   .kite-trades-table .kite-exit{grid-area:exit;font-size:12px;text-align:right}
-  .kite-trades-table .kite-entry::before,.kite-trades-table .kite-exit::before{content:attr(data-label);display:block;color:#7f9aaa;font-size:9px;margin-bottom:3px}
+  .kite-trades-table .kite-entry::before,.kite-trades-table .kite-exit::before{content:attr(data-label);display:block;color:#7f9aaa;font-size:12px;margin-bottom:3px}
   .kite-trades-table .kite-pnl{grid-area:pnl;white-space:nowrap;font-size:13px}
   .kite-trades-table .kite-instrument strong{font-size:13px}
-  .kite-trades-table .kite-instrument .kite-strike{font-size:11px}
-  .kite-trades-table .kite-trade-details summary{font-size:9px}
+  .kite-trades-table .kite-instrument .kite-strike{font-size:12px}
+  .kite-trades-table .kite-trade-details summary{font-size:12px}
   .kite-trades-table tr:last-child{border:0}
   .kite-empty td{display:block;width:100%}
 }
@@ -99,19 +99,19 @@
   .journal-history-title{font-size:14px}
   .journal-filter-label>span{display:none}
   .kite-trades-table tr.kite-history-row{grid-template-columns:52px minmax(0,1fr) 82px;column-gap:6px}
-  .kite-trades-table .kite-date,.kite-trades-table .kite-entry,.kite-trades-table .kite-exit{font-size:11px}
+  .kite-trades-table .kite-date,.kite-trades-table .kite-entry,.kite-trades-table .kite-exit{font-size:12px}
   .kite-trades-table .kite-pnl{font-size:12px}
 }
 
 /* P&L verification is period-scoped and deliberately separate from per-trade gross rows. */
-.kite-report-period{font-size:11px!important;max-width:180px;margin-left:auto;padding:6px 8px!important;color:#a9e9d1!important}
+.kite-report-period{font-size:12px!important;max-width:180px;margin-left:auto;padding:6px 8px!important;color:#a9e9d1!important}
 .kite-reconciled-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #2d4549;border-bottom:1px solid #2d4549;padding:10px 0;margin:4px 0;gap:8px;font-variant-numeric:tabular-nums}
 .kite-reconciled-totals>div{min-width:0}
-.kite-reconciled-totals span{display:block;color:#8ba6a7;font-size:10px;margin-bottom:4px}
+.kite-reconciled-totals span{display:block;color:#8ba6a7;font-size:12px;margin-bottom:4px}
 .kite-reconciled-totals strong{display:block;color:#dde9e8;font-size:clamp(12px,2.6vw,17px);font-weight:700;white-space:nowrap}
 .kite-reconciled-totals strong.profit{color:#5ce49d}
 .kite-reconciled-totals strong.loss{color:#f77381}
-.kite-pnl-scope-note{color:#9bb3b2;font-size:11px;line-height:1.5}
+.kite-pnl-scope-note{color:#9bb3b2;font-size:12px;line-height:1.5}
 .kite-side.summary{color:#99bee7;border-color:#31475b;background:#13293b}
 @media(max-width:620px){
  .journal-history-heading{flex-wrap:wrap}
