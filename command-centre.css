@@ -14,3 +14,7 @@ body[data-section="radar"] #cc-command,body[data-section="trade"] #cc-intelligen
 .cc-rows span{color:#a9b7c2;min-width:0}.cc-rows strong{text-align:right;max-width:64%;overflow-wrap:anywhere;font-weight:600}.cc-panel #cc-status[data-healthy="true"]{color:var(--accent)}.cc-panel #cc-status[data-healthy="false"]{color:var(--amber)}
 .cc-panel .cc-note{margin-top:8px}.cc-panel details summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:600}.cc-panel #cc-message{min-height:1em;color:var(--amber)}
 @media(max-width:360px){.cc-value{font-size:26px}.cc-grid .cc-value{font-size:19px}.cc-card{padding:13px}}
+
+/* The manual signal dock is redundant on Command and obscures paper operations on phones. Keep it on Intelligence. */
+body[data-section="radar"] #edge-state-dock{display:none!important}
+.cc-actions button{font-size:13px;padding-inline:8px}
