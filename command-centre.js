@@ -21,7 +21,7 @@ function model(data,now=Date.now()){
  const closedToday=trades?.filter(t=>t.closedAt&&t.buys>0&&day(t.closedAt)===day(now));
  const pnl=closedToday&&closedToday.every(t=>finite(t.netPnl))?closedToday.reduce((a,t)=>a+t.netPnl,0):null;
  return {valid,health,worker,reconciled,guardian,eligible,flat,active,pnl,open,working,trades,policy:p,
-  status:!valid?'Unavailable':!health?'Health unverified':s.haltReason?'Halted':g.locked?'Monthly locked':s.killed?'Stopped':active?'Armed · paper':s.armed?'Arming stale or mode mismatch':'Disarmed',
+  status:!valid?'Unavailable':!health?'Health unverified':s.haltReason?'Halted':g.locked?'Monthly locked':s.killed?'Stopped':active?'Armed · today only':s.armed?'Arming stale or mode mismatch':'Disarmed',
   canArm:!!(health&&flat&&eligible&&!g.locked&&!s.haltReason&&s.killed===true&&s.armed===false),
   canStop:!!valid,canAck:!!(health&&flat&&s.killed===true&&s.armed===false&&!g.locked&&s.haltReason==='SANDBOX_SERVICE_UNAVAILABLE'),
   budget:guardian?(g.locked?0:Math.max(0,7000+g.realizedPaise/100)):null,monthly:guardian?g.realizedPaise/100:null,
@@ -42,7 +42,7 @@ async function api(path,body,credential=token){
 }
 function render(){
  const now=Date.now(),m=model(now-lastFetch<=20000?data:null,now);
- out('status',m.status);out('pnl',money(m.pnl));out('budget',money(m.budget));out('goal',money(m.policy?.dailyGoal));out('reason',m.valid?words(m.halt||m.reason):'Unlock to verify executor');
+ out('status',m.status);out('pnl',money(m.pnl));out('budget',money(m.budget));out('goal',money(m.policy?.dailyGoal));out('reason',m.valid?(m.halt?words(m.halt):m.reason==='ENTRY_WINDOW_CLOSED'?'Entry window closed · no new entries':words(m.reason)):'Unlock to verify executor');
  out('health',m.health?'Worker, reconciliation and GUARDIAN fresh':'Not verified · no arm');out('updated',m.valid?'Reconciled '+time(m.reconciledAt)+' IST':'No verified snapshot');
  out('mode',m.valid?words(m.policy.entryMode):'Unavailable');out('exit',m.valid?words(m.exitPolicy):'Unavailable');
  rows('position',m.open===null||!m.open?[['Position','Unavailable']]:!m.open.length?[['Position','Flat']]:m.open.flatMap(t=>{
