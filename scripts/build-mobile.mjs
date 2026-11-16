@@ -16,6 +16,8 @@ const staticFiles = [
   "trade-snapshot.css",
   "trade-planner.js",
   "trade-planner.css",
+  "command-centre.js",
+  "command-centre.css",
   "sw.js",
   "edge-icon.svg"
 ];
