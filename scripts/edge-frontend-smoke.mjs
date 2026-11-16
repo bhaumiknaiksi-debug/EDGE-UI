@@ -58,7 +58,7 @@ assert.ok(lab > trade && alerts > lab && advanced > lab && alerts > advanced,
 assert.ok(radar < marketContext && marketContext < insights && insights < trade,
   "Existing Market Context and option intelligence must be nested into Home before Signals");
 assert.deepEqual([...html.matchAll(/data-edge-tab="([^"]+)"/g)].map(m=>m[1]),['radar','trade','lab'],
-  "Navigation must have only Home, Signals and Control");
+  "Navigation must have only Command, Intelligence and Control");
 assert.doesNotMatch(html,/id="tab-flow"|data-section="flow"/,"Insights must not remain a separate route");
 assert.match(html,/<details class="edge-advanced-diagnostics" id="edge-advanced-diagnostics">/,
   "Optional diagnostics must be collapsed by default");
@@ -393,3 +393,31 @@ const series=simpleSandbox.stitchChartSamples([
 assert.equal(series.length,2,'Chart must exclude other sessions, future times and missing prices');
 assert.match(html,/<polyline id="stitch-chart-line"/,'Chart is a trusted static SVG, not sanitizer-stripped HTML');
 console.log('Complete adaptation: matrix, quote sides, filters, missing data and session history PASS');
+
+
+const commandCode=await readFile("command-centre.js","utf8");
+new vm.Script(commandCode,{filename:"command-centre.js"});
+const ccContext={module:{exports:{}},Date,Intl};
+vm.createContext(ccContext);vm.runInContext(commandCode,ccContext);
+const {model:commandModel}=ccContext.module.exports;
+const ccNow=Date.parse("2026-11-17T10:00:00+05:30");
+const ccValid={status:{configured:true,broker:"PAPER",mode:"SANDBOX",liveOrdersSupported:false,lastTickAt:new Date(ccNow).toISOString(),monthlyGuardianEnabled:true,autopilotConfigured:true,autopilotExitPolicy:"FIXED_8_8"},state:{broker:"PAPER",armed:false,killed:true,armedDay:"2026-11-17",reconciledAt:ccNow,haltReason:null,trades:{},orders:{},policy:{entryMode:"AUTOPILOT_PAPER_V1",capital:10000,dailyGoal:1000},monthlyGuardian:{month:"2026-11",asOf:ccNow,locked:false,realizedPaise:-68750}}};
+assert.equal(commandModel(null,ccNow).canArm,false);
+assert.equal(commandModel(null,ccNow).pnl,null);
+assert.equal(commandModel(ccValid,ccNow).canArm,true);
+assert.equal(commandModel(ccValid,ccNow).budget,6312.5);
+assert.equal(commandModel(ccValid,ccNow).status,"Stopped");
+assert.equal(commandModel(ccValid,ccNow+11000).canArm,false,"fresh monthly state and reconciliation mandatory");
+assert.equal(commandModel({...ccValid,status:{...ccValid.status,liveOrdersSupported:true}},ccNow).canArm,false);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,monthlyGuardian:{...ccValid.state.monthlyGuardian,locked:true}}},ccNow).canArm,false);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,orders:{a:{state:"OPEN"}}}},ccNow).canArm,false);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,policy:{entryMode:"OPENING_RANGE_SHADOW_V1"}}},ccNow).canArm,false);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,haltReason:"SANDBOX_SERVICE_UNAVAILABLE"}},ccNow).canAck,true);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,haltReason:"MONTHLY_LOSS_LOCK"}},ccNow).canAck,false);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,armed:true,killed:false}},ccNow).active,true);
+assert.equal(commandModel({...ccValid,state:{...ccValid.state,armed:true,killed:false,armedDay:"2026-11-16"}},ccNow).active,false);
+assert.doesNotMatch(commandCode,/localStorage|sessionStorage/,"Owner code must never be persisted");
+for(const id of ["command","intelligence","control","login","arm","stop","ack","report","position","limits"])assert.match(html,new RegExp('id="cc-'+id+'"'));
+assert.match(worker,/command-centre\.js/);
+assert.match(worker,/command-centre\.css/);
+console.log("Command Centre PASS: unknown state, paper-only guard, stale reconciliation, monthly lock, wrong policy, stopped halt acknowledgement, session arming and shell assets");
