@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="/edge-icon.svg">
 <script src="/pwa.js" defer></script>
 <script src="/web-push.js" defer></script>
-<link rel="stylesheet" href="/trade-log.css">
+<link rel="stylesheet" href="/command-centre.css">\n<script src="/command-centre.js" defer></script>\n<link rel="stylesheet" href="/trade-log.css">
 <script src="/trade-log.js" defer></script>
 <script src="/kite-import.js" defer></script>
 <link rel="stylesheet" href="/trade-snapshot.css">
@@ -945,8 +945,8 @@
 </head>
 <body>
 <nav class="edge-tabs" aria-label="EDGE sections" role="tablist">
-  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">HOME<small>market pulse</small></button>
-  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">SIGNALS<small>strike monitor</small></button>
+  <button class="edge-tab active" type="button" role="tab" aria-selected="true" aria-controls="tab-radar" data-edge-tab="radar">COMMAND<small>paper &amp; market</small></button>
+  <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-trade" data-edge-tab="trade">INTELLIGENCE<small>strategies &amp; strikes</small></button>
   <button class="edge-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-lab" data-edge-tab="lab">CONTROL<small>settings &amp; alerts</small></button>
 </nav>
 
@@ -976,7 +976,27 @@
 
   <div id="edge-feed-health-note" role="status" aria-live="polite" hidden></div>
 
-<!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
+<!-- Unified paper controls: read-only backend truth, no frontend trade decisions. -->
+<section id="cc-command" class="cc-panel" aria-label="Paper command centre">
+ <div class="cc-card"><div class="cc-top"><span class="cc-label">Command Centre · Paper only</span><button id="cc-lock" type="button" hidden>Lock</button></div>
+ <form id="cc-login"><label for="cc-code">Owner code · held in memory only</label><input id="cc-code" type="password" autocomplete="off" required placeholder="Unlock paper account"><button type="submit" class="cc-primary">Unlock Command Centre</button></form>
+ <div class="cc-value" id="cc-status" role="status">Unavailable</div><p id="cc-health">Unlock to verify</p><small id="cc-updated">No verified snapshot</small>
+ <div class="cc-actions"><button id="cc-arm" type="button" class="cc-primary" disabled>ARM PAPER</button><button id="cc-stop" type="button" class="cc-stop" disabled>STOP</button><button id="cc-refresh" type="button">Refresh</button></div>
+ <p id="cc-message" role="status"></p><small>Use the original control panel if the dashboard cannot verify status.</small></div>
+ <div class="cc-card"><div class="cc-grid"><div><span class="cc-label">Today's closed paper P&amp;L</span><div id="cc-pnl" class="cc-value">Unavailable</div></div><div><span class="cc-label">Daily aspiration</span><div id="cc-goal" class="cc-value">Unavailable</div></div></div><small>Estimated net from current-session closed records; excludes open P&amp;L. Aspiration is not a forecast.</small></div>
+ <div class="cc-card"><span class="cc-label">GUARDIAN · remaining realized budget</span><div id="cc-budget" class="cc-value">Unavailable</div><small>Monthly paper threshold · not buying power or a guaranteed loss bound.</small></div>
+ <div class="cc-card"><h2>AUTOPILOT</h2><p id="cc-mode">Unavailable</p><small>Latest executor result</small><div id="cc-reason" class="cc-note">Unavailable</div><p>Exit policy: <strong id="cc-exit">Unavailable</strong></p><details open><summary>Active position</summary><div id="cc-position" class="cc-rows"></div></details></div>
+</section>
+<section id="cc-intelligence" class="cc-panel" aria-label="Strategy intelligence">
+ <div class="cc-card"><div class="cc-top"><h2>Strategy evidence</h2><button id="cc-report" type="button">Load evidence</button></div><p id="cc-report-status" role="status">Unlock on Command first.</p><div id="cc-strategies" class="cc-rows"></div><small>IMPULSE and REAPER are experimental paper strategies. ORB and VWAP remain research-only in AUTOPILOT.</small></div>
+ <div class="cc-card"><h2>Recent research proposals</h2><div id="cc-proposals" class="cc-rows"></div><small>Historical observations, not buy instructions. Executor rejection reason is on Command.</small></div>
+ <div class="cc-card"><h2>EXIT IQ comparison</h2><p id="cc-coverage">Unavailable</p><div id="cc-exit-results" class="cc-rows"></div><small>Matched modeled outcomes only; no automatic promotion.</small><a class="cc-button" href="https://edge-backend-r1ng.onrender.com/api/v1/opportunities/control">Full evidence &amp; replay report</a></div>
+</section>
+<section id="cc-control" class="cc-panel" aria-label="Paper controls and settings">
+ <div class="cc-card"><h2>Paper configuration</h2><div id="cc-limits" class="cc-rows"></div><div class="cc-actions"><button id="cc-ack" type="button" disabled>Acknowledge recovered halt</button></div><div class="cc-actions"><a class="cc-button" href="https://edge-backend-r1ng.onrender.com/api/v1/execution/sandbox/control">Edit policy · original control</a></div><p class="cc-note">Policy edits, reconciliation and recovery remain in the authenticated backend panel. No live-money controls.</p></div>
+ <div class="cc-card"><details><summary>Diagnostics and weekly review</summary><p>Read-only repository links; no inferred deployment or test status.</p><div class="cc-actions"><a class="cc-button" href="https://github.com/bhaumiknaiksi-debug/edge-backend/pulls">Backend PRs</a><a class="cc-button" href="https://github.com/bhaumiknaiksi-debug/EDGE-UI/pulls">UI PRs</a></div><a class="cc-button" href="https://dashboard.render.com/web/srv-d79sva5actks73ddudkg">Render deployment</a></details></div>
+</section>
+\n<!-- SIMPLE shows only the three server-derived tier calls. Other panels remain in PRO. -->
 <main class="simple-terminal" id="simple-signal-terminal" aria-label="EDGE market and three signal tiers">
   <section class="stitch-card stitch-decision" id="stitch-decision" aria-label="Current backend decision">
     <div class="stitch-kicker">YOUR NEXT MOVE</div><h1 id="stitch-decision-state" role="status">VERIFYING</h1>
