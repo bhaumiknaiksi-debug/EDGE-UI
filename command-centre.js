@@ -50,7 +50,7 @@ function render(){
   return [[t.contractId||'Contract',words(t.entrySource)],['Tier / quantity',String(t.tier??'—')+' / '+String(t.quantity??'—')],['Filled entry',entry?.filled>0?money(entry.averagePrice):'Not filled'],['Stop / target',money(t.stop)+' / '+(t.target===null?'No fixed target':money(t.target))],['Dynamic floor',money(t.exitIqState?.floor)],['Exit reason',words(t.exitReason)]];
  }));
  rows('limits',m.valid?[['Capital ceiling',money(m.policy.capital)],['Risk per trade',money(m.policy.perTradeRisk)],['Daily aspiration',money(m.policy.dailyGoal)],['Daily entries cap',String(m.policy.maxTradesPerDay??'Unavailable')],['Daily loss setting',money(m.policy.dailyLoss)+' · '+words(m.policy.limitMode)],['GUARDIAN realized month',money(m.monthly)],['Working orders',m.working?String(m.working.length):'Unavailable'],['Last risk valuation',time(m.accountingAt)+' IST']]:[['Account','Unlock to view']]);
- el('arm').disabled=commanding||!m.canArm||!token;el('stop').disabled=commanding||!token||!m.canStop;el('ack').disabled=commanding||!token||!m.canAck;
+ el('arm').disabled=commanding||requesting||!m.canArm||!token;el('stop').disabled=commanding||requesting||!token||!m.canStop;el('ack').disabled=commanding||requesting||!token||!m.canAck;
  el('status').dataset.healthy=String(m.health);el('login').hidden=!!token;el('lock').hidden=!token;
 }
 function renderReport(){
@@ -78,7 +78,7 @@ el('report').addEventListener('click',async()=>{if(!token){out('report-status','
  finally{reporting=false;el('report').disabled=false;}});
 for(const [id,path] of [['arm','arm'],['stop','stop'],['ack','ack-halt']])el(id).addEventListener('click',async()=>{
  const m=model(Date.now()-lastFetch<=20000?data:null);
- if(commanding||!token||!(id==='arm'?m.canArm:id==='stop'?m.canStop:m.canAck))return;
+ if(commanding||requesting||!token||!(id==='arm'?m.canArm:id==='stop'?m.canStop:m.canAck))return;
  if(!root.confirm(id==='arm'?'Arm PAPER AUTOPILOT? Simulated orders only.':id==='stop'?'Stop paper trader and request protective position closure?':'Acknowledge old generic halt and stay stopped?'))return;
  if(!root.crypto?.randomUUID){out('message','Secure request ID unavailable. Use original panel.');return;}
  commanding=true;render();try{await api('/execution/sandbox/'+path,{confirmSandbox:true,requestId:root.crypto.randomUUID()});data=null;await refresh();}
