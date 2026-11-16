@@ -83,7 +83,7 @@ assert.match(html, /<details class="edge-alerts-entry"/);
 assert.match(html, /id="edge-push-slot"/);
 assert.match(push, /slot\.replaceChildren\(box\)/);
 assert.match(push, /Promise\.race\(/, "Service-worker readiness must have a bounded timeout");
-assert.match(worker, /edge-shell-v16/, "Users must get a refreshed PWA shell");
+assert.match(worker, /edge-shell-v17/, "Users must get a refreshed PWA shell");
 assert.match(worker, /fetch\(request, \{ cache: "no-store" \}\)/, "PWA should prefer uncached app shell and JS");
 assert.match(html, /id="edge-refresh-app"/, "Update/reload control must remain accessible in Lab");
 assert.match(pwa, /edgeApplyMarketStatus/, "Market status must be applied from the backend");
@@ -421,3 +421,6 @@ for(const id of ["command","intelligence","control","login","arm","stop","ack","
 assert.match(worker,/command-centre\.js/);
 assert.match(worker,/command-centre\.css/);
 console.log("Command Centre PASS: unknown state, paper-only guard, stale reconciliation, monthly lock, wrong policy, stopped halt acknowledgement, session arming and shell assets");
+
+assert.ok(!html.includes('>\\n<script src="/command-centre.js"')&&!html.includes('\\n<!-- SIMPLE shows'), 'Do not render literal newline escape text in HTML');
+assert.match(await readFile('command-centre.css','utf8'),/body\[data-section="radar"\] #edge-state-dock\{display:none!important\}/,'Manual dock must not cover Command');
